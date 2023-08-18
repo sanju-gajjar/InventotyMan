@@ -3,9 +3,9 @@ ENV SESSION_SECRET=secret
 
 ENV db_name=warehousedb
 
-ENV db_user_name=root
+ENV db_user_name=rootas
 
-ENV db_password=root1234
+ENV db_password=Example@123
 
 ENV login_id=admin@xyz.com
 
