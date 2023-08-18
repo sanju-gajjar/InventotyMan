@@ -1,5 +1,15 @@
 FROM node:18
+ENV SESSION_SECRET=secret
 
+ENV db_name=warehousedb
+
+ENV db_user_name=root
+
+ENV db_password=root1234
+
+ENV login_id=admin@xyz.com
+
+ENV login_password=admin1234
 # Create app directory
 WORKDIR /usr/src/app
 
