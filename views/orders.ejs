@@ -195,7 +195,7 @@
         <div class="container">
           <div class="row-lg">
             <div class="col-lg">
-              <p class="text-primary">Order ID: <i><%= order.TransactionID %></i> </p>
+              <p class="text-primary">Order ID: <i><%= order._id %></i> </p>
             </div>
             <div class="col-lg">
               <p class="text-danger"> Total Amount: <i><i class="rupee sign icon"></i><%= order.Amount %></i></p>
@@ -230,9 +230,9 @@
         </thead>
           <tbody>
         <% sub_orders.forEach(function(sub_order){ %>
-          <% console.log(`sub_order.TransactionID = ${sub_order.TransactionID}`) %> 
-          <% console.log(`order.TransactionID = ${order.TransactionID}`) %> 
-        <% if(sub_order.TransactionID == order.TransactionID) { %> 
+          <% console.log(`sub_order._id = ${sub_order.TransactionID}`) %> 
+          <% console.log(`order._id = ${order._id}`) %> 
+        <% if(sub_order.TransactionID == order._id) { %> 
             <% console.log(sub_order) %> 
             <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
             <td><%= sub_order.ItemID %></td>

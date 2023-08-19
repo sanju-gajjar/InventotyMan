@@ -143,24 +143,24 @@
       <tbody>
         
         <tr>
-          <td class="table-info"><center><input type="text" id="number1" value=1 name="number1" style="border:0;outline:0" size="4" disabled/></center></td>
+          <td class="table-info"><center><input class="billlist" type="text" id="number1" value=1 name="number1" style="border:0;outline:0" size="4" disabled/></center></td>
           <td class="table-danger">
             <div class="form-floating">
-            <input type="text" class="form-control" id="itemid1" name="itemid1"  size="4" required>
+            <input type="text" class="billlist form-control" id="itemid1" name="itemid1"  size="4" required>
             <label for="floatingInput">ID</label>
             <button type="button" class="btn btn-outline-success" id="fetchitem1" onclick="fetchitem()">Get Item</button>
             </div>
         </td>
           <td class="table-primary">
             <div class="form-floating">
-              <input type="text" class="form-control" id="itemname1" name="itemname1" size="4" required >
+              <input type="text" class="billlist form-control" id="itemname1" name="itemname1" size="4" required >
               <label for="floatingInput">Name</label>
               
           </div>
           </td>
           <td class="table-warning"> 
             <div class="form-floating">
-              <select class="form-select" aria-label="Default select example" name="category1" id="category1" required > 
+              <select class="form-select billlist" aria-label="Default select example" name="category1" id="category1" required > 
                 <% category.forEach(function(order){ %>
                   <option name="<%= order.Category %>" value="<%= order.Category %>"><%= order.Category %></option>
                 <% }); %>
@@ -171,7 +171,7 @@
           </td>
           <td class="table-warning">
             <div class="form-floating">
-              <select class="form-select" aria-label="Default select example" name="brand1" id="brand1" required >
+              <select class="form-select billlist" aria-label="Default select example" name="brand1" id="brand1" required >
                 <% brand.forEach(function(order){ %>
                 <option value="<%= order.Brand %>"><%= order.Brand %></option>
                 <% }); %>
@@ -182,7 +182,7 @@
           </td>
           <td class="table-warning">
             <div class="form-floating">
-              <select class="form-select" aria-label="Default select example" name="size1" id="size1" required >
+              <select class="form-select billlist" aria-label="Default select example" name="size1" id="size1" required >
                 <% size.forEach(function(order){ %>
                   <option value="<%= order.Size %>"><%= order.Size %></option>
                 <% }); %>
@@ -193,26 +193,26 @@
           </td>
           <td class="table-success"> 
             <div class="form-floating">
-              <input type="number" class="form-control" id="amount1" name="amount1" value=0 min="0" max="99999" required>
+              <input type="number" class="form-control billlist" id="amount1" name="amount1" value=0 min="0" max="99999" required>
               <label for="floatingInput">Amount <i class="rupee sign icon"></i></label>
               
           </div>
           </td>
           <td class="table-primary">
             <div class="form-floating">
-              <input type="text" class="form-control" id="name1" name="name1" size="4" required >
+              <input type="text" class="form-control billlist" id="name1" name="name1" size="4" required >
               <label for="floatingInput">Name<i class="person volume icon"></i></label>
             </div>
           </td>
             <td class="table-primary">
               <div class="form-floating">
-                <input type="text" class="form-control" id="email1" name="email1" size="4" required>
+                <input type="text" class="form-control billlist" id="email1" name="email1" size="4" required>
                 <label for="floatingInput">Email<i class="email volume icon"></i></label>
               </div>
             </td>
               <td class="table-primary">
                 <div class="form-floating">
-                  <input type="text" class="form-control" id="phone1" name="phone1" size="4" required>
+                  <input type="text" class="form-control billlist" id="phone1" name="phone1" size="4" required>
                   <label for="floatingInput">Phone<i class="phone volume icon"></i></label>
                 </div>
               </td>
@@ -234,7 +234,7 @@
         </h4>
         <br>
         <center>
-            <div class="card text-dark" style="width: 12rem;background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
+            <div class="card text-dark billlist" style="width: 12rem;background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
               
               <div class="card-body">
                 <div class="form-floating">
@@ -272,8 +272,8 @@
           var len = x.rows.length;
           trLast.after(trNew);
          
-        
-          var inputs = document.getElementsByTagName("input");
+        var inputs =   document.getElementsByClassName("billlist")
+          //var inputs = document.getElementsByTagName("input");
           var flag1=flag2=1;
           for (var i = 0; i < inputs.length; i++) {
 
@@ -449,7 +449,7 @@
 
   <script>
     function downloadInvoice() {
-  var data = getSampleData();
+ var data = getSampleData();
   easyinvoice.createInvoice(data, function(result) {
     var date_format = new Date();
     var bill_name = "SHW"+ date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds()
@@ -465,6 +465,8 @@
   var transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
   var transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear().toString().substr(-2) + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
   var item_names = document.getElementsByTagName('input')
+
+  console.log("ITEMS NAMES "+item_names);
   var items_arr = []
   for(var i=0; i<item_names.length; i++){
     if((item_names[i].id).includes('itemname')){
@@ -474,9 +476,13 @@
         var amount_num = (item_names[j].id).charAt((item_names[j].id).length-1)
         if(item_num == amount_num){
           let item_obj = {
+              //     "quantity": 2,
+        //     "description": "Product 1",
+        //     "tax-rate": 6,
+        //     "price": 33.87
             "quantity": "1",
             "description": item_names[i].value,
-            "tax": 0,
+            "tax-rate": 0,
             "price": item_names[j].value
           }
           console.log(item_obj)
@@ -489,33 +495,54 @@
   }
   console.log(items_arr)
   return {
-    //"documentTitle": "RECEIPT", //Defaults to INVOICE
-    "currency": "INR",
-    "taxNotation": "gst", //or gst
-    "marginTop": 25,
-    "marginRight": 25,
-    "marginLeft": 25,
-    "marginBottom": 25,
-    "logo": "https://i.pinimg.com/564x/47/7c/4c/477c4c269034cc0bc048409346ac83e9.jpg", //or base64
-    //"logoExtension": "png", //only when logo is base64
-    "sender": {
-      "company": "<shop-name>",
-      "address": "<shop-address>",
-      "zip": "<shop-zip>",
-      "city": "<shop-city>",
-      "country": "Mob. - <shop-owner-mobile-number>",
-       
-      "custom1": "GST No. - <shop-gst-no.>"
-      //"custom2": "custom value 2",
-      //"custom3": "custom value 3"
-    },
-
-    "invoiceNumber": transaction_id,
-    "invoiceDate": transaction_date,
-    "invoiceTime": transaction_time,
+        "images": {
+          // The logo on top of your invoice
+          "logo": "https://i.imgur.com/b1IoAnu.png",
+          // The invoice background
+          "background": "https://i.imgur.com/zjTdQjv.png"
+        },
+        // Your own data
+        "sender": {
+          "company": "RETAIL INVOICE",
+          "address": "THE MOBILE ACCESSORIES HUB",
+          "zip": "Shope No. G-96, B.T MALL, NAVJIVAN MILL COMPOUND",
+          "city": "KALOL 382721",
+          "country": "Gandhinagar,9574867001"
+          //"custom1": "custom value 1",
+          //"custom2": "custom value 2",
+          //"custom3": "custom value 3"
+        },
+        // Your recipient
+        "client": {
+          "company": "Client Corp",
+          "address": "Clientstreet 456",
+          "zip": "4567 CD",
+          "city": "Clientcity",
+          "country": "Clientcountry"
+          // "custom1": "custom value 1",
+          // "custom2": "custom value 2",
+          // "custom3": "custom value 3"
+        },
+        "information": {
+          // Invoice number
+          "number": transaction_id,
+          // Invoice data
+          "date": transaction_date,
+          // Invoice due date
+          "due-date": transaction_date,
+        },
     "products": items_arr,
-    "bottomNotice": "Thank You for shopping from <shop-name>. We are looking forward to your next visit !"
-  };
+        "bottom-notice": "Goods Once Sold Will not be taken Bak. Warranty Will be Covered as per manufacture's & conditions,\n No Warranty Guarantee or Exchanged on Free gift items. Cheques are Subject to Realization Subject to KALOL Jurisdictions. <p style='text-align:left;'' >  <b> Bill By</b>: Keyur Gajjar </p>\n <p style='text-align:right;'' >  <b> Authorised Signatory</b> </p> <p>Thank You for shopping from Phoner. We are looking forward to your next visit !</p>",
+        // Settings to customize your invoice
+        "settings": {
+          "currency": "INR",
+        },
+        // Translate your invoice to your preferred language
+        "translate": {
+          "invoice": "PHONER",  // Default to 'INVOICE'
+          "vat": "gst" // Defaults to 'vat'
+        },
+      };
 }
 
   </script>

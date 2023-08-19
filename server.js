@@ -1,966 +1,1393 @@
 if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config()
-  }
-  
-  const express = require('express')
-  const app = express()
-  const bcrypt = require('bcrypt')
-  const passport = require('passport')
-  const flash = require('express-flash')
-  const session = require('express-session')
-  const methodOverride = require('method-override')
-  const mysql = require('mysql');
-  const bodyparser = require('body-parser');
-  const dotenv = require('dotenv');
+  require('dotenv').config()
+}
+const MongoClient = require('mongodb').MongoClient;
 
-  var port = 5000;
-  app.use(bodyparser.json());
+const url = process.env.mongo_host;
+const dbName = 'inventoryman';
+const express = require('express')
+const app = express()
+const bcrypt = require('bcrypt')
+const passport = require('passport')
+const flash = require('express-flash')
+const session = require('express-session')
+const methodOverride = require('method-override')
+const mysql = require('mysql');
+const bodyparser = require('body-parser');
+const dotenv = require('dotenv');
 
-var mysqlConnection = mysql.createConnection({
-  host: "localhost",
-  port: 3307,
-  user: process.env.db_user_name,
-  password: process.env.db_password,
-  database: process.env.db_name
-});
-  
-  mysqlConnection.connect((err)=>{
-    if(!err)
-    console.log('DB connection succeeded')
-    else
-    console.log('DB connection failed \n Error :' + JSON.stringify(err,undefined,2));
-  })
+var port = 3000;
+app.use(bodyparser.json());
 
-  const users = []
+const users = []
 
+users.push({
+  id: Date.now().toString(),
+  name: 'Admin',
+  email: process.env.login_id,
+  password: process.env.login_password
+})
+
+
+const initializePassport = require('./passport-config')
+const e = require('express')
+initializePassport(
+
+  passport,
+  email => users.find(user => user.email === email),
+  id => users.find(user => user.id === id)
+)
+
+
+app.use(express.static("public"))
+app.set('view-engine', 'ejs')
+app.use(express.urlencoded({ extended: false }))
+app.use(flash())
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+app.use(methodOverride('_method'))
+
+app.get('/', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const ordersCollection = db.collection('orders');
+
+    const pipeline = [
+      {
+        $group: {
+          _id: null,
+          TotalItemsOrdered: { $sum: '$Amount' }
+        }
+      }
+    ];
+
+    ordersCollection.aggregate(pipeline).toArray((err, result) => {
+      if (err) {
+        console.error('Error executing aggregation:', err);
+        client.close();
+        return;
+      }
+
+      if (result.length > 0) {
+        console.log("ORDER VIEW PAGE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        console.log(JSON.stringify(result));
+        console.log('Total Items Ordered:', result[0].TotalItemsOrdered);
+        
+        res.render('index.ejs', {
+          total_sales: [],
+          ord_num: [],
+          stock_num: [],
+          total_stock: []
+        });
+      } else {
+        res.render('index.ejs', {
+          total_sales: [],
+          ord_num: [],
+          stock_num: [],
+          total_stock: []
+        });
+        console.log('No orders found.');
+      }
+
+      client.close();
+    });
+  });
+})
+
+app.get('/login', checkNotAuthenticated, (req, res) => {
+  res.render('login.ejs')
+})
+
+app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true
+}))
+
+app.get('/register', checkNotAuthenticated, (req, res) => {
+  res.render('register.ejs')
+})
+
+app.post('/register', checkNotAuthenticated, async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
     users.push({
       id: Date.now().toString(),
-      name: 'Admin',
-      email: process.env.login_id,
-      password: process.env.login_password
+      name: req.body.name,
+      email: req.body.email,
+      password: hashedPassword
     })
-  
+    console.log(users)
+    res.redirect('/login')
+  } catch {
+    res.redirect('/register')
+  }
+})
 
-  const initializePassport = require('./passport-config')
-const e = require('express')
-  initializePassport(
-    
-    passport,
-    email => users.find(user => user.email === email),
-    id => users.find(user => user.id === id)
-  )
-  
- 
-  app.use( express.static( "public" ) )
-  app.set('view-engine', 'ejs')
-  app.use(express.urlencoded({ extended: false }))
-  app.use(flash())
-  app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false
-  }))
-  app.use(passport.initialize())
-  app.use(passport.session())
-  app.use(methodOverride('_method'))
-  
-  app.get('/', checkAuthenticated, (req, res) => {
-    let sql1 = 'SELECT SUM(Amount) AS TotalItemsOrdered FROM ordersdb';
+app.delete('/logout', (req, res) => {
+  req.logOut()
+  res.redirect('/login')
+})
 
-    let query1= mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-      if(!err1){
-      // res.render('index.ejs',{
-      //   orders:rows
-      // });
-      console.log('Fetched total amount from ordersdb')
-      total_sales = rows1
-      console.log(typeof(rows1))
+function checkAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next()
+  }
 
-      let sql2 = 'SELECT COUNT(ItemID) AS NumberOfProducts FROM ordersdb';
+  res.redirect('/login')
+}
 
-      let query2= mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-        if(!err2){
-        // res.render('index.ejs',{
-        //   orders:rows
-        // });
-        ord_num = rows2
-        console.log('Fetched total no. of orders from ordersdb')
+function checkNotAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return res.redirect('/')
+  }
+  next()
+}
 
-        let sql3 = 'SELECT COUNT(ItemID) AS NumberOfProducts FROM stockdb';
+app.listen(port, () => console.log(`Express Server is running at ${port} port`))
+app.get('/employees', (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
 
-        let query3= mysqlConnection.query(sql3, (err3, rows3, fields3)=>{
-        if(!err3){
-        // res.render('index.ejs',{
-        //   orders:rows
-        // });
-        console.log('Fetched total no. of stocks from stockdb')
-        stock_num = rows3
+    console.log('Connected to MongoDB');
 
-        let sql4 = 'SELECT SUM(Amount) AS TotalItemsOrdered FROM stockdb';
-        let query4= mysqlConnection.query(sql4, (err4, rows4, fields4)=>{
-          if(!err3){
-            total_stock = rows4
-            res.render('index.ejs',{
-              total_sales:rows1,
-              ord_num:rows2,
-              stock_num:rows3,
-              total_stock:rows4
-              });
-          }
-          else
-          console.log(err4);
-       
-        });
+    const db = client.db(dbName);
+    const warehouseCollection = db.collection('warehouse'); 
+
+    warehouseCollection.find().toArray((err, rows) => {
+      if (!err) {
+        res.send(rows);
+      } else {
+        console.log(err);
       }
-      else
-      console.log(err3);
-    });
 
+      client.close();
+    });
+  });
+})
+
+app.get('/orders', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const ordersCollection = db.collection('orders');
+    ordersCollection.aggregate([
+      {
+        $group: {
+          _id: '$TransactionID',
+          Amount: { $first: '$Amount' },
+          TransactionDate: { $first: '$TransactionDate' },
+          TransactionTime: { $first: '$TransactionTime' }
         }
-        else
-        console.log(err2);
-      });
-
-
       }
-      else
-      console.log(err1);
-    });
-    // res.render('index.ejs', { name: req.user.name })
-
-   
-
-    
-    // console.log(total_sales)
-    // console.log(ord_num)
-    // console.log(stock_num)
-    
-  })
-  
-  app.get('/login', checkNotAuthenticated, (req, res) => {
-    res.render('login.ejs')
-  })
-  
-  app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-  }))
-  
-  app.get('/register', checkNotAuthenticated, (req, res) => {
-    res.render('register.ejs')
-  })
-  
-  app.post('/register', checkNotAuthenticated, async (req, res) => {
-    try {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10)
-      users.push({
-        id: Date.now().toString(),
-        name: req.body.name,
-        email: req.body.email,
-        password: hashedPassword
-      })
-      console.log(users)
-      res.redirect('/login')
-    } catch {
-      res.redirect('/register')
-    }
-  })
-  
-  app.delete('/logout', (req, res) => {
-    req.logOut()
-    res.redirect('/login')
-  })
-  
-  function checkAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next()
-    }
-  
-    res.redirect('/login')
-  }
-  
-  function checkNotAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return res.redirect('/')
-    }
-    next()
-  }
-  
-  app.listen(port, ()=>console.log(`Express Server is running at ${port} port`))
-  app.get('/employees', (req,res) =>{
-    mysqlConnection.query('SELECT * FROM warehouse', (err, rows, fields)=>{
-      if(!err)
-      res.send(rows);
-      else
-      console.log(err);
-    })
-  })
-
-//View Orders
-  app.get('/orders', checkAuthenticated,(req,res) =>{
-    let sql = 'SELECT TransactionID,SUM(Amount) as Amount,TransactionDate,TransactionTime FROM ordersdb GROUP BY TransactionID';
-
-    let query = mysqlConnection.query(sql, (err, rows, fields)=>{
-      if(!err){
-        let sql1 = 'SELECT * FROM ordersdb'
-        let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-          if(!err1){
-            res.render('orders.ejs',{
-              orders:rows, sub_orders:rows1, selected_item:'None', month_name:'None', year:'None'
+    ]).toArray((err, rows) => {
+      if (!err) {
+        ordersCollection.find().toArray((err1, rows1) => {
+          console.log("CHECKING ORDER______________");
+          console.log(JSON.stringify(rows));
+          console.log(JSON.stringify(rows1));
+          if (!err1) {
+            res.render('orders.ejs', {
+              orders: rows,
+              sub_orders: rows1,
+              selected_item: 'None',
+              month_name: 'None',
+              year: 'None'
             });
-           }
-           else
-            console.log(err1)
-        })
-       
-    }
-      else
-      console.log(err);
-    });
-  })
-
-  //View Stocks
-  app.get('/viewstocks', checkAuthenticated,(req,res) =>{
-    let sql = 'SELECT * FROM stockdb ORDER BY TYear DESC,Tmonth DESC, TDay DESC,StockTime DESC';
-
-    let query = mysqlConnection.query(sql, (err, rows, fields)=>{
-      if(!err){
-        let sql1 = 'SELECT * FROM branddb' 
-        let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-          if(!err1){
-            let sql2 = 'SELECT * FROM categorydb'
-            let query2 = mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-              if(!err2){
-                res.render('viewstocks.ejs',{
-                  all_stocks:rows, brands:rows1, categories:rows2,  display_content:'None', filter_type:'None', filter_name:'None'
-                    });
-                }
-              else
-              console.log(err2)
-            })
-      
-        }
-        else
-        console.log(err1)
-      })
-    }
-      else
-      console.log(err);
-    });
-  })
-
-  //Stocks Query Filter
-  app.post('/stocks_query',checkAuthenticated, (req, res) => {
-    let sql = 'SELECT * FROM stockdb ORDER BY TYear DESC,Tmonth DESC, TDay DESC,StockTime DESC';
-
-    let query = mysqlConnection.query(sql, (err, rows, fields)=>{
-      if(!err){
-        let sql1 = 'SELECT * FROM branddb' 
-        let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-          if(!err1){
-            let sql2 = 'SELECT * FROM categorydb'
-            let query2 = mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-              if(!err2){
-                var selected_item = req.body['exampleRadios']
-                if(selected_item == 'brand'){
-                  var brand_name = req.body['selected_brand']
-                  let sql3 = `SELECT * FROM stockdb WHERE Brand='${brand_name}'`
-                  let query3 = mysqlConnection.query(sql3, (err3, rows3, fields3)=>{
-                    if(!err3){
-                      res.render('viewstocks.ejs',{
-                        all_stocks:rows, brands:rows1, categories:rows2, display_content:rows3, filter_type:'brand', filter_name:brand_name
-                          });
-                    } 
-                    else
-                    console.log(err3)
-                  })
-                }
-
-                if(selected_item == 'category'){
-                  var category_name = req.body['selected_category']
-                  let sql3 = `SELECT * FROM stockdb WHERE Category='${category_name}'`
-                  let query3 = mysqlConnection.query(sql3, (err3, rows3, fields3)=>{
-                    if(!err3){
-                      res.render('viewstocks.ejs',{
-                        all_stocks:rows, brands:rows1, categories:rows2, display_content:rows3, filter_type:'category', filter_name:category_name
-                          });
-                    } 
-                    else
-                    console.log(err3)
-                  })
-                }
-              }
-              else
-              console.log(err2)
-            })
-      
-        }
-        else
-        console.log(err1)
-      })
-    }
-      else
-      console.log(err);
-    });
-  })
-
-  //Fetch Items by ID for billing
-  app.post('/fetchitem',checkAuthenticated, (req, res) =>{
-    item_id = req.body.itemid
-    console.log(req.body)
-
-    let sql = 'SELECT * FROM stockdb WHERE ItemID = ?'
-    var response = {
-      status  : 'success',
-      success : 'Updated Successfully'
-  }
-
-    let query = mysqlConnection.query(sql, [item_id], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log(rows)
-      // res.render('viewstocks.ejs',{
-      //   orders:rows
-      // });
-      res.json({success : "Updated Successfully", status : 200, rows:rows});
-      }
-      else
-      console.log(err);
-    });
-  })
-
-  //Billing
-  app.get('/billing',checkAuthenticated, (req, res) => {
-    let sql1 = 'SELECT * FROM categorydb'
-    
-    let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-      if(!err1)
-      {
-        var category = rows1
-        let sql2 = 'SELECT * FROM branddb'
-        let query2 = mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-          if(!err2)
-          {
-            var brand = rows2
-            let sql3 = 'SELECT * FROM sizedb'
-            let query3 = mysqlConnection.query(sql3, (err3, rows3, fields3)=>{
-              if(!err3)
-              {
-                var size = rows3
-                console.log(typeof(category))
-                console.log(category)
-                console.log(brand)
-                console.log(size)
-                res.render('bill.ejs',{category:category, brand:brand, size:size})
-              }
-              else
-              console.log(err3)
-            })
+          } else {
+            console.log(err1);
           }
-          else
-          console.log(err2)
-        })
-      }
-      else
-      console.log(err1)
 
-    
-  })
+          client.close();
+        });
+      } else {
+        console.log(err);
+        client.close();
+      }
+    });
+  });
 })
 
-//Add New Category
-  app.post('/addcategory',checkAuthenticated,(req,res) => {
-    let sql = `INSERT INTO categorydb(Category) VALUES ('${req.body.new}') `
-    let query = mysqlConnection.query(sql, (err, rows, fields) => {
-      if(!err)
-      {
-        res.redirect('/categories')
+app.get('/viewstocks', checkAuthenticated, (req, res) => {
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const stockCollection = db.collection('stocks');
+
+    stockCollection.find().sort({ TYear: -1, Tmonth: -1, TDay: -1, StockTime: -1 }).toArray((err, allStocks) => {
+      if (err) {
+        console.error('Error querying stock collection:', err);
+        client.close();
+        return;
       }
-      else
-      console.log(err)
-  })
-  })
 
-  //Add New Brand
-  app.post('/addbrand',checkAuthenticated,(req,res) => {
-    let sql = `INSERT INTO branddb(Brand) VALUES ('${req.body.new}') `
-    let query = mysqlConnection.query(sql, (err, rows, fields) => {
-      if(!err)
-      {
-        res.redirect('/brands')
+      const brandsCollection = db.collection('brands');
+
+      brandsCollection.find().toArray((err1, brands) => {
+        if (err1) {
+          console.error('Error querying brand collection:', err1);
+          client.close();
+          return;
+        }
+
+        const categoriesCollection = db.collection('categories');
+
+        categoriesCollection.find().toArray((err2, categories) => {
+          if (err2) {
+            console.error('Error querying category collection:', err2);
+            client.close();
+            return;
+          }
+
+          res.render('viewstocks.ejs', {
+            all_stocks: allStocks,
+            brands: brands,
+            categories: categories,
+            display_content: 'None',
+            filter_type: 'None',
+            filter_name: 'None'
+          });
+
+          client.close();
+        });
+      });
+    });
+  });
+})
+
+app.post('/stocks_query', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const stockCollection = db.collection('stocks');
+
+    stockCollection.find().sort({ TYear: -1, Tmonth: -1, TDay: -1, StockTime: -1 }).toArray((err, allStocks) => {
+      if (err) {
+        console.error('Error querying stock collection:', err);
+        client.close();
+        return;
       }
-      else
-      console.log(err)
-  })
-  })
 
-  //Add New Size
-  app.post('/addsize',checkAuthenticated,(req,res) => {
-    let sql = `INSERT INTO sizedb(Size) VALUES ('${req.body.new}') `
-    let query = mysqlConnection.query(sql, (err, rows, fields) => {
-      if(!err)
-      {
-        res.redirect('/sizes')
-      }
-      else
-      console.log(err)
-  })
-  })
+      const brandsCollection = db.collection('brands');
 
-  //Orders Filter Query
-  app.post('/orders_query', checkAuthenticated,(req,res) => {
-    var time_type = req.body['exampleRadios']
-    if (time_type == 'month'){
-      var month= req.body['selected_month']
-      var year = req.body['selected_year']
+      brandsCollection.find().toArray((err1, brands) => {
+        if (err1) {
+          console.error('Error querying brand collection:', err1);
+          client.close();
+          return;
+        }
 
-      const monthNames = ["January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"];
-      var month_name = monthNames[parseInt(month-1)]
+        const categoriesCollection = db.collection('categories');
 
-      let sql = `SELECT TransactionID,SUM(Amount) as Amount,TransactionDate,TransactionTime FROM ordersdb WHERE TMonth = ${month} AND TYear = ${year} GROUP BY TransactionID`
+        categoriesCollection.find().toArray((err2, categories) => {
+          if (err2) {
+            console.error('Error querying category collection:', err2);
+            client.close();
+            return;
+          }
 
-      let query = mysqlConnection.query(sql, (err, rows, fields)=>{
-        if(!err){
-          let sql1 = 'SELECT * FROM ordersdb'
-          let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-            if(!err1){
-              res.render('orders.ejs',{
-                orders:rows, sub_orders:rows1, selected_item:'month', month_name:month_name, year:year
-              });
-             }
-             else
-              console.log(err1)
-          })
-         
-      }
-        else
+          var selected_item = req.body['exampleRadios'];
+
+          if (selected_item === 'brand') {
+            var brand_name = req.body['selected_brand'];
+
+            stockCollection.find({ Brand: brand_name }).toArray((err3, filteredStocks) => {
+              if (!err3) {
+                res.render('viewstocks.ejs', {
+                  all_stocks: allStocks,
+                  brands: brands,
+                  categories: categories,
+                  display_content: filteredStocks,
+                  filter_type: 'brand',
+                  filter_name: brand_name
+                });
+              } else {
+                console.log(err3);
+              }
+            });
+          } else if (selected_item === 'category') {
+            var category_name = req.body['selected_category'];
+
+            stockCollection.find({ Category: category_name }).toArray((err3, filteredStocks) => {
+              if (!err3) {
+                res.render('viewstocks.ejs', {
+                  all_stocks: allStocks,
+                  brands: brands,
+                  categories: categories,
+                  display_content: filteredStocks,
+                  filter_type: 'category',
+                  filter_name: category_name
+                });
+              } else {
+                console.log(err3);
+              }
+            });
+          } else {
+            res.render('viewstocks.ejs', {
+              all_stocks: allStocks,
+              brands: brands,
+              categories: categories,
+              display_content: 'None',
+              filter_type: 'None',
+              filter_name: 'None'
+            });
+          }
+
+          client.close();
+        });
+      });
+    });
+  });
+})
+
+app.post('/fetchitem', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const stockCollection = db.collection('stocks'); 
+
+    const item_id = req.body.itemid;
+
+    // Find documents from the stock collection based on ItemID
+    stockCollection.find({ ItemID: item_id, Status: {$ne:"sold"} }).toArray((err, rows) => {
+      if (!err) {
+        console.log(rows);
+        res.json({ success: "Updated Successfully", status: 200, rows: rows });
+      } else {
         console.log(err);
+      }
+
+      // Close the MongoDB connection
+      client.close();
+    });
+  });
+})
+
+app.get('/billing', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const categoryCollection = db.collection('categories'); 
+    const brandCollection = db.collection('brands');
+    const sizeCollection = db.collection('sizes'); 
+
+    // Find documents in the category collection
+    categoryCollection.find().toArray((err1, category) => {
+      if (err1) {
+        console.error('Error querying category collection:', err1);
+        client.close();
+        return;
+      }
+
+      // Find documents in the brand collection
+      brandCollection.find().toArray((err2, brand) => {
+        if (err2) {
+          console.error('Error querying brand collection:', err2);
+          client.close();
+          return;
+        }
+
+        // Find documents in the size collection
+        sizeCollection.find().toArray((err3, size) => {
+          if (err3) {
+            console.error('Error querying size collection:', err3);
+            client.close();
+            return;
+          }
+
+          console.log(typeof category);
+          console.log(category);
+          console.log(brand);
+          console.log(size);
+
+          // Render the bill.ejs template with the retrieved data
+          res.render('bill.ejs', { category: category, brand: brand, size: size });
+
+          // Close the MongoDB connection
+          client.close();
+        });
+      });
+    });
+  });
+})
+
+app.post('/addcategory', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const categoriesCollection = db.collection('categories');
+
+    const newCategory = { Category: req.body.new };
+
+    categoriesCollection.insertOne(newCategory, (err2, result) => {
+      if (err2) {
+        console.error('Error inserting new category:', err2);
+        client.close();
+        return;
+      }
+
+      console.log('New category inserted:', result.insertedId);
+
+      res.redirect('/categories');
+
+      client.close();
+    });
+  });
+})
+
+app.post('/addbrand', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const brandsCollection = db.collection('brands');
+
+    const newBrand = { Brand: req.body.new };
+
+    brandsCollection.insertOne(newBrand, (err2, result) => {
+      if (err2) {
+        console.error('Error inserting new brand:', err2);
+        client.close();
+        return;
+      }
+
+      console.log('New brand inserted:', result.insertedId);
+
+      res.redirect('/brands');
+
+      client.close();
+    });
+  });
+})
+
+app.post('/addsize', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const sizesCollection = db.collection('sizes');
+
+    const newSize = { Size: req.body.new };
+
+    sizesCollection.insertOne(newSize, (err2, result) => {
+      if (err2) {
+        console.error('Error inserting new size:', err2);
+        client.close();
+        return;
+      }
+
+      console.log('New size inserted:', result.insertedId);
+
+      res.redirect('/sizes');
+
+      client.close();
+    });
+  });
+})
+
+app.post('/orders_query', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const ordersCollection = db.collection('orders'); 
+
+    const time_type = req.body['exampleRadios'];
+    const selected_year = parseInt(req.body['selected_year']);
+    let aggregationPipeline = [];
+
+    if (time_type === 'month') {
+      const selected_month = parseInt(req.body['selected_month']);
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+      const month_name = monthNames[selected_month - 1];
+
+      aggregationPipeline.push(
+        {
+          $match: {
+            TMonth: selected_month,
+            TYear: selected_year
+          }
+        },
+        {
+          $group: {
+            _id: '$TransactionID',
+            Amount: { $sum: '$Amount' },
+            TransactionDate: { $first: '$TransactionDate' },
+            TransactionTime: { $first: '$TransactionTime' }
+          }
+        }
+      );
+    } else if (time_type === 'year') {
+      aggregationPipeline.push(
+        {
+          $match: {
+            TYear: selected_year
+          }
+        },
+        {
+          $group: {
+            _id: '$TransactionID',
+            Amount: { $sum: '$Amount' },
+            TransactionDate: { $first: '$TransactionDate' },
+            TransactionTime: { $first: '$TransactionTime' }
+          }
+        }
+      );
+    }
+
+    // Aggregate based on the selected time criteria
+    ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
+      if (!err) {
+        // Find all documents in the orders collection
+        ordersCollection.find().toArray((err1, rows1) => {
+          if (!err1) {
+            res.render('orders.ejs', {
+              orders: rows,
+              sub_orders: rows1,
+              selected_item: time_type,
+              month_name: time_type === 'month' ? month_name : 'None',
+              year: selected_year
+            });
+          } else {
+            console.log(err1);
+          }
+
+          // Close the MongoDB connection
+          client.close();
+        });
+      } else {
+        console.log(err);
+        client.close();
+      }
+    });
+  });
+})
+
+app.get('/sales_filter', checkAuthenticated, (req, res) => {
+  rows = {}
+  res.render('sales_filter.ejs', { is_paramater_set: false, time_type: 'none', filter_type: 'none', display_content: rows, month_name: 'None', year: "None", total_amount: "None" })
+})
+
+app.get('/stock_filter', (req, res) => {
+  res.render('stock_filter.ejs', { filter_type: 'None', display_content: {}, total_items: {} })
+})
+
+app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const stockCollection = db.collection('stocks');
+
+    var filter_type = req.body['exampleRadios1'];
+
+    if (filter_type === 'brand') {
+      stockCollection.aggregate([
+        { $group: { _id: '$Brand', Count: { $sum: 1 }, Amount: { $sum: '$Amount' } } },
+        { $project: { _id: 0, Brand: '$_id', Count: 1, Amount: 1 } }
+      ]).toArray((err, rows) => {
+        if (!err) {
+          stockCollection.countDocuments({}, (err1, count) => {
+            if (!err1) {
+              res.render('stock_filter.ejs', { filter_type: filter_type, display_content: rows, total_items: count });
+            } else {
+              console.log(err1);
+            }
+          });
+        } else {
+          console.log(err);
+        }
       });
     }
 
-    if (time_type == 'year'){
-      
-      var year = req.body['selected_year']
-
-      let sql = `SELECT TransactionID,SUM(Amount) as Amount,TransactionDate,TransactionTime FROM ordersdb WHERE TYear = ${year} GROUP BY TransactionID`
-
-      let query = mysqlConnection.query(sql, (err, rows, fields)=>{
-        if(!err){
-          let sql1 = 'SELECT * FROM ordersdb'
-          let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-            if(!err1){
-              res.render('orders.ejs',{
-                orders:rows, sub_orders:rows1, selected_item:'year', month_name:'None', year:year
-              });
-             }
-             else
-              console.log(err1)
-          })
-         
-      }
-        else
-        console.log(err);
+    if (filter_type === 'category') {
+      stockCollection.aggregate([
+        { $group: { _id: '$Category', Count: { $sum: 1 }, Amount: { $sum: '$Amount' } } },
+        { $project: { _id: 0, Category: '$_id', Count: 1, Amount: 1 } }
+      ]).toArray((err, rows) => {
+        if (!err) {
+          stockCollection.countDocuments({}, (err1, count) => {
+            if (!err1) {
+              res.render('stock_filter.ejs', { filter_type: filter_type, display_content: rows, total_items: count });
+            } else {
+              console.log(err1);
+            }
+          });
+        } else {
+          console.log(err);
+        }
       });
     }
-  })
 
-  //Sales Filter
-  app.get('/sales_filter', checkAuthenticated,(req, res) => {
-    rows = {}
-    res.render('sales_filter.ejs',{is_paramater_set : false,time_type: 'none', filter_type: 'none', display_content: rows, month_name: 'None', year:"None", total_amount:"None"})
-  })
+    client.close();
+  });
+})
 
-  app.get('/stock_filter', (req, res) => {
-    res.render('stock_filter.ejs', {filter_type: 'None',display_content: {}, total_items:{}})
-  })
-
-  //Stock Filter
-  app.post('/stock_filter_query', checkAuthenticated,(req, res) => {
-    var filter_type = req.body['exampleRadios1']
-    if(filter_type == 'brand'){
-      let sql = 'SELECT Brand,count(*) AS Count,SUM(Amount) AS Amount FROM stockdb GROUP BY Brand'
-      let query = mysqlConnection.query(sql, (err, rows, fields) => {
-        if(!err)
-        {
-          let sql1 = 'SELECT count(*) AS Count FROM stockdb'
-          let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-            if(!err1)
-            {
-              res.render('stock_filter.ejs',{filter_type: filter_type,display_content: rows, total_items:rows1}) 
-            }
-            else
-            console.log(err1)
-          })
-        }
-        else
-        console.log(err)
-      })
+app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
     }
-    if(filter_type == 'category'){
-      let sql = 'SELECT Category,count(*) AS Count,SUM(Amount) AS Amount FROM stockdb GROUP BY Category'
-      let query = mysqlConnection.query(sql, (err, rows, fields) => {
-        if(!err)
-        {
-          let sql1 = 'SELECT count(*) AS Count FROM stockdb'
-          let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-            if(!err1)
-            {
-              res.render('stock_filter.ejs',{filter_type: filter_type,display_content: rows, total_items:rows1}) 
-            }
-            else
-            console.log(err1)
-          })
-        }
-        else
-        console.log(err)
-      })
-    }
-  })
 
-  //Sales Filter
-  app.post('/sales_filter_query', checkAuthenticated,(req, res) => {
-    console.log(req.body)
-    var time_type = req.body['exampleRadios']
+    console.log('Connected to MongoDB');
 
-    if (time_type == 'month'){
+    const db = client.db(dbName);
+    const ordersCollection = db.collection('orders'); 
 
-      var month= req.body['selected_month']
-      var year = req.body['selected_year']
+    console.log(req.body);
+    const time_type = req.body['exampleRadios'];
 
+    if (time_type == 'month') {
+      const month = parseInt(req.body['selected_month']);
+      const year = parseInt(req.body['selected_year']);
       const monthNames = ["January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"];
-      var month_name = monthNames[parseInt(month-1)]
-      console.log(month_name)
-      if (req.body['exampleRadios1'] == 'all'){
-        
-        let sql = `SELECT TransactionDate,count(*) as Count,SUM(Amount) as Amount FROM ordersdb WHERE TMonth = ${month} AND TYear = ${year} GROUP BY TransactionDate`;
-        let query = mysqlConnection.query(sql, (err, rows, fields) => {
-          if(!err)
-          {
-            let sql1 = `SELECT SUM(Amount) as Amount,count(*) AS Count FROM ordersdb WHERE TMonth = ${month} AND TYear = ${year}`
-            let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-              if(!err1)
-              {
-                var total_amount = rows1
-                res.render('sales_filter.ejs',{is_paramater_set : true, time_type: 'month', filter_type: 'all', display_content: rows, month_name: month_name, year:year, total_amount:total_amount})
-              }
-              else
-              console.log(err1)
-            })
-          }
-          else
-          console.log(err)
-      })
-      }
+        "July", "August", "September", "October", "November", "December"];
+      const month_name = monthNames[month - 1];
 
-      if (req.body['exampleRadios1'] == 'brand'){
-        
-        let sql = `SELECT Brand,count(*) AS Count,SUM(Amount) as Amount FROM ordersdb WHERE TMonth=${month} AND TYear = ${year} GROUP BY Brand`;
-        let query = mysqlConnection.query(sql, (err, rows, fields) => {
-          if(!err)
-          {
-            let sql1 = `SELECT SUM(Amount) as Amount,count(*) AS Count FROM ordersdb WHERE TMonth = ${month} AND TYear = ${year}`
-            let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-              if(!err1)
-              {
-                var total_amount = rows1
-                res.render('sales_filter.ejs',{is_paramater_set : true, time_type: 'month', filter_type: 'brand', display_content: rows, month_name: month_name, year:year, total_amount:total_amount})
-              }
-              else
-              console.log(err1)
-            })
-          }
-          else
-          console.log(err)
-      })
-      }
+      const filter_type = req.body['exampleRadios1'];
 
-      if (req.body['exampleRadios1'] == 'category'){
-        
-        let sql = `SELECT Category,count(*) AS Count,SUM(Amount) as Amount FROM ordersdb WHERE TMonth=${month} AND TYear = ${year} GROUP BY Category`;
-        let query = mysqlConnection.query(sql, (err, rows, fields) => {
-          if(!err)
-          {
-            let sql1 = `SELECT SUM(Amount) as Amount,count(*) AS Count FROM ordersdb WHERE TMonth = ${month} AND TYear = ${year}`
-            let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-              if(!err1)
-              {
-                var total_amount = rows1
-                res.render('sales_filter.ejs',{is_paramater_set : true, time_type: 'month', filter_type: 'category', display_content: rows, month_name: month_name, year:year, total_amount:total_amount})
-              }
-              else
-              console.log(err1)
-            })
+      const aggregationPipeline = [
+        {
+          $match: {
+            TMonth: month,
+            TYear: year
           }
-          else
-          console.log(err)
-      })
-      }
+        },
+        {
+          $group: {
+            _id: filter_type === 'all' ? '$TransactionDate' : '$' + filter_type,
+            Count: { $sum: 1 },
+            Amount: { $sum: '$Amount' }
+          }
+        }
+      ];
+
+      ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
+        if (!err) {
+          const totalAggregationPipeline = [
+            {
+              $match: {
+                TMonth: month,
+                TYear: year
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                Amount: { $sum: '$Amount' },
+                Count: { $sum: 1 }
+              }
+            }
+          ];
+
+          ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
+            if (!err1) {
+              const total_amount = rows1[0];
+              res.render('sales_filter.ejs', {
+                is_paramater_set: true,
+                time_type: 'month',
+                filter_type: filter_type,
+                display_content: rows,
+                month_name: month_name,
+                year: year,
+                total_amount: total_amount
+              });
+            } else {
+              console.log(err1);
+            }
+
+            // Close the MongoDB connection
+            client.close();
+          });
+        } else {
+          console.log(err);
+          client.close();
+        }
+      });
     }
 
-    if (time_type == 'year')
-      var year= req.body['selected_year']
+    if (time_type == 'year') {
+      const year = parseInt(req.body['selected_year']);
+      const filter_type = req.body['exampleRadios1'];
 
-      if (req.body['exampleRadios1'] == 'all'){
-        
-        let sql = `SELECT TMonth,count(*) as Count,SUM(Amount) as Amount FROM ordersdb WHERE TYear = ${year} GROUP BY TMonth`;
-        let query = mysqlConnection.query(sql, (err, rows, fields) => {
-          if(!err)
-          {
-            let sql1 = `SELECT SUM(Amount) as Amount,count(*) AS Count FROM ordersdb WHERE TYear = ${year}`
-            let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-              if(!err1)
-              {
-                var total_amount = rows1
-                res.render('sales_filter.ejs',{is_paramater_set : true, time_type: 'year', filter_type: 'all', display_content: rows, month_name: 'None', year:year, total_amount:total_amount})
-              }
-              else
-              console.log(err1)
-            })
+      const aggregationPipeline = [
+        {
+          $match: {
+            TYear: year
           }
-          else
-          console.log(err)
-      })
-      }
+        },
+        {
+          $group: {
+            _id: filter_type === 'all' ? '$TMonth' : '$' + filter_type,
+            Count: { $sum: 1 },
+            Amount: { $sum: '$Amount' }
+          }
+        }
+      ];
 
-      if (req.body['exampleRadios1'] == 'brand'){
-        
-        let sql = `SELECT Brand,count(*) AS Count,SUM(Amount) as Amount FROM ordersdb WHERE TYear = ${year} GROUP BY Brand`;
-        let query = mysqlConnection.query(sql, (err, rows, fields) => {
-          if(!err)
-          {
-            let sql1 = `SELECT SUM(Amount) as Amount,count(*) AS Count FROM ordersdb WHERE TYear = ${year}`
-            let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-              if(!err1)
-              {
-                var total_amount = rows1
-                res.render('sales_filter.ejs',{is_paramater_set : true, time_type: 'year', filter_type: 'brand', display_content: rows, month_name: 'None', year:year, total_amount:total_amount})
+      ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
+        if (!err) {
+          const totalAggregationPipeline = [
+            {
+              $match: {
+                TYear: year
               }
-              else
-              console.log(err1)
-            })
-          }
-          else
-          console.log(err)
-      })
-      }
+            },
+            {
+              $group: {
+                _id: null,
+                Amount: { $sum: '$Amount' },
+                Count: { $sum: 1 }
+              }
+            }
+          ];
 
-      if (req.body['exampleRadios1'] == 'category'){
-        
-        let sql = `SELECT Category,count(*) AS Count,SUM(Amount) as Amount FROM ordersdb WHERE TYear = ${year} GROUP BY Category`;
-        let query = mysqlConnection.query(sql, (err, rows, fields) => {
-          if(!err)
-          {
-            let sql1 = `SELECT SUM(Amount) as Amount,count(*) AS Count FROM ordersdb WHERE TYear = ${year}`
-            let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1) => {
-              if(!err1)
-              {
-                var total_amount = rows1
-                res.render('sales_filter.ejs',{is_paramater_set : true, time_type: 'year', filter_type: 'category', display_content: rows, month_name: 'None', year:year, total_amount:total_amount})
-              }
-              else
-              console.log(err1)
-            })
-          }
-          else
-          console.log(err)
-      })
+          ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
+            if (!err1) {
+              const total_amount = rows1[0];
+              res.render('sales_filter.ejs', {
+                is_paramater_set: true,
+                time_type: 'year',
+                filter_type: filter_type,
+                display_content: rows,
+                month_name: 'None',
+                year: year,
+                total_amount: total_amount
+              });
+            } else {
+              console.log(err1);
+            }
+
+            // Close the MongoDB connection
+            client.close();
+          });
+        } else {
+          console.log(err);
+          client.close();
+        }
+      });
+    }
+  });
+})
+
+app.get('/categories', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
     }
 
-    
-  })
+    console.log('Connected to MongoDB');
 
-  //View Categories
-  app.get('/categories', checkAuthenticated,(req, res) => {
-    let sql1 = 'SELECT * FROM categorydb'
-    let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-      if(!err1)
-      {
-        var category = rows1
-        res.render('categories.ejs', {category:category})
+    const db = client.db(dbName);
+
+    const categoriesCollection = db.collection('categories');
+
+    categoriesCollection.find().toArray((err1, category) => {
+      if (err1) {
+        console.error('Error querying collection:', err1);
+        client.close();
+        return;
       }
-      else
-      console.log(err1)
-  })
+
+      res.render('categories.ejs', { category });
+
+      client.close();
+    });
+  });
 })
 
-//View Brands
-  app.get('/brands', checkAuthenticated,(req, res) => {
-    let sql2 = 'SELECT * FROM branddb'
-    let query2 = mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-      if(!err2)
-      {
-        var brand = rows2
-        res.render('brands.ejs',{brand:brand})
+app.get('/brands', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const brandsCollection = db.collection('brands');
+
+    brandsCollection.find().toArray((err2, brand) => {
+      if (err2) {
+        console.error('Error querying collection:', err2);
+        client.close();
+        return;
       }
-      else
-      console.log(err2)
-  })
+
+      res.render('brands.ejs', { brand });
+
+      client.close();
+    });
+  });
 })
 
-//View Sizes
-  app.get('/sizes', checkAuthenticated,(req, res) => {
-    let sql2 = 'SELECT * FROM sizedb'
-    let query2 = mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-      if(!err2)
-      {
-        var size = rows2
-        res.render('sizes.ejs',{size:size})
-      }
-      else
-      console.log(err2)
-    })
-  })
+app.get('/sizes', checkAuthenticated, (req, res) => {
 
-  //View Stocks
-  app.get('/stocks', checkAuthenticated,(req, res) => {
-    let sql1 = 'SELECT * FROM categorydb'
-    
-    let query1 = mysqlConnection.query(sql1, (err1, rows1, fields1)=>{
-      if(!err1)
-      {
-        var category = rows1
-        let sql2 = 'SELECT * FROM branddb'
-        let query2 = mysqlConnection.query(sql2, (err2, rows2, fields2)=>{
-          if(!err2)
-          {
-            var brand = rows2
-            let sql3 = 'SELECT * FROM sizedb'
-            let query3 = mysqlConnection.query(sql3, (err3, rows3, fields3)=>{
-              if(!err3)
-              {
-                var size = rows3
-                console.log(typeof(category))
-                console.log(category)
-                console.log(brand)
-                console.log(size)
-                res.render('stocks.ejs',{category:category, brand:brand, size:size})
-              }
-              else
-              console.log(err3)
-            })
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const sizesCollection = db.collection('sizes');
+
+    sizesCollection.find().toArray((err2, size) => {
+      if (err2) {
+        console.error('Error querying collection:', err2);
+        client.close();
+        return;
+      }
+
+      res.render('sizes.ejs', { size });
+
+      client.close();
+    });
+  });
+})
+
+app.get('/stocks', checkAuthenticated, (req, res) => {
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const categoryCollection = db.collection('categories');
+    const brandCollection = db.collection('brands');
+    const sizeCollection = db.collection('sizes');
+
+    categoryCollection.find().toArray((err1, category) => {
+      if (err1) {
+        console.error('Error querying category collection:', err1);
+        client.close();
+        return;
+      }
+
+      brandCollection.find().toArray((err2, brand) => {
+        if (err2) {
+          console.error('Error querying brand collection:', err2);
+          client.close();
+          return;
+        }
+
+        sizeCollection.find().toArray((err3, size) => {
+          if (err3) {
+            console.error('Error querying size collection:', err3);
+            client.close();
+            return;
           }
-          else
-          console.log(err2)
-        })
-      }
-      else
-      console.log(err1)
 
-    
-  })
-    // res.render('stocks.ejs')
-  })
+          console.log(typeof category);
+          console.log(category);
+          console.log(brand);
+          console.log(size);
 
-  //Submit Bill
-  app.post('/submitbill', checkAuthenticated,(req, res) => {
-    console.log(`\nRequest body = `)
-    console.log(req.body)
-    var request1 = req.body
+          res.render('stocks.ejs', { category: category, brand: brand, size: size });
+
+          client.close();
+        });
+      });
+    });
+  });
+})
+
+app.post('/submitbill', checkAuthenticated, (req, res) => {
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const ordersCollection = db.collection('orders'); 
+    const stockCollection = db.collection('stocks'); 
+
+    console.log(`\nRequest body = `);
+    console.log(req.body);
+    console.log("BILL REQUEST " + JSON.stringify(req.body));
+    const request1 = req.body;
 
     console.log("here is the request&&&&&&&&&&&&&&&&&&&&&&&7");
     console.log(JSON.stringify(request1));
-    debugger;
 
-    var date_format = new Date();
-    var transaction_date = date_format.getDate()+ '/' +(parseInt(date_format.getMonth()+1)).toString() + '/'+ date_format.getFullYear()
-    var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds()
-    var transaction_id = "SHW"+ date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds()
-    let new_req = {};
 
-    var item_ids = []
+    const date_format = new Date();
+    const transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
+    const transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
+    const transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
 
-    for(i in request1) {
-      if(i.includes("itemid")){
-        item_ids.push(request1[i])
+    const item_ids = [];
+    for (const i in request1) {
+      if (i.includes("itemid")) {
+        item_ids.push(request1[i]);
       }
     }
 
-      for (i in request1){
-      if(i.includes("number") || i.includes("total")){
-      delete i
+    const new_req = {};
+    for (const i in request1) {
+      if (i.includes("number") || i.includes("total")) {
+        delete i;
+      } else {
+        new_req[i] = request1[i];
       }
-      else
-      new_req[i] = request1[i]
-      }
-      
-      const data = Object.entries(new_req).reduce((carry, [key, value]) => {
-          const [text] = key.split(/\d+/);
-          const index = key.substring(text.length) - 1;
-          if (!Array.isArray(carry[index])) carry[index] = [];
-          carry[index].push(value);
-          return carry;
-      }, []);
+    }
 
-      for (let i = 0; i < data.length; i++) {
-        data[i].push(transaction_date);
-        data[i].push(transaction_time);
-        data[i].push(transaction_id);
-        data[i].push(date_format.getDate())
-        data[i].push(date_format.getMonth() + 1)
-        data[i].push(date_format.getFullYear())
-       }
-      
-    console.log(`\nINSERT Array = `)
-    console.log(data)
-    let sql = `INSERT INTO ordersdb(ItemID,ItemName,Category,Brand,Size,Amount,CustomerName,CustomerEmail,CustomerNumber,TransactionDate,TransactionTime,TransactionID,TDay,TMonth,TYear) VALUES ? `
-    let query = mysqlConnection.query(sql,[ data], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully inserted values into ordersdb')
-     var sql2 = 'DELETE FROM stockdb WHERE ItemID = ?'
-      for(j=0;j<item_ids.length;j++){
-        var query2 = mysqlConnection.query(sql2,[item_ids[j]], (err2, rows2, fields2)=>{
-          if(!err2)
-          {
-          console.log('Successfully deleted corresponding values from stockdb')
-          // res.redirect('/orders')
-          
-          }
-          else
-          console.log(err2);
-        });
+    const data = Object.entries(new_req).reduce((carry, [key, value]) => {
+      const [text] = key.split(/\d+/);
+      const index = key.substring(text.length) - 1;
+      if (!Array.isArray(carry[index])) carry[index] = [];
+      carry[index].push(value);
+      return carry;
+    }, []);
+
+    for (let i = 0; i < data.length; i++) {
+      data[i].push(transaction_date);
+      data[i].push(transaction_time);
+      data[i].push(transaction_id);
+      data[i].push(date_format.getDate());
+      data[i].push(date_format.getMonth() + 1);
+      data[i].push(date_format.getFullYear());
+    }
+
+    console.log(`\nINSERT Array = `);
+    console.log(data);
+
+    // Insert data into orders collection
+    var billAdd = [];
+    data.forEach(datas => {
+      billAdd.push(
+        {
+          ItemID: datas[0],
+          ItemName: datas[1],
+          Category: datas[2],
+          Brand: datas[3],
+          Size: datas[4],
+          Amount: datas[5],
+          CustomerName: datas[6],
+          TransactionDate: datas[7],
+          TransactionTime: datas[8],
+          TransactionID: datas[9],
+          TDay: datas[10],
+          TMonth: datas[11],
+          TYear: datas[12]
+        })
+    })
+    console.log("BILL REQUEST billAdd" + JSON.stringify(billAdd));
+    ordersCollection.insertMany(billAdd, (err, result) => {
+      if (!err) {
+        console.log('Successfully inserted values into ordersdb');
+
+        // Delete corresponding values from stocks collection
+        let query = { ItemID: { $in: item_ids } };
+        const data = { Status: 'sold' };
+        const options = { upsert: true };
+        // stockCollection.updateMany(query, data,options, (err2, result2) => {
+        //   if (!err2) {
+        //     console.log('Successfully deleted corresponding values from stockdb');
+        //   } else {
+        //     console.log(err2);
+        //   }
+
+        //   // Close the MongoDB connection
+        //   client.close();
+        // });
+
+        res.redirect('/orders');
+      } else {
+        console.log(err);
+        client.close();
       }
-      res.redirect('/orders')
-      
-      // res.redirect('/orders')
-      }
-      else
-      console.log(err);
     });
-  })
+  });
+})
 
-  //Submit Stock
-  app.post('/submitstock', checkAuthenticated,(req, res) => {
-    console.log(req.body)
-    var request1 = req.body
+app.post('/submitstock', checkAuthenticated, (req, res) => {
 
-    var date_format = new Date();
-    var transaction_date = date_format.getDate()+ '/'+ (parseInt(date_format.getMonth()+1)).toString() +'/'+date_format.getFullYear()
-    console.log((parseInt(date_format.getMonth()+1)).toString())
-    var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds()
-    let new_req = {};
 
-      for (i in request1){
-      if(i.includes("number") || i.includes("total")){
-      delete i
+
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const stockCollection = db.collection('stocks'); 
+
+    const request1 = req.body;
+
+    const date_format = new Date();
+    const transaction_date =
+      date_format.getDate() +
+      '/' +
+      (parseInt(date_format.getMonth() + 1)).toString() +
+      '/' +
+      date_format.getFullYear();
+
+    const transaction_time =
+      date_format.getHours() +
+      ':' +
+      date_format.getMinutes() +
+      ':' +
+      date_format.getSeconds();
+
+    const new_req = {};
+
+    for (const i in request1) {
+      if (i.includes('number') || i.includes('total')) {
+        delete request1[i];
+      } else {
+        new_req[i] = request1[i];
       }
-      else
-      new_req[i] = request1[i]
-      }
-      
-      const data = Object.entries(new_req).reduce((carry, [key, value]) => {
-          const [text] = key.split(/\d+/);
-          const index = key.substring(text.length) - 1;
-          if (!Array.isArray(carry[index])) carry[index] = [];
-          carry[index].push(value);
-          return carry;
-      }, []);
+    }
 
-      for (let i = 0; i < data.length; i++) {
-        data[i].push(transaction_date);
-        data[i].push(transaction_time);
-        data[i].push(date_format.getDate())
-        data[i].push(date_format.getMonth() + 1)
-        data[i].push(date_format.getFullYear())
-       }
-      
+    const data = Object.entries(new_req).reduce((carry, [key, value]) => {
+      const [text] = key.split(/\d+/);
+      const index = key.substring(text.length) - 1;
+      if (!Array.isArray(carry[index])) carry[index] = [];
+      carry[index].push(value);
+      return carry;
+    }, []);
 
-    let sql = `INSERT INTO stockdb(ItemID,ItemName,Category,Brand,Size,Amount,StockDate,StockTime,TDay,TMonth,TYear) VALUES ? `
-    let query = mysqlConnection.query(sql,[ data], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully inserted values')
-      res.redirect('/viewstocks')
+    for (let i = 0; i < data.length; i++) {
+      data[i].push(transaction_date);
+      data[i].push(transaction_time);
+      data[i].push(date_format.getDate());
+      data[i].push(date_format.getMonth() + 1);
+      data[i].push(date_format.getFullYear());
+    }
+
+
+    console.log("MY DATA HEREH ################################################");
+    console.log(JSON.stringify(data));
+    var stockAdd = [];
+    data.forEach(datas => {
+      stockAdd.push({
+        ItemID: datas[0],
+        ItemName: datas[1],
+        Category: datas[2],
+        Brand: datas[3],
+        Size: datas[4],
+        Amount: datas[5],
+        StockDate: datas[6],
+        StockTime: datas[7],
+        TDay: datas[8],
+        TMonth: datas[9],
+        TYear: datas[10]
+      })
+    })
+
+    stockCollection.insertMany(stockAdd, (err, result) => {
+      if (err) {
+        console.error('Error inserting values:', err);
+        client.close();
+        return;
       }
-      else
-      console.log(err);
+
+      console.log('Successfully inserted values:', result.insertedCount);
+      res.redirect('/viewstocks');
+
+      client.close();
     });
-  })
+  });
+})
 
-  //Delete Order
-  app.post('/deleteitem', checkAuthenticated,(req,res) => {
-    console.log('deleteitem called')
-    var deleteid = req.body.deleteid
-    let sql = 'DELETE FROM ordersdb WHERE ItemID = ?'
-    let query = mysqlConnection.query(sql,[ deleteid], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully deleted a value')
-      res.redirect('/orders')
-      
-      }
-      else
-      console.log(err);
-    });
-  })
+app.post('/deleteitem', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
 
-  //Delete Category
-  app.post('/deletecategory', checkAuthenticated,(req,res) => {
-    console.log('deletecategory called')
-    var deleteid = req.body.deleteid
-    let sql = 'DELETE FROM categorydb WHERE Category = ?'
-    let query = mysqlConnection.query(sql,[ deleteid], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully deleted a category')
-      res.redirect('/categories')
-      
-      }
-      else
-      console.log(err);
-    });
-  })
+    console.log('Connected to MongoDB');
 
-  //Delete Brand
-  app.post('/deletebrand', checkAuthenticated,(req,res) => {
-    console.log('deletebrand called')
-    var deleteid = req.body.deleteid
-    let sql = 'DELETE FROM branddb WHERE Brand = ?'
-    let query = mysqlConnection.query(sql,[ deleteid], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully deleted a brand')
-      res.redirect('/brands')
-      
-      }
-      else
-      console.log(err);
-    });
-  })
+    const db = client.db(dbName);
+    const ordersCollection = db.collection('orders'); 
 
-  //Delete Size
-  app.post('/deletesize', checkAuthenticated,(req,res) => {
-    console.log('deletesize called')
-    var deleteid = req.body.deleteid
-    let sql = 'DELETE FROM sizedb WHERE Size = ?'
-    let query = mysqlConnection.query(sql,[ deleteid], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully deleted a size')
-      res.redirect('/sizes')
-      
-      }
-      else
-      console.log(err);
-    });
-  })
+    const deleteid = req.body.deleteid;
 
-  //Delete Stock
-  app.post('/deletestock', checkAuthenticated,(req,res) => {
-    console.log('deleteitem called')
-    var deleteid = req.body.deleteid
-    let sql = 'DELETE FROM stockdb WHERE ItemID = ?'
-    let query = mysqlConnection.query(sql,[ deleteid], (err, rows, fields)=>{
-      if(!err)
-      {
-      console.log('Successfully deleted a value')
-      res.redirect('/viewstocks')
-      
+    ordersCollection.deleteMany({ ItemID: deleteid }, (err, result) => {
+      if (err) {
+        console.error('Error deleting value:', err);
+        client.close();
+        return;
       }
-      else
-      console.log(err);
+
+      console.log('Successfully deleted values:', result.deletedCount);
+      res.redirect('/orders');
+
+      client.close();
     });
-  })
+  });
+})
+
+app.post('/deletecategory', checkAuthenticated, (req, res) => {
+
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const categoriesCollection = db.collection('categories');
+
+    const deleteCategory = req.body.deleteid;
+
+    categoriesCollection.deleteOne({ Category: deleteCategory }, (err2, result) => {
+      if (err2) {
+        console.error('Error deleting category:', err2);
+        client.close();
+        return;
+      }
+
+      if (result.deletedCount > 0) {
+        console.log('Successfully deleted a category');
+      } else {
+        console.log('Category not found for deletion');
+      }
+
+      res.redirect('/categories');
+
+      client.close();
+    });
+  });
+})
+
+app.post('/deletebrand', checkAuthenticated, (req, res) => {
+
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const brandsCollection = db.collection('brands');
+
+    const deleteBrand = req.body.deleteid;
+
+    brandsCollection.deleteOne({ Brand: deleteBrand }, (err2, result) => {
+      if (err2) {
+        console.error('Error deleting brand:', err2);
+        client.close();
+        return;
+      }
+
+      if (result.deletedCount > 0) {
+        console.log('Successfully deleted a brand');
+      } else {
+        console.log('Brand not found for deletion');
+      }
+
+      res.redirect('/brands');
+
+      client.close();
+    });
+  });
+
+})
+
+app.post('/deletesize', checkAuthenticated, (req, res) => {
+  console.log('deletesize called')
+
+
+
+
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+
+    const sizesCollection = db.collection('sizes');
+
+    const deleteSize = req.body.deleteid;
+
+    sizesCollection.deleteOne({ Size: deleteSize }, (err2, result) => {
+      if (err2) {
+        console.error('Error deleting size:', err2);
+        client.close();
+        return;
+      }
+
+      if (result.deletedCount > 0) {
+        console.log('Successfully deleted a size');
+      } else {
+        console.log('Size not found for deletion');
+      }
+
+      res.redirect('/sizes');
+
+      client.close();
+    });
+  });
+})
+
+app.post('/deletestock', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const stockCollection = db.collection('stocks'); 
+
+    const deleteid = req.body.deleteid;
+
+    stockCollection.deleteMany({ ItemID: deleteid }, (err, result) => {
+      if (err) {
+        console.error('Error deleting value:', err);
+        client.close();
+        return;
+      }
+
+      console.log('Successfully deleted values:', result.deletedCount);
+      res.redirect('/viewstocks');
+
+      client.close();
+    });
+  });
+})
