@@ -6,8 +6,7 @@ ENV db_password=example
 ENV login_id=sanju.g1@gmail.com
 ENV login_password=Sanju@123
 ENV PORT=5004
-ENV mongo_host='mongodb+srv://kiriti:smSIOIGYAh4XRTfk@cluster0.e8ijpug.mongodb.net/test'
-# Create app directory
+
 WORKDIR /usr/src/app
 
 # Install app dependencies
