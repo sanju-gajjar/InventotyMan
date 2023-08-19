@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(bodyparser.json());
 
 var mysqlConnection = mysql.createConnection({
-  host: "us-west1.1e636607-15c3-4517-b243-8d935b3dc1be.gcp.ybdb.io",
+  host: "dpg-cjg5evb6fquc73b2avag-a.oregon-postgres.render.com",
   port: 5433,
   user: process.env.db_user_name,
   password: process.env.db_password,
