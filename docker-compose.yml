@@ -11,9 +11,25 @@ services:
     - 3307:3306
     environment:
       MYSQL_ROOT_PASSWORD: example
+    volumes:
+    - /home/sanjugajjar/Gajjar/tempdb:/var/lib/mysql
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
+
+  inventoryman:
+    image: inventoryman
+    restart: always
+    ports:
+      - 5000:8080
+    environment:
+      SESSION_SECRET: sanju
+      db_name: warehousedb
+      db_user_name: root
+      db_password: example
+      login_id: sanju.g1@gmail.com
+      login_password: Sanju@123
+      PORT: 5004

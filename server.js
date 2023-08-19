@@ -13,7 +13,7 @@ if (process.env.NODE_ENV !== 'production') {
   const bodyparser = require('body-parser');
   const dotenv = require('dotenv');
 
-  var port = process.env.PORT || 5000;
+  var port = 5000;
   app.use(bodyparser.json());
 
 var mysqlConnection = mysql.createConnection({
@@ -759,6 +759,10 @@ const e = require('express')
     console.log(`\nRequest body = `)
     console.log(req.body)
     var request1 = req.body
+
+    console.log("here is the request&&&&&&&&&&&&&&&&&&&&&&&7");
+    console.log(JSON.stringify(request1));
+    debugger;
 
     var date_format = new Date();
     var transaction_date = date_format.getDate()+ '/' +(parseInt(date_format.getMonth()+1)).toString() + '/'+ date_format.getFullYear()

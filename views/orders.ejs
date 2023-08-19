@@ -20,7 +20,7 @@
       <div class="media d-flex align-items-center"><img src="admin.svg" alt="..." width="65" class="mr-3 rounded-circle img-thumbnail shadow-sm">
         &emsp;<div class="media-body">
           <h4 class="m-0"><p class="text-white"><shop-name></h4>
-            <p class="font-weight-light text-white mb-0">(Admin)</p>
+            <p class="font-weight-light text-white mb-0">Hi, Phoner</p>
         </div>
       </div>
     </div>
@@ -164,11 +164,12 @@
       <div class="column">
           <select class="form-select" aria-label="Disabled select example" id="year" name="selected_year" disabled>
               <option selected>Select Year</option>
-              <option value="2021">2021</option>
-              <option value="2022">2022</option>
               <option value="2023">2023</option>
               <option value="2024">2024</option>
               <option value="2025">2025</option>
+              <option value="2025">2026</option>
+              <option value="2025">2027</option>
+              <option value="2025">2028</option>
             </select>
       </div>
       </div>
@@ -222,6 +223,8 @@
                 <th>Brand Name</th>
                 <th>Size</th>
                 <th>Amount</th>
+                <th>Customer Name</th>
+                <th>Customer Email</th>
                 <th>Customer Number</th>
             </tr>
         </thead>
@@ -238,7 +241,13 @@
             <td><%= sub_order.Brand %></td>
             <td><%= sub_order.Size %></td>
             <td><i class="rupee sign icon"></i><%= sub_order.Amount %></td>
-            <td><%= sub_order.CustomerNumber %></td>
+            <td><%= sub_order.CustomerName %></td>
+            <td>
+              <%= sub_order.CustomerEmail %>
+            </td>
+            <td>
+              <%= sub_order.CustomerNumber %>
+            </td>
             </tr>
           <% } %>
         
@@ -289,7 +298,9 @@
               <th>Brand Name</th>
               <th>Size</th>
               <th>Amount</th>
-              <th>Customer Number</th>
+            <th>Customer Name</th>
+            <th>Customer Email</th>
+            <th>Customer Number</th>
           </tr>
       </thead>
         <tbody>
@@ -305,7 +316,13 @@
           <td><%= sub_order.Brand %></td>
           <td><%= sub_order.Size %></td>
           <td><i class="rupee sign icon"></i><%= sub_order.Amount %></td>
-          <td><%= sub_order.CustomerNumber %></td>
+          <td><%= sub_order.CustomerName %></td>
+          <td>
+            <%= sub_order.CustomerEmail %>
+          </td>
+          <td>
+            <%= sub_order.CustomerNumber %>
+          </td>
           </tr>
         <% } %>
       
@@ -356,6 +373,8 @@
             <th>Brand Name</th>
             <th>Size</th>
             <th>Amount</th>
+            <th>Customer Name</th>
+            <th>Customer Email</th>
             <th>Customer Number</th>
         </tr>
     </thead>
@@ -372,7 +391,13 @@
         <td><%= sub_order.Brand %></td>
         <td><%= sub_order.Size %></td>
         <td><i class="rupee sign icon"></i><%= sub_order.Amount %></td>
-        <td><%= sub_order.CustomerNumber %></td>
+        <td><%= sub_order.CustomerName %></td>
+        <td>
+          <%= sub_order.CustomerEmail %>
+        </td>
+        <td>
+          <%= sub_order.CustomerNumber %>
+        </td>
         </tr>
       <% } %>
     
@@ -397,7 +422,13 @@
                 <td><%= order.Amount %></td>
                 <td><%= order.TransactionDate %></td>
                 <td><%= order.TransactionTime %>&emsp;<form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= order.ItemID %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
-                <td><%= order.CustomerNumber %></td>
+                <td><%= order.CustomerName %></td>
+                <td>
+                  <%= order.CustomerEmail%>
+                </td>
+                <td>
+                  <%= order.CustomerNumber %>
+                </td>
             </tr>
         <% }); %>
     </tbody>
