@@ -2,6 +2,8 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 const MongoClient = require('mongodb').MongoClient;
+var favicon = require('serve-favicon')
+var path = require('path')
 
 const url = process.env.mongo_host;
 const dbName = 'inventoryman';
@@ -12,12 +14,11 @@ const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
-const mysql = require('mysql');
 const bodyparser = require('body-parser');
-const dotenv = require('dotenv');
-
 var port = 3000;
 app.use(bodyparser.json());
+
+
 
 const users = []
 
@@ -41,6 +42,7 @@ initializePassport(
 
 app.use(express.static("public"))
 app.set('view-engine', 'ejs')
+app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(express.urlencoded({ extended: false }))
 app.use(flash())
 app.use(session({
