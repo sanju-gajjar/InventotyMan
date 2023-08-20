@@ -106,8 +106,8 @@ app.get('/', checkAuthenticated, (req, res) => {
               client.close();
               res.render('index.ejs', {
                 total_sales: result,
-                ord_num: [{ NumberOfProducts: resultCount.length??0 }],
-                stock_num: [{ NumberOfProducts: resultStocksCount.length??0 }],
+                ord_num: [{ NumberOfProducts: (resultCount != null && resultCount != undefined)? resultCount.length:0 }],
+                stock_num: [{ NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length!= undefined)? resultStocksCount.length:0 }],
                 total_stock: resultStock ,
               });
             } else {
