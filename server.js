@@ -16,7 +16,7 @@ const mysql = require('mysql');
 const bodyparser = require('body-parser');
 const dotenv = require('dotenv');
 
-var port = 5000;
+var port = 3000;
 app.use(bodyparser.json());
 
 const users = []
