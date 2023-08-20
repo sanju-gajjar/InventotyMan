@@ -272,18 +272,18 @@
           var len = x.rows.length;
           trLast.after(trNew);
          
-        var inputs =   document.getElementsByClassName("billlist")
+        var inputs =   document.getElementsByTagName("input")
           //var inputs = document.getElementsByTagName("input");
           var flag1=flag2=1;
           for (var i = 0; i < inputs.length; i++) {
 
-            if(inputs[i].id != 'total'){
+            if(inputs[i].id != 'total' && inputs[i].id != ''){
           
             inputs[i].id = (inputs[i].id).replace(/\d+/g, '')
             inputs[i].name = (inputs[i].name).replace(/\d+/g, '')
             inputs[i].id = inputs[i].id + (flag1).toString();
             inputs[i].name = inputs[i].name + (flag1).toString();
-            if(flag2%5==0)
+            if(flag2%7==0)
             {
               flag1++;
             }
@@ -303,7 +303,7 @@
           }
 
           for (var i = 0; i < inputs.length; i++) {
-            if(inputs[i].id != 'total'){
+            if(inputs[i].id != 'total' && inputs[i].id !=''){
             if((inputs[i].id).includes(len.toString()) && !((inputs[i].id).includes("number")) ){
               inputs[i].value = ""
               inputs[i].innerText = ""
@@ -375,7 +375,7 @@
         },
         success: function(data) {
           // console.log('Fetched Data')
-            if(data.status == 200) {
+            if(data.status == 200 && data.rows.length>0) {
                 
                 x = data.rows
                 var inputs = document.getElementsByTagName("input");
@@ -431,7 +431,7 @@
                 }
 
             } else if(data.status == "failed") {
-                alert("failed authentication!")
+                alert("Item not found")
             }
         }
     });

@@ -16,7 +16,7 @@ const mysql = require('mysql');
 const bodyparser = require('body-parser');
 const dotenv = require('dotenv');
 
-var port = 3000;
+var port = 5000;
 app.use(bodyparser.json());
 
 const users = []
@@ -63,47 +63,69 @@ app.get('/', checkAuthenticated, (req, res) => {
 
     const db = client.db(dbName);
 
-    const ordersCollection = db.collection('orders');
+    const stockCollection = db.collection('stocks');
 
-    const pipeline = [
-      {
-        $group: {
-          _id: null,
-          TotalItemsOrdered: { $sum: '$Amount' }
+    stockCollection.find({}).toArray((err, resultStocksCount) => {
+
+
+
+      const pipelineStock = [
+        {
+          $group: {
+            _id: '_id',
+            TotalItemsOrdered: { $sum: '$Amount' }
+          }
         }
-      }
-    ];
+      ];
+      stockCollection.aggregate(pipelineStock).toArray((err, resultStock) => {
+        if (err) {
+          console.error('Error executing aggregation:', err);
+          client.close();
+          return;
+        }
+        const ordersCollection = db.collection('orders');
 
-    ordersCollection.aggregate(pipeline).toArray((err, result) => {
-      if (err) {
-        console.error('Error executing aggregation:', err);
-        client.close();
-        return;
-      }
+        ordersCollection.find({}).toArray((err, resultCount) => {
 
-      if (result.length > 0) {
-        console.log("ORDER VIEW PAGE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-        console.log(JSON.stringify(result));
-        console.log('Total Items Ordered:', result[0].TotalItemsOrdered);
-        
-        res.render('index.ejs', {
-          total_sales: [],
-          ord_num: [],
-          stock_num: [],
-          total_stock: []
+          const pipeline = [
+            {
+              $group: {
+                _id: '_id',
+                TotalItemsOrdered: { $sum: '$Amount' }
+              }
+            }
+          ];
+          ordersCollection.aggregate(pipeline).toArray((err, result) => {
+            if (err) {
+              console.error('Error executing aggregation:', err);
+              client.close();
+              return;
+            }
+
+            if (resultStock.length > 0) {
+              client.close();
+              res.render('index.ejs', {
+                total_sales: result,
+                ord_num: [{ NumberOfProducts: resultCount.length??0 }],
+                stock_num: [{ NumberOfProducts: resultStocksCount.length??0 }],
+                total_stock: resultStock ,
+              });
+            } else {
+              client.close();
+              res.render('index.ejs', {
+                total_sales: [],
+                ord_num: [],
+                stock_num: [],
+                total_stock: []
+              });
+              console.log('No orders found.');
+            }
+          });
         });
-      } else {
-        res.render('index.ejs', {
-          total_sales: [],
-          ord_num: [],
-          stock_num: [],
-          total_stock: []
-        });
-        console.log('No orders found.');
-      }
-
-      client.close();
+      });
+   //   
     });
+ 
   });
 })
 
@@ -168,7 +190,7 @@ app.get('/employees', (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const warehouseCollection = db.collection('warehouse'); 
+    const warehouseCollection = db.collection('warehouse');
 
     warehouseCollection.find().toArray((err, rows) => {
       if (!err) {
@@ -391,15 +413,44 @@ app.post('/fetchitem', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const stockCollection = db.collection('stocks'); 
+    const stockCollection = db.collection('stocks');
 
     const item_id = req.body.itemid;
 
     // Find documents from the stock collection based on ItemID
-    stockCollection.find({ ItemID: item_id, Status: {$ne:"sold"} }).toArray((err, rows) => {
+    stockCollection.find({ ItemID: item_id, Status: { $ne: "sold" } }).toArray((err, rows) => {
       if (!err) {
         console.log(rows);
         res.json({ success: "Updated Successfully", status: 200, rows: rows });
+      } else {
+        console.log(err);
+      }
+
+      // Close the MongoDB connection
+      client.close();
+    });
+  });
+})
+
+app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
+  MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+    if (err) {
+      console.error('Error connecting to MongoDB:', err);
+      return;
+    }
+
+    console.log('Connected to MongoDB');
+
+    const db = client.db(dbName);
+    const stockCollection = db.collection('orders');
+
+    const item_id = req.body.itemid;
+
+    // Find documents from the stock collection based on ItemID
+    stockCollection.find({ TransactionID: item_id }).toArray((err, rows) => {
+      if (!err) {
+        console.log(rows);
+        res.json({ success: "Get Successfully", status: 200, rows: rows });
       } else {
         console.log(err);
       }
@@ -420,9 +471,9 @@ app.get('/billing', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const categoryCollection = db.collection('categories'); 
+    const categoryCollection = db.collection('categories');
     const brandCollection = db.collection('brands');
-    const sizeCollection = db.collection('sizes'); 
+    const sizeCollection = db.collection('sizes');
 
     // Find documents in the category collection
     categoryCollection.find().toArray((err1, category) => {
@@ -548,7 +599,7 @@ app.post('/addsize', checkAuthenticated, (req, res) => {
 
     const sizesCollection = db.collection('sizes');
 
-    const newSize = { Size: req.body.new };
+    const newSize = { Size: parseInt(req.body.new) };
 
     sizesCollection.insertOne(newSize, (err2, result) => {
       if (err2) {
@@ -576,7 +627,7 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const ordersCollection = db.collection('orders'); 
+    const ordersCollection = db.collection('orders');
 
     const time_type = req.body['exampleRadios'];
     const selected_year = parseInt(req.body['selected_year']);
@@ -725,7 +776,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const ordersCollection = db.collection('orders'); 
+    const ordersCollection = db.collection('orders');
 
     console.log(req.body);
     const time_type = req.body['exampleRadios'];
@@ -1017,8 +1068,8 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const ordersCollection = db.collection('orders'); 
-    const stockCollection = db.collection('stocks'); 
+    const ordersCollection = db.collection('orders');
+    const stockCollection = db.collection('stocks');
 
     console.log(`\nRequest body = `);
     console.log(req.body);
@@ -1079,15 +1130,17 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
           ItemName: datas[1],
           Category: datas[2],
           Brand: datas[3],
-          Size: datas[4],
-          Amount: datas[5],
+          Size: parseInt(datas[4]),
+          Amount: parseFloat(datas[5]),
           CustomerName: datas[6],
-          TransactionDate: datas[7],
-          TransactionTime: datas[8],
-          TransactionID: datas[9],
-          TDay: datas[10],
-          TMonth: datas[11],
-          TYear: datas[12]
+          CustomerEmail: datas[7],
+          CustomerPhone: datas[8],
+          TransactionDate: datas[9],
+          TransactionTime: datas[10],
+          TransactionID: datas[11],
+          TDay: parseInt(datas[12]),
+          TMonth: parseInt(datas[13]),
+          TYear: parseInt(datas[14])
         })
     })
     console.log("BILL REQUEST billAdd" + JSON.stringify(billAdd));
@@ -1135,7 +1188,7 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const stockCollection = db.collection('stocks'); 
+    const stockCollection = db.collection('stocks');
 
     const request1 = req.body;
 
@@ -1190,13 +1243,13 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
         ItemName: datas[1],
         Category: datas[2],
         Brand: datas[3],
-        Size: datas[4],
-        Amount: datas[5],
+        Size: parseInt(datas[4]),
+        Amount: parseFloat(datas[5]),
         StockDate: datas[6],
         StockTime: datas[7],
-        TDay: datas[8],
-        TMonth: datas[9],
-        TYear: datas[10]
+        TDay: parseInt(datas[8]),
+        TMonth: parseInt(datas[9]),
+        TYear: parseInt(datas[10])
       })
     })
 
@@ -1225,7 +1278,7 @@ app.post('/deleteitem', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const ordersCollection = db.collection('orders'); 
+    const ordersCollection = db.collection('orders');
 
     const deleteid = req.body.deleteid;
 
@@ -1373,7 +1426,7 @@ app.post('/deletestock', checkAuthenticated, (req, res) => {
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
-    const stockCollection = db.collection('stocks'); 
+    const stockCollection = db.collection('stocks');
 
     const deleteid = req.body.deleteid;
 
