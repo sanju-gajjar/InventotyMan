@@ -12,9 +12,9 @@ function initialize(passport, getUserByEmail, getUserById) {
       if (password == user.password) {
         return done(null, user)
       } else {
-        console.log(`Username =${user}`)
-        console.log(`password =${password}`)
-        console.log(`user.password =${user.password}`)
+        
+        
+        
         
         return done(null, false, { message: 'Password incorrect' })
       }

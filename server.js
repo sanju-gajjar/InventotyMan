@@ -2,10 +2,11 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 const MongoClient = require('mongodb').MongoClient;
+const nodemailer = require("nodemailer");
 var favicon = require('serve-favicon')
 var path = require('path')
 
-const url = process.env.mongo_host;
+const url = process.env.npm_config_mongo_host;
 const dbName = 'inventoryman';
 const express = require('express')
 const app = express()
@@ -61,7 +62,6 @@ app.get('/', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -108,9 +108,9 @@ app.get('/', checkAuthenticated, (req, res) => {
               client.close();
               res.render('index.ejs', {
                 total_sales: result,
-                ord_num: [{ NumberOfProducts: (resultCount != null && resultCount != undefined)? resultCount.length:0 }],
-                stock_num: [{ NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length!= undefined)? resultStocksCount.length:0 }],
-                total_stock: resultStock ,
+                ord_num: [{ NumberOfProducts: (resultCount != null && resultCount != undefined) ? resultCount.length : 0 }],
+                stock_num: [{ NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length != undefined) ? resultStocksCount.length : 0 }],
+                total_stock: resultStock,
               });
             } else {
               client.close();
@@ -120,14 +120,13 @@ app.get('/', checkAuthenticated, (req, res) => {
                 stock_num: [],
                 total_stock: []
               });
-              console.log('No orders found.');
             }
           });
         });
       });
-   //   
+      //   
     });
- 
+
   });
 })
 
@@ -154,7 +153,6 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
       email: req.body.email,
       password: hashedPassword
     })
-    console.log(users)
     res.redirect('/login')
   } catch {
     res.redirect('/register')
@@ -180,7 +178,6 @@ function checkNotAuthenticated(req, res, next) {
   }
   next()
 }
-
 app.listen(port, () => console.log(`Express Server is running at ${port} port`))
 app.get('/employees', (req, res) => {
   MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
@@ -189,7 +186,6 @@ app.get('/employees', (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const warehouseCollection = db.collection('warehouse');
@@ -213,7 +209,6 @@ app.get('/orders', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const ordersCollection = db.collection('orders');
@@ -229,9 +224,6 @@ app.get('/orders', checkAuthenticated, (req, res) => {
     ]).toArray((err, rows) => {
       if (!err) {
         ordersCollection.find().toArray((err1, rows1) => {
-          console.log("CHECKING ORDER______________");
-          console.log(JSON.stringify(rows));
-          console.log(JSON.stringify(rows1));
           if (!err1) {
             res.render('orders.ejs', {
               orders: rows,
@@ -263,7 +255,6 @@ app.get('/viewstocks', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -320,7 +311,6 @@ app.post('/stocks_query', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -412,7 +402,6 @@ app.post('/fetchitem', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const stockCollection = db.collection('stocks');
@@ -422,7 +411,6 @@ app.post('/fetchitem', checkAuthenticated, (req, res) => {
     // Find documents from the stock collection based on ItemID
     stockCollection.find({ ItemID: item_id, Status: { $ne: "sold" } }).toArray((err, rows) => {
       if (!err) {
-        console.log(rows);
         res.json({ success: "Updated Successfully", status: 200, rows: rows });
       } else {
         console.log(err);
@@ -441,7 +429,6 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const stockCollection = db.collection('orders');
@@ -451,7 +438,6 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
     // Find documents from the stock collection based on ItemID
     stockCollection.find({ TransactionID: item_id }).toArray((err, rows) => {
       if (!err) {
-        console.log(rows);
         res.json({ success: "Get Successfully", status: 200, rows: rows });
       } else {
         console.log(err);
@@ -470,7 +456,6 @@ app.get('/billing', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const categoryCollection = db.collection('categories');
@@ -501,10 +486,6 @@ app.get('/billing', checkAuthenticated, (req, res) => {
             return;
           }
 
-          console.log(typeof category);
-          console.log(category);
-          console.log(brand);
-          console.log(size);
 
           // Render the bill.ejs template with the retrieved data
           res.render('bill.ejs', { category: category, brand: brand, size: size });
@@ -527,7 +508,6 @@ app.post('/addcategory', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -542,7 +522,6 @@ app.post('/addcategory', checkAuthenticated, (req, res) => {
         return;
       }
 
-      console.log('New category inserted:', result.insertedId);
 
       res.redirect('/categories');
 
@@ -561,7 +540,6 @@ app.post('/addbrand', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -576,7 +554,6 @@ app.post('/addbrand', checkAuthenticated, (req, res) => {
         return;
       }
 
-      console.log('New brand inserted:', result.insertedId);
 
       res.redirect('/brands');
 
@@ -595,7 +572,6 @@ app.post('/addsize', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -610,7 +586,6 @@ app.post('/addsize', checkAuthenticated, (req, res) => {
         return;
       }
 
-      console.log('New size inserted:', result.insertedId);
 
       res.redirect('/sizes');
 
@@ -626,7 +601,6 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const ordersCollection = db.collection('orders');
@@ -719,7 +693,6 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const stockCollection = db.collection('stocks');
@@ -775,12 +748,10 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const ordersCollection = db.collection('orders');
 
-    console.log(req.body);
     const time_type = req.body['exampleRadios'];
 
     if (time_type == 'month') {
@@ -926,7 +897,6 @@ app.get('/categories', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -956,7 +926,6 @@ app.get('/brands', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -986,7 +955,6 @@ app.get('/sizes', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -1016,7 +984,6 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -1045,10 +1012,6 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
             return;
           }
 
-          console.log(typeof category);
-          console.log(category);
-          console.log(brand);
-          console.log(size);
 
           res.render('stocks.ejs', { category: category, brand: brand, size: size });
 
@@ -1058,7 +1021,34 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
     });
   });
 })
+async function sendMail(orderDetails, to) {
+  
 
+  var htmlOrderTable = "";
+  var invoiceNumber = orderDetails[0].TransactionID;
+  var customerName = orderDetails[0].CustomerName;
+  orderDetails.forEach((order) => { 
+    htmlOrderTable = htmlOrderTable + `<tr><td style="padding: 5px 10px 5px 0"width="80%"align="left"><p>₹{order.ItemName}</p></td><td style="padding: 5px 0"width="20%"align="left"><p>₹{order.Amount}</p></td></tr>`;
+  })
+  // SMTP config
+  const transporter = nodemailer.createTransport({
+    host: "mail.thecyclehub.co.in", //
+    port: 465,
+    auth: {
+      user: "phoner@thecyclehub.co.in", // Your Ethereal Email address
+      pass: "Keyur@123", // Your Ethereal Email password
+    },
+  }); // Send the email
+  let info = await transporter.sendMail({
+    from: '"Keyur Gajjar" <phoner@thecyclehub.co.in>',
+    to: to,//'sanju.gajjar2@gmail.com', // Test email address
+    subject: `Thank for shoping at Phoner #Invoice: ${invoiceNumber}`,
+    text: `Hi, ${customerName}`,
+    html: `<!DOCTYPE html PUBLIC'-//W3C//DTD XHTML 1.0 Transitional//EN''http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'><html xmlns='http://www.w3.org/1999/xhtml'xmlns:o='urn:schemas-microsoft-com:office:office'><head><meta charset='UTF-8'><meta content='width=device-width, initial-scale=1'name='viewport'><meta name='x-apple-disable-message-reformatting'><meta http-equiv='X-UA-Compatible'content='IE=edge'><meta content='telephone=no'name='format-detection'><title></title><!--[if(mso 16)]><style type='text/css'>a{text-decoration:none;}</style><![endif]--><!--[if gte mso 9]><style>sup{font-size:100%!important;}</style><![endif]--><!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG></o:AllowPNG><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]--></head><body><div class='es-wrapper-color'><!--[if gte mso 9]><v:background xmlns:v='urn:schemas-microsoft-com:vml'fill='t'><v:fill type='tile'color='#eeeeee'></v:fill></v:background><![endif]--><table class='es-wrapper'width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-email-paddings'valign='top'><table cellpadding='0'cellspacing='0'class='es-content esd-header-popover'align='center'><tbody><tr><td class='esd-stripe'esd-custom-block-id='7954'align='center'><table class='es-content-body'style='background-color: transparent;'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p15t es-p15b es-p10r es-p10l'align='left'><!--[if mso]><table width='580'cellpadding='0'cellspacing='0'><tr><td width='282'valign='top'><![endif]--><table class='es-left'cellspacing='0'cellpadding='0'align='left'><tbody><tr><td class='esd-container-frame'width='282'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='es-infoblock esd-block-text es-m-txt-c'align='left'><p style='font-family: arial, helvetica\ neue, helvetica, sans-serif;'>Put your preheader text here<br></p></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td><td width='20'></td><td width='278'valign='top'><![endif]--><table class='es-right'cellspacing='0'cellpadding='0'align='right'><tbody><tr><td class='esd-container-frame'width='278'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td align='right'class='es-infoblock esd-block-text es-m-txt-c'><p><a href='https://viewstripo.email'class='view'target='_blank'style='font-family: 'arial', 'helvetica neue', 'helvetica', 'sans-serif';'>View in browser</a></p></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr></tr><tr><td class='esd-stripe'esd-custom-block-id='7681'align='center'><table class='es-header-body'style='background-color: #044767;'width='600'cellspacing='0'cellpadding='0'bgcolor='#044767'align='center'><tbody><tr><td class='esd-structure es-p35t es-p35b es-p35r es-p35l'align='left'><!--[if mso]><table width='530'cellpadding='0'cellspacing='0'><tr><td width='340'valign='top'><![endif]--><table class='es-left'cellspacing='0'cellpadding='0'align='left'><tbody><tr><td class='es-m-p0r es-m-p20b esd-container-frame'width='340'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-m-txt-c'align='left'><h1 style='color: #ffffff; line-height: 100%;'>Phoner</h1></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td><td width='20'></td><td width='170'valign='top'><![endif]--><table cellspacing='0'cellpadding='0'align='right'><tbody><tr class='es-hidden'><td class='es-m-p20b esd-container-frame'esd-custom-block-id='7704'width='170'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-spacer es-p5b'align='center'style='font-size:0'><table width='100%'height='100%'cellspacing='0'cellpadding='0'border='0'><tbody><tr><td style='border-bottom: 1px solid #044767; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; height: 1px; width: 100%; margin: 0px;'></td></tr></tbody></table></td></tr><tr><td><table cellspacing='0'cellpadding='0'align='right'><tbody><tr><td align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text'align='right'><p>The Cycle Hub</p></td></tr></tbody></table></td><td class='esd-block-image es-p10l'valign='top'align='left'style='font-size:0'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'width='600'cellspacing='0'cellpadding='0'bgcolor='#ffffff'align='center'><tbody><tr><td class='esd-structure es-p40t es-p35b es-p35r es-p35l'esd-custom-block-id='7685'style='background-color: #f7f7f7;'bgcolor='#f7f7f7'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-image es-p20t es-p25b es-p35r es-p35l'align='center'style='font-size:0'></td></tr><tr><td class='esd-block-text es-p15b'align='center'><h2 style='color: #333333; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif;'>Thanks for your purchase</h2></td></tr><tr><td class='esd-block-text es-m-txt-l es-p20t'align='left'><h3 style='font-size: 18px;'>Hello NAME,</h3></td></tr><tr><td class='esd-block-text es-p15t es-p10b'align='left'><p style='font-size: 16px; color: #777777;'>Please find the invoice below for your purchase</p></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p40t es-p40b es-p35r es-p35l'esd-custom-block-id='7685'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p20t'align='center'><h3 style='color: #333333;'>INVOICE</h3></td></tr><tr><td class='esd-block-text es-p15t es-p10b'align='center'><p style='font-size: 16px; color: #777777;'>INVOICE NUMBER: ${invoiceNumber}</p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table cellpadding='0'cellspacing='0'class='es-content'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'width='600'cellspacing='0'cellpadding='0'bgcolor='#ffffff'align='center'><tbody><tr><td class='esd-structure es-p20t es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p10t es-p10b es-p10r es-p10l'bgcolor='#eeeeee'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody><tr><td width='80%'><h4>Order Confirmation#</h4></td><td width='20%'><h4>${invoiceNumber}</h4></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p10t es-p10b es-p10r es-p10l'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody>${htmlOrderTable}</tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p10t es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table style='border-top: 3px solid #eeeeee; border-bottom: 3px solid #eeeeee;'width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p15t es-p15b es-p10r es-p10l'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody><tr><td width='80%'><h4>TOTAL</h4></td><td width='20%'><h4>$115.00</h4></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr></tr><tr><td class='esd-stripe'esd-custom-block-id='7797'align='center'><table class='es-content-body'style='background-color: #1b9ba3;'width='600'cellspacing='0'cellpadding='0'bgcolor='#1b9ba3'align='center'><tbody><tr><td class='esd-structure es-p35t es-p35b es-p35r es-p35l'align='left'><table cellpadding='0'cellspacing='0'width='100%'><tbody><tr><td width='530'align='left'class='esd-container-frame'><table cellpadding='0'cellspacing='0'width='100%'><tbody><tr><td align='center'class='esd-empty-container'style='display: none;'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='es-footer'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'esd-custom-block-id='7684'align='center'><table class='es-footer-body'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p35t es-p40b es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p35b'align='center'><p><b>Keyur Gajjar</b></p></td></tr><tr><td esdev-links-color='#777777'align='left'class='esd-block-text es-m-txt-c es-p5b'><p style='color: #777777;'>Thanks your shooping and waiting for your next visit.</p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='esd-footer-popover es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'style='background-color: transparent;'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p30t es-p30b es-p20r es-p20l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='560'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td align='center'class='esd-empty-container'style='display: none;'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></div></body></html>`,
+  });
+  console.log("Message sent: %s", info); // Output message ID
+  console.log("View email: %s", nodemailer.getTestMessageUrl(info)); // URL to preview email
+}
 app.post('/submitbill', checkAuthenticated, (req, res) => {
 
   MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
@@ -1067,20 +1057,14 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const ordersCollection = db.collection('orders');
     const stockCollection = db.collection('stocks');
 
-    console.log(`\nRequest body = `);
-    console.log(req.body);
-    console.log("BILL REQUEST " + JSON.stringify(req.body));
     const request1 = req.body;
 
-    console.log("here is the request&&&&&&&&&&&&&&&&&&&&&&&7");
-    console.log(JSON.stringify(request1));
-
+   
 
     const date_format = new Date();
     const transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
@@ -1120,8 +1104,6 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       data[i].push(date_format.getFullYear());
     }
 
-    console.log(`\nINSERT Array = `);
-    console.log(data);
 
     // Insert data into orders collection
     var billAdd = [];
@@ -1145,10 +1127,8 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
           TYear: parseInt(datas[14])
         })
     })
-    console.log("BILL REQUEST billAdd" + JSON.stringify(billAdd));
     ordersCollection.insertMany(billAdd, (err, result) => {
       if (!err) {
-        console.log('Successfully inserted values into ordersdb');
 
         // Delete corresponding values from stocks collection
         let query = { ItemID: { $in: item_ids } };
@@ -1156,15 +1136,19 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
         const options = { upsert: true };
         // stockCollection.updateMany(query, data,options, (err2, result2) => {
         //   if (!err2) {
-        //     console.log('Successfully deleted corresponding values from stockdb');
         //   } else {
-        //     console.log(err2);
         //   }
 
         //   // Close the MongoDB connection
         //   client.close();
         // });
+        try {
+          if (request1.sendMail == "on") {
+            sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
+          }
+        } catch (error) {
 
+        }
         res.redirect('/orders');
       } else {
         console.log(err);
@@ -1187,7 +1171,6 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const stockCollection = db.collection('stocks');
@@ -1236,8 +1219,6 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
     }
 
 
-    console.log("MY DATA HEREH ################################################");
-    console.log(JSON.stringify(data));
     var stockAdd = [];
     data.forEach(datas => {
       stockAdd.push({
@@ -1262,7 +1243,6 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
         return;
       }
 
-      console.log('Successfully inserted values:', result.insertedCount);
       res.redirect('/viewstocks');
 
       client.close();
@@ -1277,7 +1257,6 @@ app.post('/deleteitem', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
     const ordersCollection = db.collection('orders');
@@ -1291,7 +1270,6 @@ app.post('/deleteitem', checkAuthenticated, (req, res) => {
         return;
       }
 
-      console.log('Successfully deleted values:', result.deletedCount);
       res.redirect('/orders');
 
       client.close();
@@ -1310,7 +1288,6 @@ app.post('/deletecategory', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -1326,9 +1303,7 @@ app.post('/deletecategory', checkAuthenticated, (req, res) => {
       }
 
       if (result.deletedCount > 0) {
-        console.log('Successfully deleted a category');
       } else {
-        console.log('Category not found for deletion');
       }
 
       res.redirect('/categories');
@@ -1349,7 +1324,6 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -1365,9 +1339,7 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
       }
 
       if (result.deletedCount > 0) {
-        console.log('Successfully deleted a brand');
       } else {
-        console.log('Brand not found for deletion');
       }
 
       res.redirect('/brands');
@@ -1379,7 +1351,6 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
 })
 
 app.post('/deletesize', checkAuthenticated, (req, res) => {
-  console.log('deletesize called')
 
 
 
@@ -1390,7 +1361,6 @@ app.post('/deletesize', checkAuthenticated, (req, res) => {
       return;
     }
 
-    console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
 
@@ -1406,9 +1376,7 @@ app.post('/deletesize', checkAuthenticated, (req, res) => {
       }
 
       if (result.deletedCount > 0) {
-        console.log('Successfully deleted a size');
       } else {
-        console.log('Size not found for deletion');
       }
 
       res.redirect('/sizes');
@@ -1424,9 +1392,6 @@ app.post('/deletestock', checkAuthenticated, (req, res) => {
       console.error('Error connecting to MongoDB:', err);
       return;
     }
-
-    console.log('Connected to MongoDB');
-
     const db = client.db(dbName);
     const stockCollection = db.collection('stocks');
 
@@ -1439,7 +1404,6 @@ app.post('/deletestock', checkAuthenticated, (req, res) => {
         return;
       }
 
-      console.log('Successfully deleted values:', result.deletedCount);
       res.redirect('/viewstocks');
 
       client.close();

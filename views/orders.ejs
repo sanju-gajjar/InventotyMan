@@ -13,6 +13,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
         <script src="https://unpkg.com/easyinvoice/dist/easyinvoice.min.js"></script>
+        <script src="https://smtpjs.com/v3/smtp.js">
+        </script>
 <style>
   .loader {
     border: 16px solid #f3f3f3;
@@ -276,10 +278,9 @@
         </thead>
           <tbody>
         <% sub_orders.forEach(function(sub_order){ %>
-          <% console.log(`sub_order._id = ${sub_order.TransactionID}`) %> 
-          <% console.log(`order._id = ${order._id}`) %> 
+       
         <% if(sub_order.TransactionID == order._id) { %> 
-            <% console.log(sub_order) %> 
+           
             <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
             <td><%= sub_order.ItemID %></td>
             <td><%= sub_order.ItemName %></td>
@@ -351,10 +352,9 @@
       </thead>
         <tbody>
       <% sub_orders.forEach(function(sub_order){ %>
-        <% console.log(`sub_order.TransactionID = ${sub_order.TransactionID}`) %> 
-        <% console.log(`order.TransactionID = ${order.TransactionID}`) %> 
+       
       <% if(sub_order.TransactionID == order.TransactionID) { %> 
-          <% console.log(sub_order) %> 
+         
           <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
           <td><%= sub_order.ItemID %></td>
           <td><%= sub_order.ItemName %></td>
@@ -427,10 +427,9 @@
     </thead>
       <tbody>
     <% sub_orders.forEach(function(sub_order){ %>
-      <% console.log(`sub_order.TransactionID = ${sub_order.TransactionID}`) %> 
-      <% console.log(`order.TransactionID = ${order.TransactionID}`) %> 
+      
     <% if(sub_order.TransactionID == order.TransactionID) { %> 
-        <% console.log(sub_order) %> 
+       
         <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
         <td><%= sub_order.ItemID %></td>
         <td><%= sub_order.ItemName %></td>
@@ -505,7 +504,8 @@
  </script>
 
 <script>
-  //   console.log(document.getElementsByTagName('input'))
+  //   
+
   function myFunction(){
     if (document.getElementById('exampleRadios2').checked == true){
       document.getElementById("month").disabled = false;
@@ -533,7 +533,7 @@
                   "itemid": tID
                 },
                 success: function (data) {
-                  // console.log('Fetched Data')
+                  // 
                   if (data.status == 200 && data.rows.length > 0) {
                     ////////////////////
                     var date_format = new Date();
@@ -550,13 +550,13 @@
                           "tax-rate": 0,
                           "price": data.rows[i].Amount
                         }
-                        console.log(item_obj)
+                        
                         items_arr.push(item_obj)
                       
 
                       
                     }
-                    console.log(items_arr)
+                    
                     var invoiceData= {
                       "images": {
                         // The logo on top of your invoice
@@ -608,7 +608,10 @@
                     };
                             easyinvoice.createInvoice(invoiceData, function (result) {
                       var date_format = new Date();
-                      var bill_name = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds()
+                      var bill_name = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
+
+
+                      
                       easyinvoice.download(`${bill_name}.pdf`, result.pdf);
                       //	you can download like this as well:
                       //	easyinvoice.download();

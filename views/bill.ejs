@@ -222,7 +222,11 @@
         
      
         </table>
-        <center><button type="submit" class="ui teal submit button">Submit</button>
+          <div>
+            <input type="checkbox" id="sendMail" name="sendMail" />
+            <label for="sendMail">Send Mail</label>
+          </div>
+        <center><button type="submit" class="ui teal submit button">Submit</button></center>
           
       </form>
       
@@ -294,10 +298,10 @@
           var count = 0
           for (var i = 0; i < inputs.length; i++) {
             if((inputs[i].id).includes("number")){
-              // console.log(`Item Name = ${inputs[i]}`)
-              // console.log(`Before value = ${inputs[i].value}`)
+              // 
+              // 
               inputs[i].value = count + 1
-              // console.log(`After value = ${inputs[i].value}`)
+              // 
               count++;
             }
           }
@@ -311,7 +315,7 @@
           }
           }
 
-          console.log(inputs)
+          
 
           selects = document.getElementsByTagName("select");
           var flag1=flag2=1;
@@ -326,7 +330,7 @@
             }
             flag2++;
           }
-          console.log(selects)
+          
           buttons = document.getElementsByTagName("button");
           var flag1=1;
           for(var i = 0; i < buttons.length; i++) {
@@ -344,29 +348,29 @@
     </script>
     <script>
       function fetchitem() {
-      console.log('fetch button called')
+      
       var buttons = document.getElementsByTagName("button");
       button_num = ""
       for(var i = 0; i < buttons.length; i++) {
         if((buttons[i].id).includes("fetchitem")){
             button_id = buttons[i].id
-            console.log(buttons[i])
-            console.log(buttons[i].id)
+            
+            
             button_num = (button_id.match(/(\d+)/))[0]
-            console.log(button_num)
+            
         }
       }
-      console.log(buttons)
+      
       var inputs = document.getElementsByTagName("input");
       var pass_item = ""
       for (var i = 0; i < inputs.length; i++) {
             input_id = inputs[i].id
             if((inputs[i].id).includes("itemid") && ((input_id.charAt(input_id.length-1)) == button_num)){
               pass_item = inputs[i]
-              console.log(pass_item)
+              
             }
           }
-          console.log(inputs)
+          
     $.ajax({
         type: "POST",
         url: "/fetchitem",
@@ -374,7 +378,7 @@
             "itemid": pass_item.value
         },
         success: function(data) {
-          // console.log('Fetched Data')
+          // 
             if(data.status == 200 && data.rows.length>0) {
                 
                 x = data.rows
@@ -389,11 +393,11 @@
                   if(inputs[i].id == itemname_id){
                     
                   inputs[i].value = x[0].ItemName
-                  // console.log(x['ItemName'])
+                  // 
                   }
                   if(inputs[i].id == amount_id){
                   inputs[i].value = x[0].Amount
-                  // console.log(x.Amount)
+                  // 
                   }
                 }
                 var total_amount = 0
@@ -401,16 +405,16 @@
                  
                   if((inputs[i].id).includes("amount")){
                     total_amount = total_amount + parseInt(inputs[i].value)
-                  // console.log(x.Amount)
+                  // 
                   }
                 }
-                // console.log(total_amount)
+                // 
                 for (var i = 0; i < inputs.length; i++) {
                   if(inputs[i].id == 'total')
                   inputs[i].value = total_amount
                 }
                 
-                // console.log(inputs)
+                // 
                 // alert("successfully fetched!")
 
               var selects = document.getElementsByTagName("select");
@@ -466,7 +470,7 @@
   var transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear().toString().substr(-2) + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
   var item_names = document.getElementsByTagName('input')
 
-  console.log("ITEMS NAMES "+item_names);
+  
   var items_arr = []
   for(var i=0; i<item_names.length; i++){
     if((item_names[i].id).includes('itemname')){
@@ -485,7 +489,7 @@
             "tax-rate": 0,
             "price": item_names[j].value
           }
-          console.log(item_obj)
+          
           items_arr.push(item_obj)
         }
       }
@@ -493,7 +497,7 @@
 
     }
   }
-  console.log(items_arr)
+  
   return {
         "images": {
           // The logo on top of your invoice
