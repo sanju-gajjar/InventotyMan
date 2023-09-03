@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
 
 // Database connection URI
-const uri = "mongodb+srv://phoner:XnwJwfNSWx9OtBri@cluster0.abffu83.mongodb.net"; //process.env.npm_config_mongo_host;
+const uri = process.env.npm_config_mongo_host;
 
 // Create a Mongo client
 const client = new MongoClient(uri, { useUnifiedTopology: true });
