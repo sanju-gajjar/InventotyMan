@@ -10,17 +10,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <script src="easyInvoice.min.js"></script>
+        <script src="https://smtpjs.com/v3/smtp.js">
+        </script>
+<style>
+  .loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid blue;
+    border-right: 16px solid green;
+    border-bottom: 16px solid red;
+    border-left: 16px solid pink;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+  }
 
+  @-webkit-keyframes spin {
+    0% {
+      -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+      -webkit-transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
     <title>Orders</title>
   </head>
   <body>
+   
     <!--Vertical Navbar-->
   <div class="vertical-nav bg-white" id="sidebar">
     <div class="py-4 px-3 mb-4" style="background: linear-gradient(to top, #0066eb 0%, #ff8ab3 68%);">
       <div class="media d-flex align-items-center"><img src="admin.svg" alt="..." width="65" class="mr-3 rounded-circle img-thumbnail shadow-sm">
         &emsp;<div class="media-body">
           <h4 class="m-0"><p class="text-white"><shop-name></h4>
-            <p class="font-weight-light text-white mb-0">(Admin)</p>
+            <p class="font-weight-light text-white mb-0">Hi, Phoner</p>
         </div>
       </div>
     </div>
@@ -115,6 +154,7 @@
   <div class="page-content p-5" id="content" style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
     <!-- Toggle button -->
     <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
+    <div class="downloadInvoice" id="loader"></div>
   
     <!-- Page content -->
     
@@ -164,11 +204,13 @@
       <div class="column">
           <select class="form-select" aria-label="Disabled select example" id="year" name="selected_year" disabled>
               <option selected>Select Year</option>
-              <option value="2021">2021</option>
-              <option value="2022">2022</option>
+              <option value="2023">2022</option>
               <option value="2023">2023</option>
               <option value="2024">2024</option>
               <option value="2025">2025</option>
+              <option value="2025">2026</option>
+              <option value="2025">2027</option>
+              <option value="2025">2028</option>
             </select>
       </div>
       </div>
@@ -189,12 +231,38 @@
         <br>
       <div class="ui styled fluid accordion">
       <div class="title text-primary">
-        <i class="dropdown icon"></i>
+        <i class="dropdown icon">
+          
+        </i>
+        <table>
         
-        <div class="container">
+          <tr class="text-primary">
+        
+            <td>Order ID:<i>
+                <%= order._id %>
+              </i></td>
+            <td>Total Amount:<i>
+                <%= order.Amount %>
+              </i></td>
+            <td>Date:<i>
+                <%= order.TransactionDate %>
+              </i></td>
+            <td>Time:<i>
+                <%= order.TransactionTime %>
+              </i></td>
+        
+        
+        
+          </tr>
+        
+        
+        </table>
+        
+        
+        <!-- <div class="container">
           <div class="row-lg">
-            <div class="col-lg">
-              <p class="text-primary">Order ID: <i><%= order.TransactionID %></i> </p>
+             <div class="col-lg">
+              <p class="text-primary">Order ID: <i><%= order._id %></i> </p>
             </div>
             <div class="col-lg">
               <p class="text-danger"> Total Amount: <i><i class="rupee sign icon"></i><%= order.Amount %></i></p>
@@ -206,12 +274,20 @@
             </div>
             <div class="col-lg">
               <p class="text-dark">Time: <i><%= order.TransactionTime %></i></p>
-            </div>
-          </div>
-        </div>
+            </div> -->
+           
+          <!-- </div>
+        </div>  -->
       
       </div>
       <div class="content">
+        <div class="col-lg">
+          
+          <p>Download <button class="ui green submit button" type="button" onclick="downloadInvoice(this.innerHTML)">
+            <%=order._id%> 
+          </p>
+          </button>
+        </div>
         <table class="ui inverted violet table table-bordered" >
           <thead>
             <tr class="table-success">
@@ -223,14 +299,16 @@
                 <th>Size</th>
                 <th>Amount</th>
                 <th>Customer Number</th>
+                <!-- <th>Customer Email</th>
+                <th>Customer Number</th> -->
+                <th>Action</th>
             </tr>
         </thead>
           <tbody>
         <% sub_orders.forEach(function(sub_order){ %>
-          <% console.log(`sub_order.TransactionID = ${sub_order.TransactionID}`) %> 
-          <% console.log(`order.TransactionID = ${order.TransactionID}`) %> 
-        <% if(sub_order.TransactionID == order.TransactionID) { %> 
-            <% console.log(sub_order) %> 
+       
+        <% if(sub_order.TransactionID == order._id) { %> 
+           
             <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
             <td><%= sub_order.ItemID %></td>
             <td><%= sub_order.ItemName %></td>
@@ -238,7 +316,18 @@
             <td><%= sub_order.Brand %></td>
             <td><%= sub_order.Size %></td>
             <td><i class="rupee sign icon"></i><%= sub_order.Amount %></td>
-            <td><%= sub_order.CustomerNumber %></td>
+            <!-- <td><%= sub_order.CustomerName %></td>
+            <td>
+              <%= sub_order.CustomerEmail %>
+            </td> -->
+            <td>
+              <%= sub_order.CustomerPhone %>
+            </td>
+            <td>
+              <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
+                    value="<%= sub_order._id %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </td>
             </tr>
           <% } %>
         
@@ -289,15 +378,16 @@
               <th>Brand Name</th>
               <th>Size</th>
               <th>Amount</th>
-              <th>Customer Number</th>
+            <!-- <th>Customer Name</th>
+            <th>Customer Email</th> -->
+            <th>Customer Number</th>
           </tr>
       </thead>
         <tbody>
       <% sub_orders.forEach(function(sub_order){ %>
-        <% console.log(`sub_order.TransactionID = ${sub_order.TransactionID}`) %> 
-        <% console.log(`order.TransactionID = ${order.TransactionID}`) %> 
+       
       <% if(sub_order.TransactionID == order.TransactionID) { %> 
-          <% console.log(sub_order) %> 
+         
           <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
           <td><%= sub_order.ItemID %></td>
           <td><%= sub_order.ItemName %></td>
@@ -305,7 +395,13 @@
           <td><%= sub_order.Brand %></td>
           <td><%= sub_order.Size %></td>
           <td><i class="rupee sign icon"></i><%= sub_order.Amount %></td>
-          <td><%= sub_order.CustomerNumber %></td>
+          <!-- <td><%= sub_order.CustomerName %></td>
+          <td>
+            <%= sub_order.CustomerEmail %>
+          </td> -->
+          <td>
+            <%= sub_order.CustomerPhone %>
+          </td>
           </tr>
         <% } %>
       
@@ -340,7 +436,7 @@
           <p class="text-success">Date: <i><%= order.TransactionDate %></i></p>
         </div>
         <div class="col-lg">
-          <p class="text-dark">Time: <i><%= order.TransactionTime %></i></p>
+          <p class="text-dark">Times: <i><%= order.TransactionTime %></i></p>
         </div>
       </div>
     </div>
@@ -356,15 +452,18 @@
             <th>Brand Name</th>
             <th>Size</th>
             <th>Amount</th>
+            <!-- <th>Customer Name</th>
+            <th>Customer Email</th> -->
             <th>Customer Number</th>
+            <th>Download</th>
+            <th>Action</th>
         </tr>
     </thead>
       <tbody>
     <% sub_orders.forEach(function(sub_order){ %>
-      <% console.log(`sub_order.TransactionID = ${sub_order.TransactionID}`) %> 
-      <% console.log(`order.TransactionID = ${order.TransactionID}`) %> 
+      
     <% if(sub_order.TransactionID == order.TransactionID) { %> 
-        <% console.log(sub_order) %> 
+       
         <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
         <td><%= sub_order.ItemID %></td>
         <td><%= sub_order.ItemName %></td>
@@ -372,7 +471,17 @@
         <td><%= sub_order.Brand %></td>
         <td><%= sub_order.Size %></td>
         <td><i class="rupee sign icon"></i><%= sub_order.Amount %></td>
-        <td><%= sub_order.CustomerNumber %></td>
+        <td><%= sub_order.CustomerName %></td>
+        <td>
+          <%= sub_order.CustomerEmail %>
+        </td>
+        <td>
+          <%= sub_order.CustomerPhone %>
+        </td>
+        <td>
+          <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
+                value="<%= JSON.stringify(sub_order) %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form>
+        </td>
         </tr>
       <% } %>
     
@@ -386,7 +495,7 @@
 
 <% } %>
     
-        <% orders.forEach(function(order){ %>
+        <!-- <% orders.forEach(function(order){ %>
             <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
                 <td><%= order.TransactionID %></td>
                 <td><%= order.ItemID %></td>
@@ -396,12 +505,18 @@
                 <td><%= order.Size %></td>
                 <td><%= order.Amount %></td>
                 <td><%= order.TransactionDate %></td>
-                <td><%= order.TransactionTime %>&emsp;<form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= order.ItemID %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
-                <td><%= order.CustomerNumber %></td>
+                <td><form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= JSON.stringify(order) %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
+                <td><%= order.CustomerName %></td>
+                <td>
+                  <%= order.CustomerEmail %>
+                </td>
+                <td>
+                  <%= order.CustomerPhone %>
+                </td>
             </tr>
-        <% }); %>
+        <% }); %> -->
     </tbody>
-    </table> -->
+    </table> 
     </div>
     
 
@@ -427,7 +542,8 @@
  </script>
 
 <script>
-  //   console.log(document.getElementsByTagName('input'))
+  //   
+
   function myFunction(){
     if (document.getElementById('exampleRadios2').checked == true){
       document.getElementById("month").disabled = false;
@@ -438,6 +554,119 @@
       document.getElementById("month").disabled = true;
     }
   }
+      function downloadInvoice(tID) {
+          var data = getSampleData(tID.trim().split(' ')[0]);
+
+        }
+            function getSampleData(tID) {
+               var target = document.getElementById('loader');
+              
+                target.classList.add('loader');
+              
+
+              $.ajax({
+                type: "POST",
+                url: "/fetchorderitem",
+                data: {
+                  "itemid": tID
+                },
+                success: function (data) {
+                  // 
+                  if (data.status == 200 && data.rows.length > 0) {
+                    ////////////////////
+                    var date_format = new Date();
+                    var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
+                    var transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
+                    var transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear().toString().substr(-2) + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
+                    
+                    var items_arr = []
+                    for (var i = 0; i < data.rows.length; i++) {
+                    
+                        let item_obj = {
+                          "quantity": data.rows[i].Size,
+                          "description": data.rows[i].ItemName +  '('+ data.rows[i].Category +')'+'-'+ data.rows[i].Brand,
+                          "tax-rate": 0,
+                          "price": data.rows[i].Amount
+                        }
+                        
+                        items_arr.push(item_obj)
+                      
+
+                      
+                    }
+                    
+                    var invoiceData= {
+                      "images": {
+                        // The logo on top of your invoice
+                        "logo": "https://i.imgur.com/b1IoAnu.png",
+                        // The invoice background
+                        "background": "https://i.imgur.com/zjTdQjv.png"
+                      },
+                      // Your own data
+                      "sender": {
+                        "company": "RETAIL INVOICE",
+                        "address": "THE MOBILE ACCESSORIES HUB",
+                        "zip": "Shope No. G-96, B.T MALL, NAVJIVAN MILL COMPOUND",
+                        "city": "KALOL 382721",
+                        "country": "Gandhinagar,9574867001",
+                        "custom1": "GST #: 24AIGPG8025R1ZW",
+                        //"custom2": "custom value 2",
+                        //"custom3": "custom value 3"
+                      },
+                      // Your recipient
+                      "client": {
+                        "company": data.rows[0].CustomerName,
+                        "address":  data.rows[0].CustomerEmail,
+                        "zip": "Phone"+ data.rows[0].CustomerPhone,
+                        "city": "",
+                        "country": ""
+                        // "custom1": "custom value 1",
+                        // "custom2": "custom value 2",
+                        // "custom3": "custom value 3"
+                      },
+                      "information": {
+                        // Invoice number
+                        "number": transaction_id,
+                        // Invoice data
+                        "date": transaction_date,
+                        // Invoice due date
+                        "due-date": transaction_date,
+                      },
+                      "products": items_arr,
+                      "bottom-notice": "Goods Once Sold Will not be taken Bak. Warranty Will be Covered as per manufacture's & conditions,\n No Warranty Guarantee or Exchanged on Free gift items. Cheques are Subject to Realization Subject to KALOL Jurisdictions. <p style='text-align:left;'' >  <b> Bill By</b>: Keyur Gajjar </p>\n <p style='text-align:right;'' >  <b> Authorised Signatory</b> </p> <p>Thank You for shopping from Phoner. We are looking forward to your next visit !</p>",
+                      // Settings to customize your invoice
+                      "settings": {
+                        "currency": "INR",
+                      },
+                      // Translate your invoice to your preferred language
+                      "translate": {
+                        "invoice": "PHONER",  // Default to 'INVOICE'
+                        "vat": "gst" // Defaults to 'vat'
+                      },
+                    };
+                            easyinvoice.createInvoice(invoiceData, function (result) {
+                      var date_format = new Date();
+                      var bill_name = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
+
+
+                      
+                      easyinvoice.download(`${bill_name}.pdf`, result.pdf);
+                      //	you can download like this as well:
+                      //	easyinvoice.download();
+                      //	easyinvoice.download('myInvoice.pdf');
+                      if (target.classList.contains('loader')) {
+                                target.classList.remove('loader');
+                      }
+                    });
+                   /////////////////////
+
+                  } else if (data.status == "failed") {
+                    alert("Item not found")
+                  }
+                }
+              });
+            }
+
 </script>
     
   </body>

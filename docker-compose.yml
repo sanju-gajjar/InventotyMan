@@ -2,18 +2,16 @@
 version: '3.1'
 
 services:
-
-  db:
-    image: mysql
-    command: --default-authentication-plugin=mysql_native_password
+  inventoryman:
+    image: inventoryman
     restart: always
     ports:
-    - 3307:3306
+    - 5000:3000
     environment:
-      MYSQL_ROOT_PASSWORD: example
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
+      SESSION_SECRET: sanju
+      db_name: warehousedb
+      db_user_name: root
+      db_password: example
+      login_id: sanju.g1@gmail.com
+      login_password: Sanju@123
+      PORT: 3000
