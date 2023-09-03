@@ -12,7 +12,7 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-  <script src="https://unpkg.com/easyinvoice/dist/easyinvoice.min.js"></script>
+  <script src="easyInvoice.min.js"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400&display=swap" rel="stylesheet">
   <title>Bill</title>
@@ -148,34 +148,40 @@ td {
 
 input[type=number] {
   text-align: center ;
+   border-radius: 5px;
   max-width: 50px;
-  font-size: 15px;
-  padding: 10px;
-  border: none;
+  font-size: 10px;
+  padding: 5px;
   outline: none;
+  border-radius: 20%;
+  border: none;
+  box-shadow: cadetblue 1px 1px 1px 1px;
+
 }
 
 input[type=text] {
-  max-width: 170px;
-  text-align: left;
-  font-size: 15px;
-  padding: 10px;
+   border-radius: 5px;
+   box-shadow: cadetblue 1px 1px 1px 1px;
   border: none;
+  max-width: 100px;
+  text-align: left;
+  font-size: 12px;
+  padding: 5px;
   outline: none;
 }
 
 input[type=text]:focus {
   border-radius: 5px;
   background: #ffffff;
-  box-shadow:  11px 11px 22px #d9d9d9,
-           -11px -11px 22px #ffffff;
+  box-shadow:  5px 5px 11px #76e216,
+           -5px -5px 11px #ffffff;
 }
 
 input[type=number]:focus {
   border-radius: 5px;
   background: #ffffff;
-  box-shadow:  11px 11px 22px #d9d9d9,
-           -11px -11px 22px #ffffff;
+  box-shadow:  5px 5px 11px #76e216,
+           -5px -5px 11px #ffffff;
 }
 
 input::-webkit-outer-spin-button,
@@ -208,6 +214,7 @@ input[type=number] {
   background-color:#ff057e;
 }
 
+
 .plus{
   margin-top:10px;
 }
@@ -219,7 +226,7 @@ input[type=number] {
 
 #sum input[type=text] {
   width: 100%;
-  font-size: 33px !important;
+  font-size: 20px !important;
   color: black;
   text-align: right !important;
 
@@ -230,9 +237,10 @@ input[type=number] {
   body {
       background: lemonchiffon;
   }
+ 
   .invoice-container {
       border: solid 1px gray;
-      width: 60%;
+      width: 100%;
       margin: 50px auto;
       padding: 40px;
       padding-bottom: 100px;
@@ -368,31 +376,55 @@ input[type=number] {
     <!-- Toggle button -->
     <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i
         class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
+
+        <!-- form here -->
+          <form action="/submitbill" method="POST">
         <div class="invoice-container">
-          <div class="invoice-header">
+    <div class="customerInfo">    
+      
+        <input type="text" placeholder="Phone Number" name="PhoneNumber" required class="PhoneNumber" id="PhoneNumber" class="product id"
+          onkeyup="getCustomerInfo(this.value)">
+        <input type="text" placeholder="CustomerName" name="CustomerName" required class="CustomerName" id="CustomerName">
+        <input type="text" placeholder="Email" name="Email" class="Email" id="Email">
+        <input style="width: 600px; max-width: 1000px;" type="text" placeholder="Address" name="Address" class="Address"
+          id="Address">
+   
+    </div>
+
+      <div class="invoice-header">
             <div class="title-date">
-              <h2 class="title">INVOICE</h2>
-              <p class="date">01/12/20</p>
+              <h2 class="title">Bill Date</h2>
+              <input type="date" placeholder="todayDate" name="todayDate" class="todayDate" id="todayDate" class="billDate">
             </div>
-            <div class="space"></div>
-            <p class="invoice-number">#08 279</p>
           </div>
           <div class="invoice-body">
             <table>
               <thead>
-                <th style="padding-left:12px;">PRODUCT</th>
-                <th>UNIT</th>
-                <th>PRICE</th>
-                <th>AMOUNT</th>
+                <th style="padding-left:5px;">ID</th>
+                <th style="padding-left:5px;">PRODUCT</th>
+                <th style="padding-left:5px;">BRAND</th>
+                <th style="padding-left:5px;">CATEGORY</th>
+                <th style="padding-left:5px;">CODE</th>
+                <th style="padding-left:5px;">UNIT</th>
+                <th style="padding-left:5px;">PRICE</th>
+                <th style="padding-left:5px;">DISCOUNT</th>
+                <th style="padding-left:5px;">GST%</th>
+                <th style="padding-left:5px;">AMOUNT</th>
                 <th style="text-align: right;">ACTION</th>
               </thead>
         
               <tbody id="table-body">
                 <tr class="single-row">
-                  <td><input type="text" placeholder="Product name" class="product left" oninput="getInput()"></td>
-                  <td><input type="number" placeholder="0" name="unit" class="unit" id="unit" onkeyup="getInput()"></td>
-                  <td><input type="number" placeholder="0" name="price" class="price" id="price" onkeyup="getInput()"></td>
-                  <td><input type="number" placeholder="0" name="amount" class="amount" id="amount" disabled></td>
+                  <td><input type="text" placeholder="Product Id" required name="id1" class="id1" id="id1" class="product id" oninput="getInput(this.id)"></td>
+                  <td><input type="text" placeholder="Product name" name="product1" class="product1" id="product1" class="product left"></td>
+                  <td><input type="text" placeholder="Brand" name="brand" class="brand1" id="brand1" ></td>
+                  <td><input type="text" placeholder="Category" name="category" class="category1" id="category1" ></td>
+                  <td><input type="text" placeholder="HSB" name="hsb1" class="hsb1" id="hsb1"></td>
+                  <td><input type="number" placeholder="0" name="unit1" class="unit1" id="unit1" onkeyup="getUnitInput(this.id)"></td>
+                  <td><input type="text" inputmode="decimal" placeholder="0" name="price1" class="price1" id="price1" onkeyup="getUnitInput(this.id)" pattern="[0-9]*[.,]?[0-9]*"></td>
+                  <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" placeholder="0" name="discount1" class="discount1" id="discount1" onkeyup="getUnitInput(this.id)"></td>
+                  <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" placeholder="0%" name="gst1" class="gst1" id="gst1"onkeyup="getUnitInput(this.id)" ></td>
+                  <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px" placeholder="0" name="amount1" class="amount1" id="amount1"></td>
                   <td style="text-align: right;"><span class="material-icons">delete_outline</span></td>
                 </tr>
         
@@ -411,10 +443,13 @@ input[type=number] {
                 </tr>
               </tbody>
             </table>
-            <div id="sum"><input type="text" placeholder="0.00" name="total" class="total" id="total" disabled></div>
-        
+            <div id="sum" class="money" ><input type="text" placeholder="0.00" name="total" class="total" style="max-width: 170px; width: 170px;" id="total" disabled></div>
+          
           </div>
         </div>
+          <center><button type="submit" class="ui teal submit button">Submit</button></center>
+  </form>
+        <!-- form ends here -->
   <!-- Semnatic-UI Scripts -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -426,92 +461,92 @@ input[type=number] {
     crossorigin="anonymous"></script>
 
   <script>
-    function fetchitem() {
-      button_num = this.event.currentTarget.getAttribute("id").split('itemid')[1]
+//     function fetchitem(pass_item) {
+//       // button_num = this.event.currentTarget.getAttribute("id").split('itemid')[1]
 
 
-      var inputs = document.getElementsByTagName("input");
-      var pass_item = ""
-      for (var i = 0; i < inputs.length; i++) {
-        input_id = inputs[i].id
-        if ((inputs[i].id).includes("itemid") && ((input_id.charAt(input_id.length - 1)) == button_num)) {
-          pass_item = inputs[i]
+//       // var inputs = document.getElementsByTagName("input");
+//       // var pass_item = ""
+//       // for (var i = 0; i < inputs.length; i++) {
+//       //   input_id = inputs[i].id
+//       //   if ((inputs[i].id).includes("itemid") && ((input_id.charAt(input_id.length - 1)) == button_num)) {
+//       //     pass_item = inputs[i]
 
-        }
-      }
-      if (pass_item.value.length > 6) {
-        $.ajax({
-          type: "POST",
-          url: "/fetchitem",
-          data: {
-            "itemid": pass_item.value
-          },
-          success: function (data) {
-            // 
-            if (data.status == 200 && data.rows.length > 0) {
+//       //   }
+//       // }
+//       if (pass_item.length > 6) {
+//         $.ajax({
+//           type: "POST",
+//           url: "/fetchitem",
+//           data: {
+//             "itemid": pass_item
+//           },
+//           success: function (data) {
+//             // 
+//             if (data.status == 200 && data.rows.length > 0) {
+// return data.rows;
+//       //         x = data.rows
+//       //         var inputs = document.getElementsByTagName("input");
+//       //         itemname_id = "itemname" + button_num
+//       //         amount_id = "amount" + button_num
+//       //         category_id = "category" + button_num
+//       //         brand_id = "brand" + button_num
+//       //         size_id = "size" + button_num
 
-              x = data.rows
-              var inputs = document.getElementsByTagName("input");
-              itemname_id = "itemname" + button_num
-              amount_id = "amount" + button_num
-              category_id = "category" + button_num
-              brand_id = "brand" + button_num
-              size_id = "size" + button_num
+//       //         for (var i = 0; i < inputs.length; i++) {
+//       //           if (inputs[i].id == itemname_id) {
 
-              for (var i = 0; i < inputs.length; i++) {
-                if (inputs[i].id == itemname_id) {
+//       //             inputs[i].value = x[0].ItemName
+//       //             // 
+//       //           }
+//       //           if (inputs[i].id == amount_id) {
+//       //             inputs[i].value = x[0].Amount
+//       //             // 
+//       //           }
+//       //         }
+//       //         var total_amount = 0
+//       //         for (var i = 0; i < inputs.length; i++) {
 
-                  inputs[i].value = x[0].ItemName
-                  // 
-                }
-                if (inputs[i].id == amount_id) {
-                  inputs[i].value = x[0].Amount
-                  // 
-                }
-              }
-              var total_amount = 0
-              for (var i = 0; i < inputs.length; i++) {
+//       //           if ((inputs[i].id).includes("amount")) {
+//       //             total_amount = total_amount + parseInt(inputs[i].value)
+//       //             // 
+//       //           }
+//       //         }
+//       //         // 
+//       //         for (var i = 0; i < inputs.length; i++) {
+//       //           if (inputs[i].id == 'total')
+//       //             inputs[i].value = total_amount
+//       //         }
 
-                if ((inputs[i].id).includes("amount")) {
-                  total_amount = total_amount + parseInt(inputs[i].value)
-                  // 
-                }
-              }
-              // 
-              for (var i = 0; i < inputs.length; i++) {
-                if (inputs[i].id == 'total')
-                  inputs[i].value = total_amount
-              }
-
-              // 
-              // alert("successfully fetched!")
-      document.getElementById("btn_row_add_below_end").click();
-      document.getElementById("itemid"+ (parseInt(button_num)+1).toString()).focus();
+//       //         // 
+//       //         // alert("successfully fetched!")
+//       // document.getElementById("btn_row_add_below_end").click();
+//       // document.getElementById("itemid"+ (parseInt(button_num)+1).toString()).focus();
       
-              var selects = document.getElementsByTagName("select");
-              for (var i = 0; i < selects.length; i++) {
-                if (selects[i].id == category_id) {
+//       //         var selects = document.getElementsByTagName("select");
+//       //         for (var i = 0; i < selects.length; i++) {
+//       //           if (selects[i].id == category_id) {
 
-                  selects[i].value = x[0].Category
+//       //             selects[i].value = x[0].Category
 
-                }
-                if (selects[i].id == brand_id) {
-                  selects[i].value = x[0].Brand
+//       //           }
+//       //           if (selects[i].id == brand_id) {
+//       //             selects[i].value = x[0].Brand
 
-                }
-                if (selects[i].id == size_id) {
-                  selects[i].value = x[0].Size
+//       //           }
+//       //           if (selects[i].id == size_id) {
+//       //             selects[i].value = x[0].Size
 
-                }
-              }
+//       //           }
+//       //         }
 
-            } else if (data.status == "failed") {
-              alert("Item not found")
-            }
-          }
-        });
-      }
-    }
+//             } else if (data.status == "failed") {
+//               alert("Item not found")
+//             }
+//           }
+//         });
+//       }
+//     }
 
   </script>
 
@@ -526,49 +561,149 @@ input[type=number] {
   </script>
 
   <script>
+      document.getElementById("todayDate").valueAsDate = new Date();
+
+    
     const tBody = document.getElementById("table-body");
 
       addNewRow = () => {
+        var rows = document.querySelectorAll("tr.single-row");
+        var currenRowLngth=rows.length+1;
         const row = document.createElement("tr");
         row.className = "single-row";
-        row.innerHTML = `<td><input type="text" placeholder="Product name" class="product" id="product"></td>
-                    <td><input type="number" placeholder="0" name="unit" class="unit" id="unit" onkeyup="getInput()"></td>
-                    <td><input type="number" placeholder="0" name="price" class="price" id="price" onkeyup="getInput()"></td>
-                    <td><input type="number" placeholder="0" name="amount" class="amount" id="amount" disabled></td>
-                    <td style="text-align: right;"><span class="material-icons" action="delete">delete_outline</span></td>`
+        row.innerHTML = `
+        <td><input type="text" placeholder="Product Id" name="id${currenRowLngth}" class="id${currenRowLngth}" id="id${currenRowLngth}" onkeyup="getInput(this.id)" ></td>
+        <td><input type="text" placeholder="Product name" class="product${currenRowLngth}" id="product${currenRowLngth}" name="product${currenRowLngth}"></td>
+        <td><input type="text" placeholder="Brand" class="brand${currenRowLngth}" id="brand${currenRowLngth}" name="brand${currenRowLngth}"></td>
+        <td><input type="text" placeholder="Category" class="category${currenRowLngth}" id="category${currenRowLngth}" name="category${currenRowLngth}"></td>
+        
+        <td><input type="text" placeholder="HSB" class="hsb${currenRowLngth}" id="hsb${currenRowLngth}" name="hsb${currenRowLngth}"></td>
+      <td><input type="number" placeholder="0" name="unit${currenRowLngth}" class="unit${currenRowLngth}" id="unit${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
+      <td>
+      <input placeholder="0" name="price${currenRowLngth}" class="price" id="price${currenRowLngth}" onkeyup="getUnitInput(this.id)" type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*">
+      </td>
+           <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" placeholder="0" name="discount${currenRowLngth}" class="discount" id="discount${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
+           <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*"  placeholder="0%" name="gst${currenRowLngth}" class="gst" id="gst${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
+       <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px" placeholder="0" name="amount${currenRowLngth}" class="amount" id="amount${currenRowLngth}"></td>
+       <td style="text-align: right;"><span class="material-icons" action="delete">delete_outline</span></td>`
 
-        tBody.insertBefore(row, tBody.lastElementChild.previousSibling);
+tBody.insertBefore(row, tBody.lastElementChild.previousSibling);
+        var idname = `id${currenRowLngth}`;
+        document.getElementById(idname).focus();
       }
 
       document.getElementById("add-row").addEventListener("click", (e) => {
         e.preventDefault();
         addNewRow();
+        
+
       });
 
-      //GET INPUTS, MULTIPLY AND GET THE ITEM PRICE
-      getInput = () => {
+      getUnitInput = (selectid) => {
         var rows = document.querySelectorAll("tr.single-row");
-        rows.forEach((currentRow) => {
-          var unit = currentRow.querySelector("#unit").value;
-          var price = currentRow.querySelector("#price").value;
+        rows.forEach((currentRow,index) => {
+           var selectedUnitId = currentRow.querySelector("#unit" + (index + 1)).id;
+           var selectedDiscountId = currentRow.querySelector("#discount" + (index + 1)).id;
+          var selectedGstId = currentRow.querySelector("#gst" + (index + 1)).id;
+           if (selectedUnitId == selectid ||selectedDiscountId==selectid || selectedGstId == selectid) {
+          var id = currentRow.querySelector("#id"+ (index + 1)).value;
+          var productData = "";
+          var unit = currentRow.querySelector("#unit" + (index + 1)).value;
+          var discount = currentRow.querySelector("#discount" + (index + 1)).value;
+          var gst = currentRow.querySelector("#gst" + (index + 1)).value;
+          var price = currentRow.querySelector("#price" + (index + 1)).value;
+          var unitprice= unit * price;
+          unitprice = discount > 0 ? unitprice -discount : unitprice;
+          unitprice = gst>0? (parseFloat(unitprice)+ parseFloat(unitprice) *parseFloat(gst)/100): unitprice;
+          var discountValue = discount > 0 ? discount : 0;
+          amount = unitprice;
+          currentRow.querySelector("#amount" + (index + 1)).value = amount;
 
-          amount = unit * price;
-          currentRow.querySelector("#amount").value = amount;
           overallSum();
-
+           }
         })
       };
 
+      //GET INPUTS, MULTIPLY AND GET THE ITEM PRICE
+      getInput = (id) => {
+        var rows = document.querySelectorAll("tr.single-row");
+        rows.forEach((currentRow,index) => {
+          var selectedId = currentRow.querySelector("#id"+(index+1)).id;
+          if(selectedId == id){
+          var currentId = currentRow.querySelector("#id" + (index + 1)).value;
+          var productData="";
+          if(currentId != null && currentId.length>=7){
+              $.ajax({
+                type: "POST",
+                url: "/fetchitem",
+                data: {
+                  "itemid": currentId
+                },
+                success: function (data) {
+                  // 
+                  if (data.status == 200) {
+                    var productData= data.rows;
+                    if (productData.length > 0) {
+                      var unit = currentRow.querySelector("#unit" + (index + 1)).value=1;   
+                      var product = currentRow.querySelector("#product" + (index + 1)).value = productData[0].ItemName;
+                      var Brand = currentRow.querySelector("#brand" + (index + 1)).value = productData[0].Brand;
+                      var Category = currentRow.querySelector("#category" + (index + 1)).value = productData[0].Category;
+                      var price = currentRow.querySelector("#price" + (index + 1)).value = productData[0].Amount;
+                       var unit = currentRow.querySelector("#unit" + (index + 1)).value;
+                      var price = currentRow.querySelector("#price" + (index + 1)).value;
+
+                      amount = unit * price;
+                      currentRow.querySelector("#amount" + (index + 1)).value = amount;
+
+                      overallSum();
+                      addNewRow();
+                    }
+                  } else if (data.status == "failed") {
+                    alert("Item not found")
+                  }
+                  }
+              });
+            
+          }
+         
+        }
+        })
+      };
+      getCustomerInfo = (PhoneNumber) => {
+        if(PhoneNumber.length==10){
+          
+                       $.ajax({
+            type: "POST",
+            url: "/fetchcustomer",
+            data: {
+              "PhoneNumber": PhoneNumber
+            },
+            success: function (data) {
+              // 
+              if (data.status == 200) {
+                var productData = data.rows;
+                if (productData.length > 0) {
+                  const CustomerName = document.querySelector("#CustomerName").value=productData[0].CustomerName;
+                  const Email = document.querySelector("#Email").value = productData[0].Email;
+                  const Address = document.querySelector("#Address").value = productData[0].Address;
+                }
+              } else if (data.status == "failed") {
+                alert("Item not found")
+              }
+            }
+          });
+        }
+      }
       //Get the overall sum/Total
       overallSum = () => {
-        var arr = document.getElementsByName("amount");
-        var total = 0;
-        for (var i = 0; i < arr.length; i++) {
-          if (arr[i].value) {
-            total += +arr[i].value;
-          }
-          document.getElementById("total").value = total;
-        }
+        var rows = document.querySelectorAll("tr.single-row");
+        var selectedAmount =0;
+        rows.forEach((currentRow, index) => {
+
+          var amount=currentRow.querySelector("#amount" + (index + 1)).value
+          selectedAmount = parseFloat(selectedAmount)+ parseFloat(amount!=""?amount:0);
+        });
+        document.getElementById("total").value =selectedAmount.toFixed(2);;
       }
 
       //Delete row from the table
