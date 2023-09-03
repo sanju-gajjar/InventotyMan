@@ -204,6 +204,7 @@
       <div class="column">
           <select class="form-select" aria-label="Disabled select example" id="year" name="selected_year" disabled>
               <option selected>Select Year</option>
+              <option value="2023">2022</option>
               <option value="2023">2023</option>
               <option value="2024">2024</option>
               <option value="2025">2025</option>
@@ -248,7 +249,29 @@
             <div class="col-lg">
               <p class="text-dark">Time: <i><%= order.TransactionTime %></i></p>
             </div>
-               
+            <table border="1">
+            
+                <tr class="text-primary">
+                 
+                  <td>Order ID:<i>
+                      <%= order._id %>
+                    </i></td>
+                                      <td>Total Amount:<i>
+                                          <%=  order.Amount %>
+                                        </i></td>
+                                                          <td>Date:<i>
+                                                              <%= order.TransactionDate %>
+                                                            </i></td>
+                                                                              <td>Time:<i>
+                                                                                  <%= order.TransactionTime %>
+                                                                                </i></td>
+
+
+
+                </tr>
+
+          
+            </table>
           </div>
         </div>
       
@@ -274,6 +297,7 @@
                 <th>Customer Name</th>
                 <th>Customer Email</th>
                 <th>Customer Number</th>
+                <th>Action</th>
             </tr>
         </thead>
           <tbody>
@@ -294,6 +318,11 @@
             </td>
             <td>
               <%= sub_order.CustomerPhone %>
+            </td>
+            <td>
+              <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
+                    value="<%= sub_order._id %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
             </td>
             </tr>
           <% } %>
@@ -423,6 +452,7 @@
             <th>Customer Email</th>
             <th>Customer Number</th>
             <th>Download</th>
+            <th>Action</th>
         </tr>
     </thead>
       <tbody>
@@ -444,6 +474,10 @@
         <td>
           <%= sub_order.CustomerPhone %>
         </td>
+        <td>
+          <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
+                value="<%= JSON.stringify(sub_order) %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form>
+        </td>
         </tr>
       <% } %>
     
@@ -457,7 +491,7 @@
 
 <% } %>
     
-        <% orders.forEach(function(order){ %>
+        <!-- <% orders.forEach(function(order){ %>
             <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
                 <td><%= order.TransactionID %></td>
                 <td><%= order.ItemID %></td>
@@ -467,7 +501,7 @@
                 <td><%= order.Size %></td>
                 <td><%= order.Amount %></td>
                 <td><%= order.TransactionDate %></td>
-                <td><%= order.TransactionTime %>&emsp;<form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= order.ItemID %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
+                <td><form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= JSON.stringify(order) %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
                 <td><%= order.CustomerName %></td>
                 <td>
                   <%= order.CustomerEmail %>
@@ -476,7 +510,7 @@
                   <%= order.CustomerPhone %>
                 </td>
             </tr>
-        <% }); %>
+        <% }); %> -->
     </tbody>
     </table> 
     </div>
