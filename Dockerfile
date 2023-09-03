@@ -1,12 +1,16 @@
 FROM node:18
-ENV SESSION_SECRET=sanju
-ENV db_name=warehousedb
-ENV db_user_name=root
-ENV db_password=example
-ENV login_id=sanju.g1@gmail.com
-ENV login_password=Sanju@123
-ENV PORT=5004
+ENV SESSION_SECRET=secret
 
+ENV db_name=warehousedb
+
+ENV db_user_name=rootas
+
+ENV db_password=Example@123
+
+ENV login_id=admin@xyz.com
+
+ENV login_password=admin1234
+# Create app directory
 WORKDIR /usr/src/app
 
 # Install app dependencies
