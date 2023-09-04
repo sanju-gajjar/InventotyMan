@@ -36,7 +36,12 @@ users.push({
   email: process.env.login_id,
   password: process.env.login_password
 })
-
+users.push({
+  id: Date.now().toString(),
+  name: 'User',
+  email: "thecyclehubuser1@gmail.com",
+  password:"Thecyclehub@123" 
+})
 const initializePassport = require('./passport-config')
 const e = require('express');
 const { log } = require('console');
@@ -136,16 +141,6 @@ app.use(methodOverride('_method'))
 //   });
 // })
 
-function getTotal(unit, gst, price, discount){ 
-  price = price * unit;
-  if (discount > 0) {
-    price = price - discount;
-  }
-  if (gst > 0) {
-    price = price * (gst / 100);
-  }
-  return parseFloat(price).toFixed();
-};
 app.get('/', checkAuthenticated, (req, res) => {
   //
   // if (err) {
@@ -1144,6 +1139,7 @@ async function sendMail(orderDetails, to) {
   console.log("View email: %s", nodemailer.getTestMessageUrl(info)); // URL to preview email
 }
 app.post('/submitbill', checkAuthenticated, (req, res) => {
+
   const db = getDatabase(dbName);
   const ordersCollection = db.collection('orders');
   const stockCollection = db.collection('stocks');
@@ -1203,22 +1199,22 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   // Find documents from the stock collection based on ItemID
 
   const filter = { PhoneNumber: PhoneNumber };
-  const newCustomer = {
-    'PhoneNumber': PhoneNumber,
-    'CustomerName': CustomerName,
-    'Email': Email,
-    'Address': Address
-  };
   // Define the update document
-  const update = { $set: { newCustomer } };
+  const update = {
+    $set: {
+      'PhoneNumber': PhoneNumber,
+      'CustomerName': CustomerName,
+      'Email': Email,
+      'Address': Address
+    } };
   // Define the options for the update operation
   const options = { upsert: true, returnOriginal: false };
   customerCollection.findOneAndUpdate(filter, update, options);
-  const request1 = jsonArrayFinal.filter(x=>x.id!="" && x.id.length>=7);
+  const request1 = jsonArrayFinal.filter(x=>x.id!="");
   const date_format = new Date();
   const transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
   const transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
-  const transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
+  const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
   // Insert data into orders collection
   var billAdd = [];
   request1.forEach((ddd) => { 
@@ -1227,11 +1223,11 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       Category: ddd.category,
       Brand: ddd.brand,
       ItemName: ddd.product,
-      Size: ddd.unit,
-      GST: ddd.gst,
-      Discount: ddd.discount,
-      Amount: ddd.amount,
-      Price: ddd.price,
+      Size: parseInt(ddd.unit),
+      GST: parseFloat(ddd.gst),
+      Discount: parseFloat(ddd.discount),
+      Amount: parseFloat(ddd.amount),
+      Price: parseFloat(ddd.price),
       CustomerPhone: PhoneNumber,
       TransactionDate: transaction_date,
       TransactionTime: transaction_time,
