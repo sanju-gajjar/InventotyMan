@@ -561,7 +561,7 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
               x.CustomerEmail = customDetails.Email
             })
             res.json({
-              success: "Get Successfully",
+              success: "Get Successfully version 1.0.0",
               status: 200,
               rows: rows
             });
