@@ -541,11 +541,36 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
     TransactionID: item_id
   }).toArray((err, rows) => {
     if (!err) {
-      res.json({
-        success: "Get Successfully",
-        status: 200,
-        rows: rows
-      });
+
+      if (rows.length > 0) { 
+        let CustomerPhone = rows[0].CustomerPhone;
+        let customDetails = {};
+        const customerCollection = db.collection('customer');
+        const PhoneNumber = CustomerPhone;
+        // Find documents from the customer collection based on phone number
+        customerCollection.find({
+          PhoneNumber: PhoneNumber
+        }).toArray((err, customerRows) => {
+          if (!err) {
+            customDetails = customerRows[0];
+
+            rows.forEach(x => { 
+              x.CustomerName = customDetails.CustomerName
+              x.CustomerAddress = customDetails.Address
+              x.CustomerPhone = customDetails.PhoneNumber
+              x.CustomerEmail = customDetails.Email
+            })
+            res.json({
+              success: "Get Successfully",
+              status: 200,
+              rows: rows
+            });
+          } else {
+            console.log(err);
+          }
+        });
+      }
+
     } else {
       console.log(err);
     }
@@ -1196,6 +1221,7 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   const CustomerName = req.body.CustomerName;
   const Email = req.body.Email;
   const Address = req.body.Address;
+  const TodayDate = req.body.todayDate;
   // Find documents from the stock collection based on ItemID
 
   const filter = { PhoneNumber: PhoneNumber };
@@ -1212,6 +1238,7 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   customerCollection.findOneAndUpdate(filter, update, options);
   const request1 = jsonArrayFinal.filter(x=>x.id!="");
   const date_format = new Date();
+  
   const transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
   const transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
   const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
@@ -1229,6 +1256,7 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       Amount: parseFloat(ddd.amount),
       Price: parseFloat(ddd.price),
       CustomerPhone: PhoneNumber,
+      BillDate: TodayDate,
       TransactionDate: transaction_date,
       TransactionTime: transaction_time,
       TransactionID: transaction_id,

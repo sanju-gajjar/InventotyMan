@@ -616,7 +616,7 @@
                       // Your recipient
                       "client": {
                         "company": data.rows[0].CustomerName,
-                        "address":  data.rows[0].CustomerEmail,
+                        "address":  data.rows[0].CustomerAddress,
                         "zip": "Phone"+ data.rows[0].CustomerPhone,
                         "city": "",
                         "country": ""
@@ -628,9 +628,9 @@
                         // Invoice number
                         "number": transaction_id,
                         // Invoice data
-                        "date": transaction_date,
+                        "date": data.rows[0].BillDate,
                         // Invoice due date
-                        "due-date": transaction_date,
+                        "due-date": data.rows[0].BillDate,
                       },
                       "products": items_arr,
                       "bottom-notice": "Goods Once Sold Will not be taken Bak. Warranty Will be Covered as per manufacture's & conditions,\n No Warranty Guarantee or Exchanged on Free gift items. Cheques are Subject to Realization Subject to KALOL Jurisdictions. <p style='text-align:left;'' >  <b> Bill By</b>: Keyur Gajjar </p>\n <p style='text-align:right;'' >  <b> Authorised Signatory</b> </p> <p>Thank You for shopping from Phoner. We are looking forward to your next visit !</p>",
