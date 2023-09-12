@@ -13,7 +13,10 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
         <script src="easyInvoice.min.js"></script>
+        <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
         <script src="https://smtpjs.com/v3/smtp.js">
+          
         </script>
 <style>
   .loader {
@@ -583,20 +586,31 @@
                     for (var i = 0; i < data.rows.length; i++) {
                     
                         let item_obj = {
+                          "noitem":(i+1),
                           "quantity": data.rows[i].Size,
                           "description": data.rows[i].ItemName +  '('+ data.rows[i].Category +')'+'-'+ data.rows[i].Brand,
                           "tax-rate": 0,
-                          "price": data.rows[i].Amount
+                          "price": data.rows[i].Amount,
+                          "distotal": data.rows[i].Discount,
+                          "GST": data.rows[i].GST,
+                          "price": data.rows[i].Price,
                         }
                         
                         items_arr.push(item_obj)
                       
-
-                      
                     }
                     
-                    var invoiceData= {
-                      "images": {
+                    var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-96,97,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9574867001</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>01</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th></th><td></td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{rowtotal}}</td></tr>{{/each}}     </tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td>8</td><td></td><td>0.0</td><td>0.0</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount@0.00%:</td><td>$0.00</td></tr><tr><td>GST:</td><td>%tax%</td></tr><tr><td>Final Amount:</td><td>%total%</td></tr></table></div><div class="footer"><p>Payment Mode:<strong>Cash</strong>/<strong>Loan</strong></p><p>Bill By:</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
+                    var htmlpayload={products: items_arr };
+                     var template = Handlebars.compile(html); 
+                    parsedHtml = template(htmlpayload);
+
+                    const invoiceDataNew = {
+                      customize: {
+                        // btoa === base64 encode
+                        template: btoa(parsedHtml) // Your template must be base64 encoded
+                      },
+                         "images": {
                         // The logo on top of your invoice
                         "logo": "https://i.imgur.com/b1IoAnu.png",
                         // The invoice background
@@ -617,7 +631,7 @@
                       "client": {
                         "company": data.rows[0].CustomerName,
                         "address":  data.rows[0].CustomerAddress,
-                        "zip": "Phone"+ data.rows[0].CustomerPhone,
+                        "zip":  data.rows[0].CustomerPhone,
                         "city": "",
                         "country": ""
                         // "custom1": "custom value 1",
@@ -625,26 +639,25 @@
                         // "custom3": "custom value 3"
                       },
                       "information": {
-                        // Invoice number
                         "number": transaction_id,
-                        // Invoice data
                         "date": data.rows[0].BillDate,
-                        // Invoice due date
                         "due-date": data.rows[0].BillDate,
                       },
-                      "products": items_arr,
-                      "bottom-notice": "Goods Once Sold Will not be taken Bak. Warranty Will be Covered as per manufacture's & conditions,\n No Warranty Guarantee or Exchanged on Free gift items. Cheques are Subject to Realization Subject to KALOL Jurisdictions. <p style='text-align:left;'' >  <b> Bill By</b>: Keyur Gajjar </p>\n <p style='text-align:right;'' >  <b> Authorised Signatory</b> </p> <p>Thank You for shopping from Phoner. We are looking forward to your next visit !</p>",
-                      // Settings to customize your invoice
+                     // "products": items_arr,
                       "settings": {
+                        "margin-top": 5,
+                        "margin-right": 5,
+                        "margin-left": 5,
+                        "margin-bottom": 5, 
+                        "locale":"en-IN",
                         "currency": "INR",
+                        "height": "1000px",
+                        "width": "1000px",
+                        "orientation": "landscape"
                       },
-                      // Translate your invoice to your preferred language
-                      "translate": {
-                        "invoice": "PHONER",  // Default to 'INVOICE'
-                        "vat": "gst" // Defaults to 'vat'
-                      },
-                    };
-                            easyinvoice.createInvoice(invoiceData, function (result) {
+                    };  
+                    
+                    easyinvoice.createInvoice(invoiceDataNew, function (result) {
                       var date_format = new Date();
                       var bill_name = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
 
