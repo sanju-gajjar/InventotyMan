@@ -566,7 +566,7 @@
               
                 target.classList.add('loader');
               
-
+var totalAmount=0.0;
               $.ajax({
                 type: "POST",
                 url: "/fetchorderitem",
@@ -581,7 +581,7 @@
                     var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
                     var transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
                     var transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear().toString().substr(-2) + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
-                    var totalAmount=0.0;
+                    
                     var items_arr = []
                     for (var i = 0; i < data.rows.length; i++) {
                     
