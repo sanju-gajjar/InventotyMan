@@ -25,7 +25,7 @@ const flash = require('express-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
 const bodyparser = require('body-parser');
-var port = 3000;
+var port = 3002;
 app.use(bodyparser.json());
 
 const users = []
@@ -304,6 +304,9 @@ app.get('/orders', checkAuthenticated, (req, res) => {
       },
       TransactionTime: {
         $first: '$TransactionTime'
+      },
+      CustomerPhone: {
+        $first:'$CustomerPhone'
       }
     }
   }
@@ -702,14 +705,23 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
   const ordersCollection = db.collection('orders');
 
   const time_type = req.body['exampleRadios'];
+  const phone = req.body['phone'];
+  const month = req.body['month'];
+  const year = req.body['year'];
+  console.log(phone);
+  console.log(month);
+  console.log(year);
+  console.log(time_type);
+  console.log(parseInt(req.body['selected_month']));
+
   const selected_year = parseInt(req.body['selected_year']);
   let aggregationPipeline = [];
-
+  let month_name = "";
   if (time_type === 'month') {
     const selected_month = parseInt(req.body['selected_month']);
     const monthNames = ["January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"];
-    const month_name = monthNames[selected_month - 1];
+    month_name = monthNames[selected_month - 1];
 
     aggregationPipeline.push({
       $match: {
@@ -749,6 +761,25 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
         }
       }
     });
+  } else if (phone != null && phone.length==10) { 
+    aggregationPipeline.push({
+      $match: {
+        CustomerPhone: phone
+      }
+    }, {
+      $group: {
+        _id: '$TransactionID',
+        Amount: {
+          $sum: '$Amount'
+        },
+        TransactionDate: {
+          $first: '$TransactionDate'
+        },
+        TransactionTime: {
+          $first: '$TransactionTime'
+        }
+      }
+    });
   }
 
   // Aggregate based on the selected time criteria
@@ -757,13 +788,23 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
       // Find all documents in the orders collection
       ordersCollection.find().toArray((err1, rows1) => {
         if (!err1) {
-          res.render('orders.ejs', {
-            orders: rows,
-            sub_orders: rows1,
-            selected_item: time_type,
-            month_name: time_type === 'month' ? month_name : 'None',
-            year: selected_year
-          });
+          if (phone != null && phone.length == 10) {
+            res.render('orders.ejs', {
+              orders: rows,
+              sub_orders: rows1,
+              selected_item: time_type,
+              month_name: 'Phone',
+              year: phone
+            });
+          } else {
+            res.render('orders.ejs', {
+              orders: rows,
+              sub_orders: rows1,
+              selected_item: time_type,
+              month_name: time_type === 'month' ? month_name : 'None',
+              year: selected_year
+            });
+          }
         } else {
           console.log(err1);
         }
@@ -1285,15 +1326,15 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       const options = {
         upsert: true
       };
-      stockCollection.updateMany(query, newvalues, options, (err2, result2) => {
-        if (!err2) {
-          console.log('updated stock to sold');
-        } else {
-          console.log('updated stock to sold', err2);
-        }
-        // Close the MongoDB connection
-        //
-      });
+      // stockCollection.updateMany(query, newvalues, options, (err2, result2) => {
+      //   if (!err2) {
+      //     console.log('updated stock to sold');
+      //   } else {
+      //     console.log('updated stock to sold', err2);
+      //   }
+      //   // Close the MongoDB connection
+      //   //
+      // });
 
       if (req.body.sendMail == "on") {
         sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);

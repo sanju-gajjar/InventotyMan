@@ -19,7 +19,23 @@
           
         </script>
 <style>
+  .fulldiv{
+   position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+   
+  }
   .loader {
+    z-index: 1;
+    background-color: grey;
+    display: flex;
+    top: 50%;
+    right: 50%;
+    position: fixed;
+    justify-content: center;
     border: 16px solid #f3f3f3;
     border-radius: 50%;
     border-top: 16px solid blue;
@@ -157,7 +173,7 @@
   <div class="page-content p-5" id="content" style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
     <!-- Toggle button -->
     <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
-    <div class="downloadInvoice" id="loader"></div>
+    <div id="loader"></div>
   
     <!-- Page content -->
     
@@ -175,6 +191,13 @@
       
       <div class="column">
       <div class="form-check form-check-inline form-switch">
+        <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios4" placeholder="Enter Phone Number"
+          oninput="myFunction()">
+        <label class="form-check-label" for="exampleRadios4">
+          Mobile Number
+        </label>
+      </div>
+        <div class="form-check form-check-inline form-switch">
            <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="month" oninput="myFunction()">
           <label class="form-check-label" for="exampleRadios2">
               Month
@@ -187,6 +210,10 @@
           </label>
       </div>
       </div>
+            <div class="column">
+                <input class="form-input" type="input" name="phone" id="phone" placeholder="Enter Phone Number">
+
+            </div>
       <div class="column">
           <select class="form-select" aria-label="Disabled select example" id="month" name="selected_month" disabled>
               <option selected>Select Month</option>
@@ -216,6 +243,7 @@
               <option value="2025">2028</option>
             </select>
       </div>
+      
       </div>
       </div>
       <br>
@@ -230,7 +258,11 @@
     </form>
     
       <% if(selected_item == 'None') { %> 
-      <% orders.forEach(function(order){ %>
+      <% orders.sort(
+
+function(a, b){return a._id - b._id}
+
+      ).forEach(function(order){ %>
         <br>
       <div class="ui styled fluid accordion">
       <div class="title text-primary">
@@ -244,7 +276,7 @@
             <td>Order ID:<i>
                 <%= order._id %>
               </i></td>
-            <td>Total Amount:<i>
+            <td style="right: 0;" >Total Amount:<i>
                 <%= order.Amount %>
               </i></td>
             <td>Date:<i>
@@ -253,34 +285,17 @@
             <td>Time:<i>
                 <%= order.TransactionTime %>
               </i></td>
-        
-        
-        
-          </tr>
-        
-        
+              <td>Phone:<i>
+                <td>
+                  <%= order.CustomerPhone %>
+                </td>
+              </i>
+
+              </td>
+          </tr>   
+
         </table>
         
-        
-        <!-- <div class="container">
-          <div class="row-lg">
-             <div class="col-lg">
-              <p class="text-primary">Order ID: <i><%= order._id %></i> </p>
-            </div>
-            <div class="col-lg">
-              <p class="text-danger"> Total Amount: <i><i class="rupee sign icon"></i><%= order.Amount %></i></p>
-            </div>
-          </div>
-          <div class="row-lg">
-            <div class="col-lg">
-              <p class="text-success">Date: <i><%= order.TransactionDate %></i></p>
-            </div>
-            <div class="col-lg">
-              <p class="text-dark">Time: <i><%= order.TransactionTime %></i></p>
-            </div> -->
-           
-          <!-- </div>
-        </div>  -->
       
       </div>
       <div class="content">
@@ -498,26 +513,6 @@
 
 <% } %>
     
-        <!-- <% orders.forEach(function(order){ %>
-            <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
-                <td><%= order.TransactionID %></td>
-                <td><%= order.ItemID %></td>
-                <td><%= order.ItemName %></td>
-                <td><%= order.Category %></td>
-                <td><%= order.Brand %></td>
-                <td><%= order.Size %></td>
-                <td><%= order.Amount %></td>
-                <td><%= order.TransactionDate %></td>
-                <td><form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= JSON.stringify(order) %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
-                <td><%= order.CustomerName %></td>
-                <td>
-                  <%= order.CustomerEmail %>
-                </td>
-                <td>
-                  <%= order.CustomerPhone %>
-                </td>
-            </tr>
-        <% }); %> -->
     </tbody>
     </table> 
     </div>
@@ -551,10 +546,18 @@
     if (document.getElementById('exampleRadios2').checked == true){
       document.getElementById("month").disabled = false;
       document.getElementById("year").disabled = false;
+       document.getElementById("phone").disabled = true;
+    }
+     if (document.getElementById('exampleRadios4').checked == true) {
+      document.getElementById("month").disabled = true;
+      document.getElementById("year").disabled = true;
+       document.getElementById("phone").disabled = false;
     }
     if (document.getElementById('exampleRadios3').checked == true){
       document.getElementById("year").disabled = false;
       document.getElementById("month").disabled = true;
+       document.getElementById("phone").disabled = true;
+
     }
   }
       function downloadInvoice(tID) {
@@ -565,6 +568,9 @@
                var target = document.getElementById('loader');
               
                 target.classList.add('loader');
+                target.classList.add('fulldiv');
+                
+                
               
 var totalAmount=0.0;
               $.ajax({
@@ -580,28 +586,32 @@ var totalAmount=0.0;
                     var date_format = new Date();
                     var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
                     var transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
-                    var transaction_id = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear().toString().substr(-2) + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
+
+                    const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
                     
                     var items_arr = []
                     for (var i = 0; i < data.rows.length; i++) {
-                    
+                        var disc= data.rows[i].Discount == null ? 0.0 : data.rows[i].Discount;
+                        if(isNaN(disc)){
+                          disc=0.0;
+                        }
                         let item_obj = {
                           "noitem":(i+1),
                           "quantity": data.rows[i].Size,
                           "description": data.rows[i].ItemName +  '('+ data.rows[i].Category +')'+'-'+ data.rows[i].Brand,
                           "tax-rate": 0,
-                          "price": data.rows[i].Amount,
-                          "distotal": data.rows[i].Discount,
+                          "price": parseFloat(data.rows[i].Amount).toFixed(2),
+                          "distotal": parseFloat(disc).toFixed(2),
                           "GST": data.rows[i].GST,
-                          "price": data.rows[i].Price,
+                          "price": parseFloat(data.rows[i].Price).toFixed(2),
                         }
-                        totalAmount=totalAmount + data.rows[i].Amount;
+                        totalAmount= parseFloat(totalAmount + data.rows[i].Amount).toFixed(2);
                         items_arr.push(item_obj)
                       
                     }
                     
-                    var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-96,97,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9574867001</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>01</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th></th><td></td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{rowtotal}}</td></tr>{{/each}}     </tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td>0.0</td><td></td><td>0.0</td><td>{{totalAmount}}</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount@0.00%:</td><td>$0.00</td></tr><tr><td>GST:</td><td>%tax%</td></tr><tr><td>Final Amount:</td><td>{{totalAmount}}</td></tr></table></div><div class="footer"><p>Payment Mode:<strong>Cash</strong>/<strong>Loan</strong></p><p>Bill By:</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
-                    var htmlpayload={products: items_arr };
+                    var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-96,97,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9574867001</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>01</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th></th><td></td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{price}}</td></tr>{{/each}}</tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td></td><td></td><td></td><td>{{totalAmount}}</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount:</td><td>0.00</td></tr><tr><td>GST:</td><td>%</td></tr><tr><td>Final Amount:</td><td>{{totalAmount}}</td></tr></table></div><div class="footer"><p>Payment Mode:<strong>Cash</strong>/<strong>Loan</strong></p><p>Bill By:</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
+                    var htmlpayload={products: items_arr, totalAmount };
                      var template = Handlebars.compile(html); 
                     parsedHtml = template(htmlpayload);
 
@@ -659,16 +669,13 @@ var totalAmount=0.0;
                     
                     easyinvoice.createInvoice(invoiceDataNew, function (result) {
                       var date_format = new Date();
-                      var bill_name = "SHW" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
-
-
-                      
-                      easyinvoice.download(`${bill_name}.pdf`, result.pdf);
+                      easyinvoice.download(`${transaction_id}.pdf`, result.pdf);
                       //	you can download like this as well:
                       //	easyinvoice.download();
                       //	easyinvoice.download('myInvoice.pdf');
                       if (target.classList.contains('loader')) {
                                 target.classList.remove('loader');
+                        target.classList.remove('fulldiv');
                       }
                     });
                    /////////////////////

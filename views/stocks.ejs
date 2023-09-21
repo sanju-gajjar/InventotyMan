@@ -142,8 +142,8 @@
           <th>Item Name</th>
           <th>Category</th>
           <th>Brand</th>
-          <th>Size</th>
-          <th>Amount</th>
+          <th>Quantity</th>
+          <th>Per Price</th>
         </tr>
       </thead>
       
@@ -171,17 +171,7 @@
                 <% category.forEach(function(order){ %>
                   <option name="<%= order.Category %>" value="<%= order.Category %>"><%= order.Category %></option>
                 <% }); %>
-                <!-- <option name="shirt" value="Shirt">Shirt</option>
-                <option name="jeans" value="Jeans">Jeans</option>
-                <option name="cottonpant" value="Cotton Pant">Cotton Pant</option>
-                <option name="tshirt" value="T-Shirt">T-Shirt</option>
-                <option name="trouser" value="Trouser">Trouser</option>
-                <option name="halfpant" value="Half Pant">Half Pant</option>
-                <option name="capri" value="Capri">Capri</option>
-                <option name="vest" value="Vest">Vest</option>
-                <option name="underwear" value="Underwear">Underwear</option>
-                <option name="kurta" value="Kurta">Kurta</option>
-                <option name="pajama" value="Pajama">Pajama</option> -->
+              
               </select>
                 <label for="floatingInput">Category</label>
             </div>
@@ -193,39 +183,21 @@
                 <% brand.forEach(function(order){ %>
                   <option value="<%= order.Brand %>"><%= order.Brand %></option>
                   <% }); %>
-                <!-- <option value="Turtle">Turtle</option>
-                <option value="Duke">Duke</option>
-                <option value="US Polo">US Polo</option>
-                <option value="Flying Machine">Flying Machine</option>
-                <option value="Donear">Donear</option>
-                <option value="Adven">Adven</option>
-                <option value="Siffar">Siffar</option>
-                <option value="Law Man">Law Man</option>
-                <option value="John Player">John Player</option> -->
+              
               </select>
                 <label for="floatingInput">Brand</label>
             </div>
           </td>
           <td class="table-warning">
             <div class="form-floating">
-              <select class="form-select" aria-label="Default select example" name="size1" id="size1" required>
-                
-                <% size.forEach(function(order){ %>
-                  <option value="<%= order.Size %>"><%= order.Size %></option>
-                <% }); %>
-                <!-- <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option> -->
-              </select>
-              <label for="floatingInput">Size</label>
+              <input type="number" class="form-control" name="size1" placeholder="Enter Quantity" value=0 id="size1" required>
+              <label for="floatingInput">Quantity</label>
             </div>
           </td>
           <td class="table-success">
             <div class="form-floating">
               <input type="number" class="form-control" name="amount1" placeholder="Enter Amount" value=0 id="amount1" required>
-              <label for="floatingInput">Amount</label>
+              <label for="floatingInput">Per Price</label>
               
           </div>
           </td>
