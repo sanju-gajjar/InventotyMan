@@ -25,13 +25,7 @@ const flash = require('express-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
 const bodyparser = require('body-parser');
-var port = 3002;
-
-// const accountSid = 'YOUR_ACCOUNT_SID';
-// const authToken = 'YOUR_AUTH_TOKEN';
-// const client = require('twilio')(accountSid, authToken);
-
-
+var port = 3000;
 app.use(bodyparser.json());
 
 const users = []
@@ -46,7 +40,7 @@ users.push({
   id: Date.now().toString(),
   name: 'User',
   email: "thecyclehubuser1@gmail.com",
-  password: "Thecyclehub@123"
+  password:"Thecyclehub@123" 
 })
 const initializePassport = require('./passport-config')
 const e = require('express');
@@ -279,16 +273,6 @@ function checkNotAuthenticated(req, res, next) {
   next()
 }
 app.listen(port, () => console.log(`Express Server is running at ${port} port`))
-
-app.post('sendWhatsAppMsg', (req, res) => {
-  client.messages
-    .create({
-      body: 'Hello from Node.js!',
-      from: 'whatsapp:+YOUR_TWILIO_PHONE_NUMBER',
-      to: 'whatsapp:+RECIPIENT_PHONE_NUMBER'
-    })
-    .then(message => console.log(message.sid));
-});
 app.get('/employees', (req, res) => {
 
   const db = getDatabase(dbName);
@@ -320,9 +304,6 @@ app.get('/orders', checkAuthenticated, (req, res) => {
       },
       TransactionTime: {
         $first: '$TransactionTime'
-      },
-      CustomerPhone: {
-        $first: '$CustomerPhone'
       }
     }
   }
@@ -561,7 +542,7 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
   }).toArray((err, rows) => {
     if (!err) {
 
-      if (rows.length > 0) {
+      if (rows.length > 0) { 
         let CustomerPhone = rows[0].CustomerPhone;
         let customDetails = {};
         const customerCollection = db.collection('customer');
@@ -573,14 +554,14 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
           if (!err) {
             customDetails = customerRows[0];
 
-            rows.forEach(x => {
+            rows.forEach(x => { 
               x.CustomerName = customDetails.CustomerName
               x.CustomerAddress = customDetails.Address
               x.CustomerPhone = customDetails.PhoneNumber
               x.CustomerEmail = customDetails.Email
             })
             res.json({
-              success: "Get Successfully version 1.0.0",
+              success: "Get Successfully",
               status: 200,
               rows: rows
             });
@@ -714,74 +695,26 @@ app.post('/addsize', checkAuthenticated, (req, res) => {
   });
 
 })
-app.get('/orders_query', checkAuthenticated, (req, res) => {
-  res.redirect('/orders');
-});
+
 app.post('/orders_query', checkAuthenticated, (req, res) => {
 
   const db = getDatabase(dbName);
   const ordersCollection = db.collection('orders');
 
-  // const time_type = req.body['exampleRadios'];
-  const phone = req.body['phone'];
-  // const month = req.body['month'];
-  // const year = req.body['year'];
-  console.log(phone);
-
-  // console.log(parseInt(req.body['selected_month']));
-
-  // const selected_year = parseInt(req.body['selected_year']);
+  const time_type = req.body['exampleRadios'];
+  const selected_year = parseInt(req.body['selected_year']);
   let aggregationPipeline = [];
-  let month_name = "";
-  // if (time_type === 'month') {
-  //   const selected_month = parseInt(req.body['selected_month']);
-  //   const monthNames = ["January", "February", "March", "April", "May", "June",
-  //     "July", "August", "September", "October", "November", "December"];
-  //   month_name = monthNames[selected_month - 1];
 
-  //   aggregationPipeline.push({
-  //     $match: {
-  //       TMonth: selected_month,
-  //       TYear: selected_year
-  //     }
-  //   }, {
-  //     $group: {
-  //       _id: '$TransactionID',
-  //       Amount: {
-  //         $sum: '$Amount'
-  //       },
-  //       TransactionDate: {
-  //         $first: '$TransactionDate'
-  //       },
-  //       TransactionTime: {
-  //         $first: '$TransactionTime'
-  //       }
-  //     }
-  //   });
-  // } else if (time_type === 'year') {
-  //   aggregationPipeline.push({
-  //     $match: {
-  //       TYear: selected_year
-  //     }
-  //   }, {
-  //     $group: {
-  //       _id: '$TransactionID',
-  //       Amount: {
-  //         $sum: '$Amount'
-  //       },
-  //       TransactionDate: {
-  //         $first: '$TransactionDate'
-  //       },
-  //       TransactionTime: {
-  //         $first: '$TransactionTime'
-  //       }
-  //     }
-  //   });
-  // } 
-  if (phone != null && phone.length == 10) {
+  if (time_type === 'month') {
+    const selected_month = parseInt(req.body['selected_month']);
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    const month_name = monthNames[selected_month - 1];
+
     aggregationPipeline.push({
       $match: {
-        CustomerPhone: phone
+        TMonth: selected_month,
+        TYear: selected_year
       }
     }, {
       $group: {
@@ -794,9 +727,25 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
         },
         TransactionTime: {
           $first: '$TransactionTime'
+        }
+      }
+    });
+  } else if (time_type === 'year') {
+    aggregationPipeline.push({
+      $match: {
+        TYear: selected_year
+      }
+    }, {
+      $group: {
+        _id: '$TransactionID',
+        Amount: {
+          $sum: '$Amount'
         },
-        CustomerPhone: {
-          $first: '$CustomerPhone'
+        TransactionDate: {
+          $first: '$TransactionDate'
+        },
+        TransactionTime: {
+          $first: '$TransactionTime'
         }
       }
     });
@@ -808,24 +757,13 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
       // Find all documents in the orders collection
       ordersCollection.find().toArray((err1, rows1) => {
         if (!err1) {
-
-          if (phone != null && phone.length == 10) {
-            res.render('orders.ejs', {
-              orders: rows,
-              sub_orders: rows1,
-              selected_item: "None",
-              month_name: 'Phone',
-              year: phone
-            });
-          } else {
-            res.render('orders.ejs', {
-              orders: rows,
-              sub_orders: rows1,
-              selected_item: "time_type",
-              month_name: "time_type" === 'month' ? month_name : 'None',
-              year: "selected_year"
-            });
-          }
+          res.render('orders.ejs', {
+            orders: rows,
+            sub_orders: rows1,
+            selected_item: time_type,
+            month_name: time_type === 'month' ? month_name : 'None',
+            year: selected_year
+          });
         } else {
           console.log(err1);
         }
@@ -1231,11 +1169,11 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   const ordersCollection = db.collection('orders');
   const stockCollection = db.collection('stocks');
   const customerCollection = db.collection('customer');
-  // console.log(req.body);
+ // console.log(req.body);
   let jsonArray = [];
   let counter = 1;
   let obj = {};
-
+ 
   for (let key in req.body) {
     if (key.startsWith('id')) {
       if (obj['id' + counter] !== undefined) {
@@ -1277,8 +1215,8 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   }
   //console.log(JSON.stringify(jsonArrayFinal));
 
- // const item_ids = jsonArrayFinal.map(x => x.id);
-
+  const item_ids = jsonArrayFinal.map(x=>x.id);
+ 
   const PhoneNumber = req.body.PhoneNumber;
   const CustomerName = req.body.CustomerName;
   const Email = req.body.Email;
@@ -1294,22 +1232,21 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       'CustomerName': CustomerName,
       'Email': Email,
       'Address': Address
-    }
-  };
+    } };
   // Define the options for the update operation
   const options = { upsert: true, returnOriginal: false };
   customerCollection.findOneAndUpdate(filter, update, options);
-  const request1 = jsonArrayFinal.filter(x => x.id != "");
+  const request1 = jsonArrayFinal.filter(x=>x.id!="");
   const date_format = new Date();
-
+  
   const transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
   const transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
   const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
   // Insert data into orders collection
   var billAdd = [];
-  request1.forEach((ddd) => {
+  request1.forEach((ddd) => { 
     billAdd.push({
-      ItemID: ddd.id,
+      ItemID :ddd.id,
       Category: ddd.category,
       Brand: ddd.brand,
       ItemName: ddd.product,
@@ -1329,48 +1266,38 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
     });
   })
 
-
-
+    
+ 
   ordersCollection.insertMany(billAdd, (err, result) => {
     if (!err) {
-      // let query = {
-      //   ItemID: {
-      //     $in: item_ids
-      //   }
-      // };
-      // const newData = {
-      //   Status: 'sold'
-      // };
-      // let newvalues = {
-      //   $set: newData
-      // }
-      // const options = {
-      //   upsert: true
-      // };
-
-        billAdd.forEach((item) => {
-          const { ItemID, Size } = item;
-
-          stockCollection.updateOne(
-            { ItemID },
-            { $inc: { Size: -Size } },
-  (err, result) => {
-    if (err) {
-      console.log('Error updating product:', err);
-    } else {
-      console.log(`Product with ID ${ItemID} updated successfully`);
-    }
-  }
-);
-         
-        });
-      
-
-
-      if (req.body.sendMail == "on") {
-        sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
+      let query = {
+        ItemID: {
+          $in: item_ids
+        }
+      };
+      const newData = {
+        Status: 'sold'
+      };
+      let newvalues = {
+        $set: newData
       }
-
+      const options = {
+        upsert: true
+      };
+      stockCollection.updateMany(query, newvalues, options, (err2, result2) => {
+        if (!err2) {
+          console.log('updated stock to sold');
+        } else {
+          console.log('updated stock to sold', err2);
+        }
+        // Close the MongoDB connection
+        //
+      });
+    
+        if (req.body.sendMail == "on") {
+          sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
+        }
+     
       res.redirect('/orders');
     } else {
       console.log(err);

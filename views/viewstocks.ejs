@@ -15,7 +15,8 @@
   </head>
   <body>
      <!--Vertical Navbar-->
-  <div class="vertical-nav bg-white" id="sidebar">
+  <%- include('header') %>
+     <!-- <div class="vertical-nav bg-white" id="sidebar">
     <div class="py-4 px-3 mb-4" style="background: linear-gradient(to top, #0066eb 0%, #ff8ab3 68%);">
       <div class="media d-flex align-items-center"><img src="admin.svg" alt="..." width="65" class="mr-3 rounded-circle img-thumbnail shadow-sm">
         &emsp;<div class="media-body">
@@ -108,7 +109,7 @@
               </a>
       </li>
     </ul>
-  </div>
+  </div> -->
   <!-- End vertical navbar -->
   
   <!-- Page content holder -->
@@ -182,6 +183,7 @@
             <th>Amount</th>
             <th>Date Entered</th>
             <th>Time Entered</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -194,7 +196,9 @@
                 <td><%= order.Size %></td>
                 <td><%= order.Amount %></td>
                 <td><%= order.StockDate %></td>
-                <td><%= order.StockTime %>&emsp;<form action="/deletestock" method="POST"><input type="hidden" name="deleteid" value="<%= order.ItemID %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
+                <td><%= order.StockTime %>&emsp;<form action="/deletestock" method="POST">
+                </td><td>
+                  <input type="hidden" name="deleteid" value="<%= order.ItemID %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></td>
                 <!-- <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid" value="<%= order.TransactionID %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form> -->
             </tr>
         <% }); %>

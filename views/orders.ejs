@@ -73,7 +73,8 @@
   <body>
    
     <!--Vertical Navbar-->
-  <div class="vertical-nav bg-white" id="sidebar">
+    <%- include('header') %>
+  <!-- <div class="vertical-nav bg-white" id="sidebar">
     <div class="py-4 px-3 mb-4" style="background: linear-gradient(to top, #0066eb 0%, #ff8ab3 68%);">
       <div class="media d-flex align-items-center"><img src="admin.svg" alt="..." width="65" class="mr-3 rounded-circle img-thumbnail shadow-sm">
         &emsp;<div class="media-body">
@@ -166,7 +167,7 @@
               </a>
       </li>
     </ul>
-  </div>
+  </div> -->
   <!-- End vertical navbar -->
   
   <!-- Page content holder -->
@@ -189,7 +190,7 @@
       <h3>View Orders By</h3>
       </div>
       
-      <div class="column">
+      <!-- <div class="column">
       <div class="form-check form-check-inline form-switch">
         <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios4" placeholder="Enter Phone Number"
           oninput="myFunction()">
@@ -209,12 +210,9 @@
               Year
           </label>
       </div>
-      </div>
-            <div class="column">
-                <input class="form-input" type="input" name="phone" id="phone" placeholder="Enter Phone Number">
-
-            </div>
-      <div class="column">
+      </div> -->
+            
+      <!-- <div class="column">
           <select class="form-select" aria-label="Disabled select example" id="month" name="selected_month" disabled>
               <option selected>Select Month</option>
               <option value="1">January</option>
@@ -242,13 +240,16 @@
               <option value="2025">2027</option>
               <option value="2025">2028</option>
             </select>
-      </div>
+      </div> -->
       
       </div>
       </div>
       <br>
       <center>
         <div class="ui left corner labeled action input">
+          <div class="column">
+            <input class="form-input" type="input" name="phone" id="phone" placeholder="Enter Phone Number">
+          </div>
           <button class="ui teal button" type="submit">Search &emsp;</button>
           <div class="ui corner label">
             <i class="search icon"></i>
@@ -260,35 +261,35 @@
       <% if(selected_item == 'None') { %> 
       <% orders.sort(
 
-function(a, b){return a._id - b._id}
+function(a, b){return new Date(b.TransactionDate.split('/')[2],b.TransactionDate.split('/')[1],b.TransactionDate.split('/')[0]) -  new Date(a.TransactionDate.split('/')[2],a.TransactionDate.split('/')[1],a.TransactionDate.split('/')[0])}
 
       ).forEach(function(order){ %>
         <br>
       <div class="ui styled fluid accordion">
       <div class="title text-primary">
-        <i class="dropdown icon">
-          
-        </i>
+       
         <table>
-        
+       
           <tr class="text-primary">
-        
+            <td><i class="dropdown icon">
+            </i></td>
+        <td>Date:<i>
+            <%= order.TransactionDate %>
+          </i> | </td> 
+        <td>Time:<i>
+            <%= order.TransactionTime %>
+          </i> | </td>
             <td>Order ID:<i>
                 <%= order._id %>
-              </i></td>
+              </i> | </td>
+              <td>Phone:<i>
+              <td>
+                <%= order.CustomerPhone %>
+               | </td>
             <td style="right: 0;" >Total Amount:<i>
                 <%= order.Amount %>
-              </i></td>
-            <td>Date:<i>
-                <%= order.TransactionDate %>
-              </i></td>
-            <td>Time:<i>
-                <%= order.TransactionTime %>
-              </i></td>
-              <td>Phone:<i>
-                <td>
-                  <%= order.CustomerPhone %>
-                </td>
+              </i>  </td>
+             
               </i>
 
               </td>
@@ -305,6 +306,12 @@ function(a, b){return a._id - b._id}
             <%=order._id%> 
           </p>
           </button>
+                  <div class="form-check form-check-inline form-switch">
+                    <input class="form-check-input" type="radio" name=<%=order._id%> id=<%=order._id%> value="sendMail">
+                    <label class="form-check-label" for="sendMail">
+                      Send Mail
+                    </label>
+                  </div>
         </div>
         <table class="ui inverted violet table table-bordered" >
           <thead>
@@ -359,7 +366,7 @@ function(a, b){return a._id - b._id}
 
   <% } %>
     
-  <% if(selected_item == 'month') { %> 
+  <!-- <% if(selected_item == 'month') { %> 
     <h2 class="text-primary">Showing Orders for <%= month_name %>, <%= year %>  </h2>
     <% orders.forEach(function(order){ %>
       <br>
@@ -509,7 +516,7 @@ function(a, b){return a._id - b._id}
 </table> 
 </div>
 </div>
-<% }) %> 
+<% }) %>  -->
 
 <% } %>
     
@@ -573,6 +580,7 @@ function(a, b){return a._id - b._id}
                 
               
 var totalAmount=0.0;
+var email="";
               $.ajax({
                 type: "POST",
                 url: "/fetchorderitem",
@@ -604,17 +612,22 @@ var totalAmount=0.0;
                           "distotal": parseFloat(disc).toFixed(2),
                           "GST": data.rows[i].GST,
                           "price": parseFloat(data.rows[i].Price).toFixed(2),
+                          "email": data.rows[i].CustomerEmail
                         }
+                        email= data.rows[0].CustomerEmail;
                         totalAmount= parseFloat(totalAmount + data.rows[i].Amount).toFixed(2);
                         items_arr.push(item_obj)
                       
                     }
                     
-                    var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-96,97,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9574867001</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>01</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th></th><td></td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{price}}</td></tr>{{/each}}</tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td></td><td></td><td></td><td>{{totalAmount}}</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount:</td><td>0.00</td></tr><tr><td>GST:</td><td>%</td></tr><tr><td>Final Amount:</td><td>{{totalAmount}}</td></tr></table></div><div class="footer"><p>Payment Mode:<strong>Cash</strong>/<strong>Loan</strong></p><p>Bill By:</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
-                    var htmlpayload={products: items_arr, totalAmount };
+                    var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-details th{text-align:left;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-96,97,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9574867001</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>01</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th>Email</th><td>{{email}}</td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{price}}</td></tr>{{/each}}</tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td></td><td></td><td></td><td>{{totalAmount}}</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount:</td><td>0.00</td></tr><tr><td>GST:</td><td>%</td></tr><tr><td>Final Amount:</td><td>{{totalAmount}}</td></tr></table></div><div class="footer"><p>Payment Mode:<strong>Cash</strong>/<strong>Loan</strong></p><p>Bill By: Keyur Gajjar</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
+                    var htmlpayload={products: items_arr, totalAmount,email };
                      var template = Handlebars.compile(html); 
                     parsedHtml = template(htmlpayload);
-
+                    if(document.getElementById(tID).checked == true){
+                    console.log(parsedHtml);
+                    }
+                    
                     const invoiceDataNew = {
                       customize: {
                         // btoa === base64 encode
