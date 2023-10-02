@@ -217,10 +217,10 @@
                               <%= sub_order.Amount %>
                             </td>
                             <td>
-                              <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone)?.CustomerName %>
+                              <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone) != undefined ? customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone).CustomerName :"" %>
                             </td>
                             <td>
-                              <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone)?.Email  %>
+                              <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone) !=undefined .find(x=>x.PhoneNumber== order.CustomerPhone).Email : ""  %>
                             </td>
                             <td>
                               <%= sub_order.CustomerPhone %>
