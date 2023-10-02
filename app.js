@@ -353,14 +353,25 @@ app.get('/orders', checkAuthenticated, (req, res) => {
           }).sort({
             _id: -1
           }).toArray((err1, customerInfo) => {
-            res.render('orders.ejs', {
-              orders: rows,
-              sub_orders: rows1,
-              customerInfo: customerInfo,
-              selected_item: 'None',
-              month_name: 'None',
-              year: 'None'
-            });
+            if (customerInfo != null) {
+              res.render('orders.ejs', {
+                orders: rows,
+                sub_orders: rows1,
+                customerInfo: customerInfo,
+                selected_item: 'None',
+                month_name: 'None',
+                year: 'None'
+              });
+            } else { 
+              res.render('orders.ejs', {
+                orders: rows,
+                sub_orders: rows1,
+                customerInfo: undefined,
+                selected_item: 'None',
+                month_name: 'None',
+                year: 'None'
+              });
+            }
           });
         } else {
           console.log(err1);
