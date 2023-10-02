@@ -1,8 +1,6 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
-
-
 const {
   connect
 } = require('./db/db');
@@ -28,11 +26,6 @@ const methodOverride = require('method-override')
 const bodyparser = require('body-parser');
 var port = 3002;
 
-// const accountSid = 'YOUR_ACCOUNT_SID';
-// const authToken = 'YOUR_AUTH_TOKEN';
-// const client = require('twilio')(accountSid, authToken);
-
-
 app.use(bodyparser.json());
 
 const users = []
@@ -51,7 +44,9 @@ users.push({
 })
 const initializePassport = require('./passport-config')
 const e = require('express');
-const { log } = require('console');
+const {
+  log
+} = require('console');
 initializePassport(
 
   passport,
@@ -74,87 +69,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
 
-// app.get('/', checkAuthenticated, (req, res) => {
-//
-//     if (err) {
-//       console.error('Error connecting to MongoDB:', err);
-//       return;
-//     }
-
-
-//     const db = getDatabase(dbName);
-
-//     const stockCollection = db.collection('stocks');
-
-//     stockCollection.find({}).toArray((err, resultStocksCount) => {
-
-
-//       const pipelineStock = [
-//         {
-//           $group: {
-//             _id: '_id',
-//             TotalItemsOrdered: { $sum: '$Amount' }
-//           }
-//         }
-//       ];
-//       stockCollection.aggregate(pipelineStock).toArray((err, resultStock) => {
-//         if (err) {
-//           console.error('Error executing aggregation:', err);
-//
-//           return;
-//         }
-//         const ordersCollection = db.collection('orders');
-
-//         ordersCollection.find({}).toArray((err, resultCount) => {
-
-//           const pipeline = [
-//             {
-//               $group: {
-//                 _id: '_id',
-//                 TotalItemsOrdered: { $sum: '$Amount' }
-//               }
-//             }
-//           ];
-//           ordersCollection.aggregate(pipeline).toArray((err, result) => {
-//             if (err) {
-//               console.error('Error executing aggregation:', err);
-//
-//               return;
-//             }
-
-//             if (resultStock.length > 0) {
-//
-//               res.render('index.ejs', {
-//                 total_sales: result,
-//                 ord_num: [{ NumberOfProducts: (resultCount != null && resultCount != undefined) ? resultCount.length : 0 }],
-//                 stock_num: [{ NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length != undefined) ? resultStocksCount.length : 0 }],
-//                 total_stock: resultStock,
-//               });
-//             } else {
-//
-//               res.render('index.ejs', {
-//                 total_sales: [],
-//                 ord_num: [],
-//                 stock_num: [],
-//                 total_stock: []
-//               });
-//             }
-//           });
-//         });
-//       });
-//       //
-//     });
-
-//   });
-// })
-
 app.get('/', checkAuthenticated, (req, res) => {
-  //
-  // if (err) {
-  //   console.error('Error connecting to MongoDB:', err);
-  //   return;
-  // }
-
 
   const db = getDatabase(dbName);
 
@@ -164,11 +79,13 @@ app.get('/', checkAuthenticated, (req, res) => {
 
     const pipelineStock = [{
       $addFields: {
-        total: { $multiply: ["$Amount", "$Size"] }
+        total: {
+          $multiply: ["$Amount", "$Size"]
+        }
         // Calculate amount * size and store in a new field called "total"
       }
     },
-      {
+    {
       $group: {
         _id: '_id',
         TotalItemsOrdered: {
@@ -187,21 +104,21 @@ app.get('/', checkAuthenticated, (req, res) => {
 
       ordersCollection.find({}).toArray((err, resultCount) => {
 
-        const pipeline = [
-          {
-            $addFields: {
-              total: { $multiply: ["$Amount", "$Size"] }
-              // Calculate amount * size and store in a new field called "total"
+        const pipeline = [{
+          $addFields: {
+            total: {
+              $multiply: ["$Amount", "$Size"]
             }
-          }, {
+            // Calculate amount * size and store in a new field called "total"
+          }
+        }, {
           $group: {
             _id: '_id',
             TotalItemsOrdered: {
               $sum: '$total'
             }
           }
-        }
-        ];
+        }];
         ordersCollection.aggregate(pipeline).toArray((err, result) => {
           if (err) {
             console.error('Error executing aggregation:', err);
@@ -215,12 +132,10 @@ app.get('/', checkAuthenticated, (req, res) => {
               total_sales: result,
               ord_num: [{
                 NumberOfProducts: (resultCount != null && resultCount != undefined) ? resultCount.length : 0
-              }
-              ],
+              }],
               stock_num: [{
                 NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length != undefined) ? resultStocksCount.length : 0
-              }
-              ],
+              }],
               total_stock: resultStock,
             });
           } else {
@@ -293,31 +208,6 @@ function checkNotAuthenticated(req, res, next) {
 }
 app.listen(port, () => console.log(`Express Server is running at ${port} port`))
 
-app.post('sendWhatsAppMsg', (req, res) => {
-  client.messages
-    .create({
-      body: 'Hello from Node.js!',
-      from: 'whatsapp:+YOUR_TWILIO_PHONE_NUMBER',
-      to: 'whatsapp:+RECIPIENT_PHONE_NUMBER'
-    })
-    .then(message => console.log(message.sid));
-});
-app.get('/employees', (req, res) => {
-
-  const db = getDatabase(dbName);
-  const warehouseCollection = db.collection('warehouse');
-
-  warehouseCollection.find().toArray((err, rows) => {
-    if (!err) {
-      res.send(rows);
-    } else {
-      console.log(err);
-    }
-
-  });
-
-})
-
 app.get('/orders', checkAuthenticated, (req, res) => {
 
   const db = getDatabase(dbName);
@@ -339,17 +229,18 @@ app.get('/orders', checkAuthenticated, (req, res) => {
         $first: '$CustomerPhone'
       }
     }
-  }
-  ]).toArray((err, rows) => {
+  }]).toArray((err, rows) => {
     if (!err) {
       ordersCollection.find().sort({
         _id: -1
       }).toArray((err1, rows1) => {
         if (!err1) {
 
-          let customerPhonesList=rows.map(x => x.CustomerPhone)
+          let customerPhonesList = rows.map(x => x.CustomerPhone)
           customerCollection.find({
-            "PhoneNumber": { $in: customerPhonesList },
+            "PhoneNumber": {
+              $in: customerPhonesList
+            },
           }).sort({
             _id: -1
           }).toArray((err1, customerInfo) => {
@@ -362,7 +253,7 @@ app.get('/orders', checkAuthenticated, (req, res) => {
                 month_name: 'None',
                 year: 'None'
               });
-            } else { 
+            } else {
               res.render('orders.ejs', {
                 orders: rows,
                 sub_orders: rows1,
@@ -386,10 +277,10 @@ app.get('/orders', checkAuthenticated, (req, res) => {
 
 })
 app.get('/viewbarcodepage', checkAuthenticated, (req, res) => {
-try {
-  
+  try {
 
-  const db = getDatabase(dbName);
+
+    const db = getDatabase(dbName);
     const brandsCollection = db.collection('brands');
 
     brandsCollection.find().toArray((err1, brands) => {
@@ -417,9 +308,9 @@ try {
 
       });
     });
-} catch (error) {
-  console.log(error);
-}
+  } catch (error) {
+    console.log(error);
+  }
 })
 
 app.get('/viewstocks', checkAuthenticated, (req, res) => {
@@ -570,9 +461,14 @@ app.post('/barcode_query', checkAuthenticated, (req, res) => {
 
   const db = getDatabase(dbName);
   console.log(req.body);
-  const { selected_brand, selected_category } = req.body;
-  if (selected_brand == null || selected_category == null) { 
-    res.render('barcpdegen.ejs', { products: []});
+  const {
+    selected_brand,
+    selected_category
+  } = req.body;
+  if (selected_brand == null || selected_category == null) {
+    res.render('barcpdegen.ejs', {
+      products: []
+    });
   }
   const stockCollection = db.collection('stocks');
 
@@ -610,7 +506,7 @@ app.post('/barcode_query', checkAuthenticated, (req, res) => {
           all_stocks: allStocks,
           brands: brands,
           categories: categories,
-         // display_content: filteredStocks,
+          // display_content: filteredStocks,
           filter_type: 'Filter',
           filter_name: selected_brand + " " + selected_category
         });
@@ -838,32 +734,7 @@ app.post('/addsize', checkAuthenticated, (req, res) => {
   });
 
 })
-app.get('/edit/:id', async (req, res) => {
-  const db = getDatabase(dbName);
-  const productFB = db.collection('orders');
-  var objectId2 = new ObjectID(req.params.id);
-  productFB.find({ _id: objectId2 }).toArray((err, rows) => {
-    if (!err) {
-      res.render('edit-product-popup.ejs', { product: rows[0] });
-     }
-  });
-  
-});
 
-app.post('/edit/:id', async (req, res) => {
-  const { name, price } = req.body;
-  const db = getDatabase(dbName);
-  const productFB = db.collection('orders');
-  const update = {
-    $set: {
-      ItemName:name,
-      Amount:price
-    }
-  };
-  var objectId2 = new ObjectID(req.params.id);
-  productFB.findOneAndUpdate({ _id: objectId2 }, update);
-  res.redirect('/orders');
-});
 app.get('/orders_query', checkAuthenticated, (req, res) => {
   res.redirect('/orders');
 });
@@ -879,56 +750,9 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
   // const year = req.body['year'];
   console.log(phone);
 
-  // console.log(parseInt(req.body['selected_month']));
-
-  // const selected_year = parseInt(req.body['selected_year']);
+  
   let aggregationPipeline = [];
   let month_name = "";
-  // if (time_type === 'month') {
-  //   const selected_month = parseInt(req.body['selected_month']);
-  //   const monthNames = ["January", "February", "March", "April", "May", "June",
-  //     "July", "August", "September", "October", "November", "December"];
-  //   month_name = monthNames[selected_month - 1];
-
-  //   aggregationPipeline.push({
-  //     $match: {
-  //       TMonth: selected_month,
-  //       TYear: selected_year
-  //     }
-  //   }, {
-  //     $group: {
-  //       _id: '$TransactionID',
-  //       Amount: {
-  //         $sum: '$Amount'
-  //       },
-  //       TransactionDate: {
-  //         $first: '$TransactionDate'
-  //       },
-  //       TransactionTime: {
-  //         $first: '$TransactionTime'
-  //       }
-  //     }
-  //   });
-  // } else if (time_type === 'year') {
-  //   aggregationPipeline.push({
-  //     $match: {
-  //       TYear: selected_year
-  //     }
-  //   }, {
-  //     $group: {
-  //       _id: '$TransactionID',
-  //       Amount: {
-  //         $sum: '$Amount'
-  //       },
-  //       TransactionDate: {
-  //         $first: '$TransactionDate'
-  //       },
-  //       TransactionTime: {
-  //         $first: '$TransactionTime'
-  //       }
-  //     }
-  //   });
-  // } 
   if (phone != null && phone.length == 10) {
     aggregationPipeline.push({
       $match: {
@@ -962,7 +786,9 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
 
           if (phone != null && phone.length == 10) {
             customerCollection.find({
-              "PhoneNumber": { $in: [phone] },
+              "PhoneNumber": {
+                $in: [phone]
+              },
             }).sort({
               _id: -1
             }).toArray((err1, customerInfo) => {
@@ -1029,28 +855,33 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
   var filter_type = req.body['exampleRadios1'];
 
   if (filter_type === 'brand') {
-    stockCollection.aggregate([
-      {
-        $addFields: {
-          total: { $multiply: ["$Amount", "$Size"] }
-          // Calculate amount * size and store in a new field called "total"
+    stockCollection.aggregate([{
+      $addFields: {
+        total: {
+          $multiply: ["$Amount", "$Size"]
         }
-      },
-      {
-        $group: {
-          _id: "$Brand", // Group by brand
-          Amount: { $sum: "$total" },
-          Brand: { $first:'$Brand'}, // Sum the calculated values and store in a field called "totalAmount"
-          Count: {
-            $sum: '$Size'
-          },
-        }
-      },{
+        // Calculate amount * size and store in a new field called "total"
+      }
+    },
+    {
+      $group: {
+        _id: "$Brand", // Group by brand
+        Amount: {
+          $sum: "$total"
+        },
+        Brand: {
+          $first: '$Brand'
+        }, // Sum the calculated values and store in a field called "totalAmount"
+        Count: {
+          $sum: '$Size'
+        },
+      }
+    }, {
       $project: {
         _id: 0,
         Brand: 1,
         Count: 1,
-          Amount: 1
+        Amount: 1
       }
     }
     ]).toArray((err, rows) => {
@@ -1073,21 +904,22 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
   }
 
   if (filter_type === 'category') {
-    stockCollection.aggregate([
-      {
-        $addFields: {
-          total: { $multiply: ["$Amount", "$Size"] }
-          // Calculate amount * size and store in a new field called "total"
+    stockCollection.aggregate([{
+      $addFields: {
+        total: {
+          $multiply: ["$Amount", "$Size"]
         }
-      }, {
+        // Calculate amount * size and store in a new field called "total"
+      }
+    }, {
       $group: {
         _id: '$Category',
         Count: {
           $sum: '$Size'
-          },
-          Category: {
-            $first: '$Category'
-          },
+        },
+        Category: {
+          $first: '$Category'
+        },
         Amount: {
           $sum: '$total'
         }
@@ -1099,8 +931,7 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
         Count: 1,
         Amount: 1
       }
-    }
-    ]).toArray((err, rows) => {
+    }]).toArray((err, rows) => {
       if (!err) {
         stockCollection.countDocuments({}, (err1, count) => {
           if (!err1) {
@@ -1132,7 +963,8 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
     const month = parseInt(req.body['selected_month']);
     const year = parseInt(req.body['selected_year']);
     const monthNames = ["January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"];
+      "July", "August", "September", "October", "November", "December"
+    ];
     const month_name = monthNames[month - 1];
 
     const filter_type = req.body['exampleRadios1'];
@@ -1148,14 +980,17 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
         Count: {
           $sum: 1
         },
-        Brand: { $first: '$Brand' },
-        Category: { $first: '$Category' },
+        Brand: {
+          $first: '$Brand'
+        },
+        Category: {
+          $first: '$Category'
+        },
         Amount: {
           $sum: '$Amount'
         }
       }
-    }
-    ];
+    }];
 
     ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
       if (!err) {
@@ -1174,8 +1009,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
               $sum: 1
             }
           }
-        }
-        ];
+        }];
 
         ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
           if (!err1) {
@@ -1220,8 +1054,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
           $sum: '$Amount'
         }
       }
-    }
-    ];
+    }];
 
     ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
       if (!err) {
@@ -1239,8 +1072,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
               $sum: 1
             }
           }
-        }
-        ];
+        }];
 
         ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
           if (!err1) {
@@ -1452,7 +1284,7 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   }
   //console.log(JSON.stringify(jsonArrayFinal));
 
- // const item_ids = jsonArrayFinal.map(x => x.id);
+  // const item_ids = jsonArrayFinal.map(x => x.id);
 
   const PhoneNumber = req.body.PhoneNumber;
   const CustomerName = req.body.CustomerName;
@@ -1461,11 +1293,13 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   const Pincode = req.body.Pincode;
   const Address = req.body.Address;
   const TodayDate = req.body.todayDate;
-  const onlinePayment = req.body.onlinePayment == 'yes' ? true:false;
-  
+  const onlinePayment = req.body.onlinePayment == 'yes' ? true : false;
+
   // Find documents from the stock collection based on ItemID
 
-  const filter = { PhoneNumber: PhoneNumber };
+  const filter = {
+    PhoneNumber: PhoneNumber
+  };
   // Define the update document
   const update = {
     $set: {
@@ -1473,12 +1307,15 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       'CustomerName': CustomerName,
       'Email': Email,
       'Address': Address,
-      'CGST': CGST, 
-      'Pincode':Pincode,
+      'CGST': CGST,
+      'Pincode': Pincode,
     }
   };
   // Define the options for the update operation
-  const options = { upsert: true, returnOriginal: false };
+  const options = {
+    upsert: true,
+    returnOriginal: false
+  };
   customerCollection.findOneAndUpdate(filter, update, options);
   const request1 = jsonArrayFinal.filter(x => x.id != "");
   const date_format = new Date();
@@ -1515,38 +1352,31 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
 
   ordersCollection.insertMany(billAdd, (err, result) => {
     if (!err) {
-      // let query = {
-      //   ItemID: {
-      //     $in: item_ids
-      //   }
-      // };
-      // const newData = {
-      //   Status: 'sold'
-      // };
-      // let newvalues = {
-      //   $set: newData
-      // }
-      // const options = {
-      //   upsert: true
-      // };
 
-        billAdd.forEach((item) => {
-          const { ItemID, Size } = item;
+      billAdd.forEach((item) => {
+        const {
+          ItemID,
+          Size
+        } = item;
 
-          stockCollection.updateOne(
-            { ItemID },
-            { $inc: { Size: -Size } },
-  (err, result) => {
-    if (err) {
-      console.log('Error updating product:', err);
-    } else {
-      console.log(`Product with ID ${ItemID} updated successfully`);
-    }
-  }
-);
-         
-        });
-      
+        stockCollection.updateOne({
+          ItemID
+        }, {
+          $inc: {
+            Size: -Size
+          }
+        },
+          (err, result) => {
+            if (err) {
+              console.log('Error updating product:', err);
+            } else {
+              console.log(`Product with ID ${ItemID} updated successfully`);
+            }
+          }
+        );
+
+      });
+
 
 
       if (req.body.sendMail == "on") {
@@ -1706,8 +1536,7 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
       return;
     }
 
-    if (result.deletedCount > 0) { }
-    else { }
+    if (result.deletedCount > 0) { } else { }
 
     res.redirect('/brands');
 
@@ -1736,22 +1565,11 @@ app.post('/deletesize', checkAuthenticated, (req, res) => {
 
 })
 
-app.post('/barcodegen', checkAuthenticated, (req, res) => { 
-  res.render('barcodegen.ejs', { products: JSON.parse(req.body.allStocks) });
-  // const db = getDatabase(dbName);
+app.post('/barcodegen', checkAuthenticated, (req, res) => {
+  res.render('barcodegen.ejs', {
+    products: JSON.parse(req.body.allStocks)
+  });
 
-  // const stockCollection = db.collection('stocks');
-
-  // stockCollection.find({
-  //   Brand: req.body.brand,
-  //   Category: req.body.category
-  // }).toArray((err, allStocks) => {
-  //   if (err) {
-  //     console.error('Error stockCollection generate barcde page:', err2);
-  //     return;
-  //   }
-    
-  // });
 })
 
 app.post('/deletestock', checkAuthenticated, (req, res) => {
