@@ -1,4 +1,10 @@
 <header>
+    <style>
+        .headersvg{
+            width: 150px !important;
+            max-width: 150px !important;
+        }
+    </style>
 <div class="vertical-nav bg-white" id="sidebar">
     <div class="py-4 px-3 mb-4" style="background: linear-gradient(to top, #0066eb 0%, #ff8ab3 68%);">
         <div class="media d-flex align-items-center"><img src="admin.svg" alt="..." width="65"
@@ -8,6 +14,7 @@
                     <p class="text-white"><shop-name>
                 </h4>
                 <p class="font-weight-light text-white mb-0">Hi, Admin</p>
+                <p class="font-weight-light text-white mb-0">Ver: 1.0.2</p>
             </div>
         </div>
     </div>
@@ -28,9 +35,8 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="/billing" class="nav-link text-dark font-italic"
-                style="background: linear-gradient(to right, #0066eb 0%, #ff8ab3 68%);">
-                <p class="text-white"><i class="rupee sign icon"></i>
+            <a href="/billing" class="nav-link text-dark font-italic">
+                <p><i class="rupee sign icon"></i>
                     Bill
                 </p>
             </a>
@@ -72,12 +78,12 @@
                 Category
             </a>
         </li>
-        <!-- <li class="nav-item">
-            <a href="/sizes" class="nav-link text-dark font-italic">
+        <li class="nav-item">
+            <a href="/viewbarcodepage" class="nav-link text-dark font-italic">
                 <i class="check square icon"></i>
-                Size
+                BarCode Gen
             </a>
-        </li> -->
+        </li>
     </ul>
 
     <h5 class="ui horizontal divider header text-primary">

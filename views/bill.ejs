@@ -20,300 +20,346 @@
 
 <body>
   <style>
-  
-body {
-  font-family: Arial, sans-serif;
-  padding: 5px;
-}
+    body {
+      font-family: Arial, sans-serif;
+      padding: 5px;
+    }
 
-h2, h3 {
-  margin-bottom: 10px;
-}
+    h2,
+    h3 {
+      margin-bottom: 10px;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-button {
-  margin-top: 5px;
-}
-
-#totalAmount {
-  margin-top: 20px;
-}
-
-label {
-  display: inline-block;
-  width: 100px;
-}
-
-input {
-  width: 200px;
-}
-
-#total {
-  font-weight: bold;
-}
-* {
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: roboto;
-  background: white;
-}
-
-.material-icons {
-  cursor: pointer;
-}
-
-.invoice-container {
-  margin: auto;
-  padding: 0px 20px;
-}
-
-.invoice-header {
-  display: flex;
-  padding: 70px 0%;
-  width: 100%;
-}
-
-.title {
-  font-size: 18px;
-  letter-spacing: 3px;
-  color: rgb(66, 66, 66);
-}
-
-.date {
-  padding: 5px 0px;
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: rgb(156, 156, 156);
-}
-
-.invoice-number {
-  font-size: 17px;
-  letter-spacing: 2px;
-  color: rgb(156, 156, 156);
-}
-
-.space {
-  width: 50%;
-}
-
-table {
-  table-layout: auto;
-  width: 100%;
-}
-table, th, td {
-  border-collapse: collapse;
-}
-
-th {
-  padding: 10px 0px;
-  border-bottom: 1px solid rgb(187, 187, 187);
-  border-bottom-style: dashed;
-  font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: gray;
-  text-align: left;
-
-}
-
-td {
-  padding: 10px 0px;
-  border-bottom: 0.5px solid rgb(226, 226, 226);
-  text-align: left;
-}
-
-.dashed {
-  border-bottom: 1px solid rgb(187, 187, 187);
-  border-bottom-style: dashed;
-}
-
-.total {
-  font-weight: 800;
-  font-size: 20px !important;
-  color: black;
-}
-
-input[type=number] {
-  text-align: center ;
-  border-radius: 5px;
-  max-width: 50px;
-  font-size: 10px;
-  padding: 5px;
-  outline: none;
-  border-radius: 20%;
-  border: none;
-  box-shadow: cadetblue 1px 1px 1px 1px;
-
-}
-
-input[type=text] {
-   border-radius: 5px;
-   box-shadow: cadetblue 1px 1px 1px 1px;
-  border: none;
-  max-width: 100px;
-  text-align: left;
-  font-size: 12px;
-  padding: 5px;
-  outline: none;
-}
-
-input[type=text]:focus {
-  border-radius: 5px;
-  background: #ffffff;
-  box-shadow:  5px 5px 11px #76e216,
-           -5px -5px 11px #ffffff;
-}
-
-input[type=number]:focus {
-  border-radius: 5px;
-  background: #ffffff;
-  box-shadow:  5px 5px 11px #76e216,
-           -5px -5px 11px #ffffff;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
--webkit-appearance: none;
-margin: 0;
-}
-/* Firefox */
-input[type=number] {
--moz-appearance: textfield;
-}
-
-.float{
-  width:40px;
-  height:40px;
-  background-color:#FF1D89;
-  color:#FFF;
-  border-radius:100%;
-  text-align:center;
-  box-shadow:
-0 2.8px 2.2px rgba(0, 0, 0, 0.048),
-0 6.7px 5.3px rgba(0, 0, 0, 0.069),
-0 12.5px 10px rgba(0, 0, 0, 0.085),
-0 22.3px 17.9px rgba(0, 0, 0, 0.101),
-0 41.8px 33.4px rgba(0, 0, 0, 0.122),
-0 100px 80px rgba(0, 0, 0, 0.17);
-}
-
-.float:hover {
-  background-color:#ff057e;
-}
-
-
-.plus{
-  margin-top:10px;
-}
-
-#sum {
-  text-align: right;
-  width: 100%;
-}
-
-#sum input[type=text] {
-  width: 100%;
-  font-size: 20px !important;
-  color: black;
-  text-align: right !important;
-
-}
-
-/* Medium devices (landscape tablets, 768px and up) */
-@media only screen and (min-width: 768px) {
-  body {
-      background: lemonchiffon;
-  }
- 
-  .invoice-container {
-      border: solid 1px gray;
+    table {
       width: 100%;
-      margin: 20px auto;
-      padding: 10px;
-      padding-bottom: 100px;
-      border-radius: 5px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    button {
+      margin-top: 5px;
+    }
+
+    #totalAmount {
+      margin-top: 20px;
+    }
+
+    label {
+      display: inline-block;
+      width: 100px;
+    }
+
+    input {
+      width: 200px;
+    }
+
+    #total {
+      font-weight: bold;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: roboto;
       background: white;
+    }
+
+    .material-icons {
+      cursor: pointer;
+    }
+
+    .invoice-container {
+      margin: auto;
+      padding: 0px 20px;
+    }
+
+    .invoice-header {
+      display: flex;
+      padding: 70px 0%;
+      width: 100%;
+    }
+
+    .title {
+      font-size: 18px;
+      letter-spacing: 3px;
+      color: rgb(66, 66, 66);
+    }
+
+    .date {
+      padding: 5px 0px;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: rgb(156, 156, 156);
+    }
+
+    .invoice-number {
+      font-size: 17px;
+      letter-spacing: 2px;
+      color: rgb(156, 156, 156);
+    }
+
+    .space {
+      width: 50%;
+    }
+
+    table {
+      table-layout: auto;
+      width: 100%;
+    }
+
+    table,
+    th,
+    td {
+      border-collapse: collapse;
+    }
+
+    th {
+      padding: 10px 0px;
+      border-bottom: 1px solid rgb(187, 187, 187);
+      border-bottom-style: dashed;
+      font-weight: 400;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: gray;
+      text-align: left;
+
+    }
+
+    td {
+      padding: 10px 0px;
+      border-bottom: 0.5px solid rgb(226, 226, 226);
+      text-align: left;
+    }
+
+    .dashed {
+      border-bottom: 1px solid rgb(187, 187, 187);
+      border-bottom-style: dashed;
+    }
+
+    .total {
+      font-weight: 800;
+      font-size: 20px !important;
+      color: black;
+    }
+
+    input[type=number] {
+      text-align: center;
+      border-radius: 5px;
+      max-width: 50px;
+      font-size: 10px;
+      padding: 5px;
+      outline: none;
+      border-radius: 20%;
+      border: none;
+      box-shadow: cadetblue 1px 1px 1px 1px;
+
+    }
+
+    input[type=text] {
+      border-radius: 5px;
+      box-shadow: cadetblue 1px 1px 1px 1px;
+      border: none;
+      max-width: 100px;
+      text-align: left;
+      font-size: 12px;
+      padding: 5px;
+      outline: none;
+    }
+
+    input[type=text]:focus {
+      border-radius: 5px;
+      background: #ffffff;
+      box-shadow: 5px 5px 11px #76e216,
+        -5px -5px 11px #ffffff;
+    }
+
+    input[type=number]:focus {
+      border-radius: 5px;
+      background: #ffffff;
+      box-shadow: 5px 5px 11px #76e216,
+        -5px -5px 11px #ffffff;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    .float {
+      width: 40px;
+      height: 40px;
+      background-color: #FF1D89;
+      color: #FFF;
+      border-radius: 100%;
+      text-align: center;
       box-shadow:
-0 2.8px 2.2px rgba(0, 0, 0, 0.02),
-0 6.7px 5.3px rgba(0, 0, 0, 0.028),
-0 12.5px 10px rgba(0, 0, 0, 0.035),
-0 22.3px 17.9px rgba(0, 0, 0, 0.042),
-0 41.8px 33.4px rgba(0, 0, 0, 0.05),
-0 100px 80px rgba(0, 0, 0, 0.07);
-  }
+        0 2.8px 2.2px rgba(0, 0, 0, 0.048),
+        0 6.7px 5.3px rgba(0, 0, 0, 0.069),
+        0 12.5px 10px rgba(0, 0, 0, 0.085),
+        0 22.3px 17.9px rgba(0, 0, 0, 0.101),
+        0 41.8px 33.4px rgba(0, 0, 0, 0.122),
+        0 100px 80px rgba(0, 0, 0, 0.17);
+    }
 
-  .title-date {
-      width: 20%;
-  }
-  .invoice-number {
-      width: 20%;
-  }
-  .space {
+    .float:hover {
+      background-color: #ff057e;
+    }
+
+
+    .plus {
+      margin-top: 10px;
+    }
+
+    #sum {
+      text-align: right;
+      width: 100%;
+    }
+
+    #sum input[type=text] {
+      width: 100%;
+      font-size: 20px !important;
+      color: black;
+      text-align: right !important;
+
+    }
+
+    .customerInfo td input[type=text] {
+      max-width: 80%;
       width: 80%;
-  }
-  .invoice-body{
-     width: 100%;
-  overflow-x: auto;
-  }
-  @media only screen and (max-width: 600px) { /* change this value to match container's max-width */
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-  
-  td {
-    display: inline-block;
-    width: 33.33%; /* each cell will fill 1/3rd of the container width */
-  }
-}
-}
+    }
 
+    /* Medium devices (landscape tablets, 768px and up) */
+    @media only screen and (min-width: 768px) {
+      body {
+        background: lemonchiffon;
+      }
 
+      .invoice-container {
+        border: solid 1px gray;
+        width: 100%;
+        margin: 20px auto;
+        padding: 10px;
+        padding-bottom: 100px;
+        border-radius: 5px;
+        background: white;
+        box-shadow:
+          0 2.8px 2.2px rgba(0, 0, 0, 0.02),
+          0 6.7px 5.3px rgba(0, 0, 0, 0.028),
+          0 12.5px 10px rgba(0, 0, 0, 0.035),
+          0 22.3px 17.9px rgba(0, 0, 0, 0.042),
+          0 41.8px 33.4px rgba(0, 0, 0, 0.05),
+          0 100px 80px rgba(0, 0, 0, 0.07);
+      }
+
+      .title-date {
+        width: 20%;
+      }
+
+      .invoice-number {
+        width: 20%;
+      }
+
+      .space {
+        width: 80%;
+      }
+
+      .invoice-body {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      @media only screen and (max-width: 600px) {
+
+        /* change this value to match container's max-width */
+        table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        td {
+          display: inline-block;
+          width: 33.33%;
+          /* each cell will fill 1/3rd of the container width */
+        }
+      }
+    }
   </style>
   <!--Vertical Navbar-->
   <%- include('header') %>
-  
-  <!-- End vertical navbar -->
 
-  <!-- Page content holder -->
-  <div class="page-content p-5" id="content" style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
-    <!-- Toggle button -->
-    <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i
-        class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
+    <!-- End vertical navbar -->
 
-        <!-- form here -->
-          <form action="/submitbill" method="POST">
+    <!-- Page content holder -->
+    <div class="page-content p-5" id="content"
+      style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
+      <!-- Toggle button -->
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Bill</li>
+        </ol>
+      </nav>
+      <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i
+          class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
+
+      <!-- form here -->
+      <form action="/submitbill" method="POST">
         <div class="invoice-container">
-    <div class="customerInfo">
-      
-        <input type="text" placeholder="Phone Number" name="PhoneNumber" required class="PhoneNumber" id="PhoneNumber" class="product id"
-          onkeyup="getCustomerInfo(this.value)">
-        <input type="text" placeholder="CustomerName" name="CustomerName" required class="CustomerName" id="CustomerName">
-        <input type="text" placeholder="Email" name="Email" class="Email" id="Email">
-        <input style="width: 600px; max-width: 1000px;" type="text" placeholder="Address" name="Address" class="Address"
-          id="Address">
-   
-    </div>
+          <div class="customerInfo">
+            <table>
+              <tr>
+                <td>
+                  <input type="text" placeholder="Phone Number" name="PhoneNumber" required class="PhoneNumber"
+                    id="PhoneNumber" class="product id" onkeyup="getCustomerInfo(this.value)">
+                </td>
+                <td>
+                  <input type="text" placeholder="CustomerName" name="CustomerName" required class="CustomerName"
+                    id="CustomerName">
+                </td>
+                <td>
+                  <input style="" type="text" placeholder="Address" name="Address" class="Address" id="Address">
+                </td>
+                <td>
+                  <input type="text" placeholder="Pincode" name="Pincode" class="Pincode" id="Pincode">
+                </td>
+                <td>
+                  <div class="title-date">
+                    <input type="date" placeholder="todayDate" name="todayDate" class="todayDate" id="todayDate"
+                      class="billDate">
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="text" placeholder="Email" name="Email" class="Email" id="Email">
+                </td>
+                <td>
+                  <input type="text" placeholder="CGST" name="CGST" class="CGST" id="CGST">
+                </td>
 
-      <div class="invoice-header">
-            <div class="title-date">
-              <h2 class="title">Bill Date</h2>
-              <input type="date" placeholder="todayDate" name="todayDate" class="todayDate" id="todayDate" class="billDate">
-            </div>
+              </tr>
+            </table>
+
+          </div>
+
+          <div class="invoice-header">
+
           </div>
           <div class="invoice-body">
             <table>
@@ -322,7 +368,7 @@ input[type=number] {
                 <th style="padding-left:5px;">PRODUCT</th>
                 <th style="padding-left:5px;">BRAND</th>
                 <th style="padding-left:5px;">CATEGORY</th>
-                <th style="padding-left:5px;">CODE</th>
+                <th style="padding-left:5px;">HSN/HSB</th>
                 <th style="padding-left:5px;">UNIT</th>
                 <th style="padding-left:5px;">PRICE</th>
                 <th style="padding-left:5px;">DISCOUNT</th>
@@ -330,19 +376,26 @@ input[type=number] {
                 <th style="padding-left:5px;">AMOUNT</th>
                 <th style="text-align: right;">ACTION</th>
               </thead>
-        
+
               <tbody id="table-body">
                 <tr class="single-row">
-                  <td><input type="text" placeholder="Product Id" required name="id1" class="id1" id="id1" class="product id" oninput="getInput(this.id)"></td>
-                  <td><input type="text" placeholder="Product name" name="product1" class="product1" id="product1" class="product left"></td>
-                  <td><input type="text" placeholder="Brand" name="brand1" class="brand1" id="brand1" ></td>
-                  <td><input type="text" placeholder="Category" name="category1" class="category1" id="category1" ></td>
-                  <td><input type="text" placeholder="HSB" name="hsb1" class="hsb1" id="hsb1"></td>
-                  <td><input type="number" placeholder="0" name="unit1" class="unit1" id="unit1" onkeyup="getUnitInput(this.id)"></td>
-                  <td><input type="text" inputmode="decimal" placeholder="0" name="price1" class="price1" id="price1" onkeyup="getUnitInput(this.id)" pattern="[0-9]*[.,]?[0-9]*"></td>
-                  <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" placeholder="0" name="discount1" class="discount1" id="discount1" onkeyup="getUnitInput(this.id)"></td>
-                  <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" placeholder="0%" name="gst1" class="gst1" id="gst1"onkeyup="getUnitInput(this.id)" ></td>
-                  <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px" placeholder="0" name="amount1" class="amount1" id="amount1"></td>
+                  <td><input type="text" placeholder="Product Id" required name="id1" class="id1" id="id1"
+                      class="product id" oninput="getInput(this.id)"></td>
+                  <td><input type="text" placeholder="Product name" name="product1" class="product1" id="product1"
+                      class="product left"></td>
+                  <td><input type="text" placeholder="Brand" name="brand1" class="brand1" id="brand1"></td>
+                  <td><input type="text" placeholder="Category" name="category1" class="category1" id="category1"></td>
+                  <td><input type="text" placeholder="HSN/HSB" name="hsb1" class="hsb1" id="hsb1"></td>
+                  <td><input type="number" placeholder="0" name="unit1" class="unit1" id="unit1"
+                      onkeyup="getUnitInput(this.id)"></td>
+                  <td><input type="text" inputmode="decimal" placeholder="0" name="price1" class="price1" id="price1"
+                      onkeyup="getUnitInput(this.id)" pattern="[0-9]*[.,]?[0-9]*"></td>
+                  <td><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0"
+                      name="discount1" class="discount1" id="discount1" onkeyup="getUnitInput(this.id)"></td>
+                  <td><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0%" name="gst1"
+                      class="gst1" id="gst1" onkeyup="getUnitInput(this.id)"></td>
+                  <td><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px"
+                      placeholder="0" name="amount1" class="amount1" id="amount1"></td>
                   <td style="text-align: right;"><span class="material-icons">delete_outline</span></td>
                 </tr>
                 <tr style="padding-left: 20px">
@@ -360,40 +413,50 @@ input[type=number] {
                 </tr>
               </tbody>
             </table>
-            <div id="sum" class="money" ><input type="text" placeholder="0.00" name="total" class="total" style="max-width: 170px; width: 170px;" id="total" disabled></div>
-          
+            
+            <div id="sum" class="money"><input type="text" placeholder="0.00" name="total" class="total"
+                style="max-width: 170px; width: 170px;" id="total" disabled></div>
+                <div class="form-check form-check-inline form-switch">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="yes" name="onlinePayment" id="onlinePayment">
+                    <label class="form-check-label" for="onlinePayment">
+                      Online Payment
+                    </label>
+                  </div>
+                </div>
+
           </div>
         </div>
-          <center><button type="submit" class="ui teal submit button">Submit</button></center>
-  </form>
-        <!-- form ends here -->
-  <!-- Semnatic-UI Scripts -->
+        <center><button type="submit" class="ui teal submit button">Submit</button></center>
+      </form>
+      <!-- form ends here -->
+      <!-- Semnatic-UI Scripts -->
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
 
-  <!-- Option 1: Bootstrap Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
-    crossorigin="anonymous"></script>
-  <script>
-    $(function () {
-      // Sidebar toggle behavior
-      $('#sidebarCollapse').on('click', function () {
-        $('#sidebar, #content').toggleClass('active');
-      });
-    });
-      document.getElementById("todayDate").valueAsDate = new Date();
+      <!-- Option 1: Bootstrap Bundle with Popper -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+        crossorigin="anonymous"></script>
+      <script>
+        $(function () {
+          // Sidebar toggle behavior
+          $('#sidebarCollapse').on('click', function () {
+            $('#sidebar, #content').toggleClass('active');
+          });
+        });
+        document.getElementById("todayDate").valueAsDate = new Date();
 
-    
-    const tBody = document.getElementById("table-body");
 
-      addNewRow = () => {
-        var rows = document.querySelectorAll("tr.single-row");
-        var currenRowLngth=rows.length+1;
-        const row = document.createElement("tr");
-        row.className = "single-row";
-        row.innerHTML = `
+        const tBody = document.getElementById("table-body");
+
+        addNewRow = () => {
+          var rows = document.querySelectorAll("tr.single-row");
+          var currenRowLngth = rows.length + 1;
+          const row = document.createElement("tr");
+          row.className = "single-row";
+          row.innerHTML = `
         <td><input type="text" placeholder="Product Id" name="id${currenRowLngth}" class="id${currenRowLngth}" id="id${currenRowLngth}" onkeyup="getInput(this.id)" ></td>
         <td><input type="text" placeholder="Product name" class="product${currenRowLngth}" id="product${currenRowLngth}" name="product${currenRowLngth}"></td>
         <td><input type="text" placeholder="Brand" class="brand${currenRowLngth}" id="brand${currenRowLngth}" name="brand${currenRowLngth}"></td>
@@ -409,140 +472,149 @@ input[type=number] {
        <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px" placeholder="0" name="amount${currenRowLngth}" class="amount" id="amount${currenRowLngth}"></td>
        <td style="text-align: right;"><span class="material-icons" action="delete">delete_outline</span></td>`
 
-tBody.insertBefore(row, tBody.lastElementChild.previousSibling);
-        var idname = `id${currenRowLngth}`;
-        document.getElementById(idname).focus();
-      }
-
-      document.getElementById("add-row").addEventListener("click", (e) => {
-        e.preventDefault();
-        addNewRow();
-        
-
-      });
-
-      getUnitInput = (selectid) => {
-        var rows = document.querySelectorAll("tr.single-row");
-        rows.forEach((currentRow,index) => {
-           var selectedUnitId = currentRow.querySelector("#unit" + (index + 1)).id;
-           var selectedDiscountId = currentRow.querySelector("#discount" + (index + 1)).id;
-          var selectedGstId = currentRow.querySelector("#gst" + (index + 1)).id;
-           if (selectedUnitId == selectid ||selectedDiscountId==selectid || selectedGstId == selectid) {
-          var id = currentRow.querySelector("#id"+ (index + 1)).value;
-          var productData = "";
-          var unit = currentRow.querySelector("#unit" + (index + 1)).value;
-          var discount = currentRow.querySelector("#discount" + (index + 1)).value;
-          var gst = currentRow.querySelector("#gst" + (index + 1)).value;
-          var price = currentRow.querySelector("#price" + (index + 1)).value;
-          var unitprice= unit * price;
-          unitprice = discount > 0 ? unitprice -discount : unitprice;
-          unitprice = gst>0? (parseFloat(unitprice)+ parseFloat(unitprice) *parseFloat(gst)/100): unitprice;
-          var discountValue = discount > 0 ? discount : 0;
-          amount = unitprice;
-          currentRow.querySelector("#amount" + (index + 1)).value = amount;
-
-          overallSum();
-           }
-        })
-      };
-
-      //GET INPUTS, MULTIPLY AND GET THE ITEM PRICE
-      getInput = (id) => {
-        var rows = document.querySelectorAll("tr.single-row");
-        rows.forEach((currentRow,index) => {
-          var selectedId = currentRow.querySelector("#id"+(index+1)).id;
-          if(selectedId == id){
-          var currentId = currentRow.querySelector("#id" + (index + 1)).value;
-          var productData="";
-          if(currentId != null && currentId.length>=7){
-              $.ajax({
-                type: "POST",
-                url: "/fetchitem",
-                data: {
-                  "itemid": currentId
-                },
-                success: function (data) {
-                  // 
-                  if (data.status == 200) {
-                    var productData= data.rows;
-                    if (productData.length > 0) {
-                      var unit = currentRow.querySelector("#unit" + (index + 1)).value=1;   
-                      var product = currentRow.querySelector("#product" + (index + 1)).value = productData[0].ItemName;
-                      var Brand = currentRow.querySelector("#brand" + (index + 1)).value = productData[0].Brand;
-                      var Category = currentRow.querySelector("#category" + (index + 1)).value = productData[0].Category;
-                      var price = currentRow.querySelector("#price" + (index + 1)).value = productData[0].Amount;
-                       var unit = currentRow.querySelector("#unit" + (index + 1)).value;
-                      var price = currentRow.querySelector("#price" + (index + 1)).value;
-
-                      amount = unit * price;
-                      currentRow.querySelector("#amount" + (index + 1)).value = amount;
-
-                      overallSum();
-                      addNewRow();
-                    }
-                  } else if (data.status == "failed") {
-                    alert("Item not found")
-                  }
-                  }
-              });
-            
-          }
-         
+          tBody.insertBefore(row, tBody.lastElementChild.previousSibling);
+          var idname = `id${currenRowLngth}`;
+          document.getElementById(idname).focus();
         }
-        })
-      };
-      getCustomerInfo = (PhoneNumber) => {
-        if(PhoneNumber.length==10){
-          
-                       $.ajax({
-            type: "POST",
-            url: "/fetchcustomer",
-            data: {
-              "PhoneNumber": PhoneNumber
-            },
-            success: function (data) {
-              // 
-              if (data.status == 200) {
-                var productData = data.rows;
-                if (productData.length > 0) {
-                  const CustomerName = document.querySelector("#CustomerName").value=productData[0].CustomerName;
-                  const Email = document.querySelector("#Email").value = productData[0].Email;
-                  const Address = document.querySelector("#Address").value = productData[0].Address;
-                }
-              } else if (data.status == "failed") {
-                alert("Item not found")
-              }
-            }
-          });
-        }
-      }
-      //Get the overall sum/Total
-      overallSum = () => {
-        var rows = document.querySelectorAll("tr.single-row");
-        var selectedAmount =0;
-        rows.forEach((currentRow, index) => {
 
-          var amount=currentRow.querySelector("#amount" + (index + 1)).value
-          selectedAmount = parseFloat(selectedAmount)+ parseFloat(amount!=""?amount:0);
+        document.getElementById("add-row").addEventListener("click", (e) => {
+          e.preventDefault();
+          addNewRow();
+
+
         });
-        document.getElementById("total").value =selectedAmount.toFixed(2);;
-      }
 
-      //Delete row from the table
-      tBody.addEventListener("click", (e) => {
-        let el = e.target;
-        const deleteROW = e.target.getAttribute("action");
-        if (deleteROW == "delete") {
-          delRow(el);
-          overallSum();
+        getUnitInput = (selectid) => {
+          var rows = document.querySelectorAll("tr.single-row");
+          rows.forEach((currentRow, index) => {
+            var selectedUnitId = currentRow.querySelector("#unit" + (index + 1)).id;
+            var selectedDiscountId = currentRow.querySelector("#discount" + (index + 1)).id;
+            var selectedGstId = currentRow.querySelector("#gst" + (index + 1)).id;
+            if (selectedUnitId == selectid || selectedDiscountId == selectid || selectedGstId == selectid) {
+              var id = currentRow.querySelector("#id" + (index + 1)).value;
+              var productData = "";
+              var unit = currentRow.querySelector("#unit" + (index + 1)).value;
+              var discount = currentRow.querySelector("#discount" + (index + 1)).value;
+              var gst = currentRow.querySelector("#gst" + (index + 1)).value;
+              var price = currentRow.querySelector("#price" + (index + 1)).value;
+              var unitprice = unit * price;
+              unitprice = discount > 0 ? unitprice - discount : unitprice;
+              unitprice = gst > 0 ? (parseFloat(unitprice) + parseFloat(unitprice) * parseFloat(gst) / 100) : unitprice;
+              var discountValue = discount > 0 ? discount : 0;
+              amount = unitprice;
+              currentRow.querySelector("#amount" + (index + 1)).value = amount;
+
+              overallSum();
+            }
+          })
+        };
+
+        //GET INPUTS, MULTIPLY AND GET THE ITEM PRICE
+        getInput = (id) => {
+          var rows = document.querySelectorAll("tr.single-row");
+          rows.forEach((currentRow, index) => {
+            var selectedId = currentRow.querySelector("#id" + (index + 1)).id;
+            if (selectedId == id) {
+              var currentId = currentRow.querySelector("#id" + (index + 1)).value;
+              var productData = "";
+              if (currentId != null && currentId.length >= 7) {
+                $.ajax({
+                  type: "POST",
+                  url: "/fetchitem",
+                  data: {
+                    "itemid": currentId
+                  },
+                  success: function (data) {
+                    // 
+                    if (data.status == 200) {
+                      var productData = data.rows;
+                      if (productData.length > 0) {
+                        var unit = currentRow.querySelector("#unit" + (index + 1)).value = 1;
+                        var product = currentRow.querySelector("#product" + (index + 1)).value = productData[0].ItemName;
+                        var Brand = currentRow.querySelector("#brand" + (index + 1)).value = productData[0].Brand;
+                        var Category = currentRow.querySelector("#category" + (index + 1)).value = productData[0].Category;
+                        var price = currentRow.querySelector("#price" + (index + 1)).value = productData[0].Amount;
+                        var unit = currentRow.querySelector("#unit" + (index + 1)).value;
+                        var price = currentRow.querySelector("#price" + (index + 1)).value;
+
+                        amount = unit * price;
+                        currentRow.querySelector("#amount" + (index + 1)).value = amount;
+
+                        overallSum();
+                        addNewRow();
+                      }
+                    } else if (data.status == "failed") {
+                      alert("Item not found")
+                    }
+                  }
+                });
+
+              }
+
+            }
+          })
+        };
+        getCustomerInfo = (PhoneNumber) => {
+          if (PhoneNumber.length == 10) {
+
+            $.ajax({
+              type: "POST",
+              url: "/fetchcustomer",
+              data: {
+                "PhoneNumber": PhoneNumber
+              },
+              success: function (data) {
+                // 
+                if (data.status == 200) {
+                  var productData = data.rows;
+                  if (productData.length > 0) {
+                    if (productData[0].CustomerName != null) {
+                      const CustomerName = document.querySelector("#CustomerName").value = productData[0].CustomerName;
+                    }
+                    if (productData[0].Email != null) {
+                      const Email = document.querySelector("#Email").value = productData[0].Email;
+                    } if (productData[0].Address != null) {
+                      const Address = document.querySelector("#Address").value = productData[0].Address;
+                    } if (productData[0].Pincode != null) {
+                      const Pincode = document.querySelector("#Pincode").value = productData[0].Pincode;
+                    } if (productData[0].CGST != null) {
+                      const CGST = document.querySelector("#CGST").value = productData[0].CGST;
+                    }
+                  }
+                } else if (data.status == "failed") {
+                  alert("Item not found")
+                }
+              }
+            });
+          }
         }
-      })
+        //Get the overall sum/Total
+        overallSum = () => {
+          var rows = document.querySelectorAll("tr.single-row");
+          var selectedAmount = 0;
+          rows.forEach((currentRow, index) => {
 
-      //Target row and remove from DOM;
-      delRow = (el) => {
-        el.parentNode.parentNode.parentNode.removeChild(el.parentNode.parentNode);
-      }
-  </script>
+            var amount = currentRow.querySelector("#amount" + (index + 1)).value
+            selectedAmount = parseFloat(selectedAmount) + parseFloat(amount != "" ? amount : 0);
+          });
+          document.getElementById("total").value = selectedAmount.toFixed(2);;
+        }
+
+        //Delete row from the table
+        tBody.addEventListener("click", (e) => {
+          let el = e.target;
+          const deleteROW = e.target.getAttribute("action");
+          if (deleteROW == "delete") {
+            delRow(el);
+            overallSum();
+          }
+        })
+
+        //Target row and remove from DOM;
+        delRow = (el) => {
+          el.parentNode.parentNode.parentNode.removeChild(el.parentNode.parentNode);
+        }
+      </script>
 </body>
 
 </html>

@@ -116,6 +116,12 @@
   <!-- Page content holder -->
   <div class="page-content p-5" id="content" style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%); ">
     <!-- Toggle button -->
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Sales Filter</li>
+        </ol>
+      </nav>
     <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
   
     <!-- Page content -->
@@ -123,7 +129,7 @@
     <br>
     <h1>SALES FILTER</h1>
     <br>
-    <center><img class="ui medium rounded image" src="sales_filter.svg"></center>
+    <center><img class="ui medium rounded image headersvg" src="sales_filter.svg"></center>
     <br>
     <form action="/sales_filter_query" method="POST">
     <div class="ui four column grid">
@@ -278,7 +284,7 @@
           <% display_content.forEach(function(order){ %>
               <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
                  
-                  <td><%= order.TransactionDate %></td>
+                  <td><%= order._id %></td>
                   <td><%= order.Count %></td>
                   <td><i class="rupee sign icon"></i> <%= order.Amount %></td>
               </tr>

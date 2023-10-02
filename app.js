@@ -1,7 +1,8 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
-const MongoClient = require('mongodb').MongoClient;
+const JsBarcode = require('jsbarcode');
+
 const {
   connect
 } = require('./db/db');
@@ -162,10 +163,16 @@ app.get('/', checkAuthenticated, (req, res) => {
   stockCollection.find({}).toArray((err, resultStocksCount) => {
 
     const pipelineStock = [{
+      $addFields: {
+        total: { $multiply: ["$Amount", "$Size"] }
+        // Calculate amount * size and store in a new field called "total"
+      }
+    },
+      {
       $group: {
         _id: '_id',
         TotalItemsOrdered: {
-          $sum: '$Amount'
+          $sum: '$total'
         }
       }
     }
@@ -180,11 +187,17 @@ app.get('/', checkAuthenticated, (req, res) => {
 
       ordersCollection.find({}).toArray((err, resultCount) => {
 
-        const pipeline = [{
+        const pipeline = [
+          {
+            $addFields: {
+              total: { $multiply: ["$Amount", "$Size"] }
+              // Calculate amount * size and store in a new field called "total"
+            }
+          }, {
           $group: {
             _id: '_id',
             TotalItemsOrdered: {
-              $sum: '$Amount'
+              $sum: '$total'
             }
           }
         }
@@ -309,6 +322,7 @@ app.get('/orders', checkAuthenticated, (req, res) => {
 
   const db = getDatabase(dbName);
   const ordersCollection = db.collection('orders');
+  const customerCollection = db.collection('customer');
   ordersCollection.aggregate([{
     $group: {
       _id: '$TransactionID',
@@ -332,12 +346,21 @@ app.get('/orders', checkAuthenticated, (req, res) => {
         _id: -1
       }).toArray((err1, rows1) => {
         if (!err1) {
-          res.render('orders.ejs', {
-            orders: rows,
-            sub_orders: rows1,
-            selected_item: 'None',
-            month_name: 'None',
-            year: 'None'
+
+          let customerPhonesList=rows.map(x => x.CustomerPhone)
+          customerCollection.find({
+            "PhoneNumber": { $in: customerPhonesList },
+          }).sort({
+            _id: -1
+          }).toArray((err1, customerInfo) => {
+            res.render('orders.ejs', {
+              orders: rows,
+              sub_orders: rows1,
+              customerInfo: customerInfo,
+              selected_item: 'None',
+              month_name: 'None',
+              year: 'None'
+            });
           });
         } else {
           console.log(err1);
@@ -349,6 +372,38 @@ app.get('/orders', checkAuthenticated, (req, res) => {
 
     }
   });
+
+})
+app.get('/viewbarcodepage', checkAuthenticated, (req, res) => {
+
+  const db = getDatabase(dbName);
+    const brandsCollection = db.collection('brands');
+
+    brandsCollection.find().toArray((err1, brands) => {
+      if (err1) {
+        console.error('Error querying brand collection:', err1);
+
+        return;
+      }
+
+      const categoriesCollection = db.collection('categories');
+
+      categoriesCollection.find().toArray((err2, categories) => {
+        if (err2) {
+          console.error('Error querying category collection:', err2);
+
+          return;
+        }
+        res.render('barcodeFilter.ejs', {
+          brands: brands,
+          categories: categories,
+          display_content: 'None',
+          filter_type: 'None',
+          filter_name: 'None'
+        });
+
+      });
+    });
 
 })
 
@@ -496,6 +551,60 @@ app.post('/stocks_query', checkAuthenticated, (req, res) => {
 
 })
 
+app.post('/barcode_query', checkAuthenticated, (req, res) => {
+
+  const db = getDatabase(dbName);
+  console.log(req.body);
+  const { selected_brand, selected_category } = req.body;
+  if (selected_brand == null || selected_category == null) { 
+    res.render('barcpdegen.ejs', { products: []});
+  }
+  const stockCollection = db.collection('stocks');
+
+  stockCollection.find({
+    "Category": selected_category,
+    "Brand": selected_brand,
+  }).sort({
+    TYear: -1,
+    Tmonth: -1,
+    TDay: -1,
+    StockTime: -1
+  }).toArray((err, allStocks) => {
+    if (err) {
+      console.error('Error querying stock collection:', err);
+      return;
+    }
+    const brandsCollection = db.collection('brands');
+
+    brandsCollection.find().toArray((err1, brands) => {
+      if (err1) {
+        console.error('Error querying brand collection:', err1);
+
+        return;
+      }
+
+      const categoriesCollection = db.collection('categories');
+
+      categoriesCollection.find().toArray((err2, categories) => {
+        if (err2) {
+          console.error('Error querying category collection:', err2);
+
+          return;
+        }
+        res.render('barcodeFilter.ejs', {
+          all_stocks: allStocks,
+          brands: brands,
+          categories: categories,
+         // display_content: filteredStocks,
+          filter_type: 'Filter',
+          filter_name: selected_brand + " " + selected_category
+        });
+      });
+    });
+  });
+
+})
+
 app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
 
   const db = getDatabase(dbName);
@@ -553,7 +662,7 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
   const db = getDatabase(dbName);
   const stockCollection = db.collection('orders');
 
-  const item_id = req.body.itemid;
+  const item_id = req.body.itemid.toString().split('\n')[0];
 
   // Find documents from the stock collection based on ItemID
   stockCollection.find({
@@ -714,6 +823,32 @@ app.post('/addsize', checkAuthenticated, (req, res) => {
   });
 
 })
+app.get('/edit/:id', async (req, res) => {
+  const db = getDatabase(dbName);
+  const productFB = db.collection('orders');
+  var objectId2 = new ObjectID(req.params.id);
+  productFB.find({ _id: objectId2 }).toArray((err, rows) => {
+    if (!err) {
+      res.render('edit-product-popup.ejs', { product: rows[0] });
+     }
+  });
+  
+});
+
+app.post('/edit/:id', async (req, res) => {
+  const { name, price } = req.body;
+  const db = getDatabase(dbName);
+  const productFB = db.collection('orders');
+  const update = {
+    $set: {
+      ItemName:name,
+      Amount:price
+    }
+  };
+  var objectId2 = new ObjectID(req.params.id);
+  productFB.findOneAndUpdate({ _id: objectId2 }, update);
+  res.redirect('/orders');
+});
 app.get('/orders_query', checkAuthenticated, (req, res) => {
   res.redirect('/orders');
 });
@@ -721,6 +856,7 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
 
   const db = getDatabase(dbName);
   const ordersCollection = db.collection('orders');
+  const customerCollection = db.collection('customer');
 
   // const time_type = req.body['exampleRadios'];
   const phone = req.body['phone'];
@@ -810,13 +946,21 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
         if (!err1) {
 
           if (phone != null && phone.length == 10) {
-            res.render('orders.ejs', {
-              orders: rows,
-              sub_orders: rows1,
-              selected_item: "None",
-              month_name: 'Phone',
-              year: phone
+            customerCollection.find({
+              "PhoneNumber": { $in: [phone] },
+            }).sort({
+              _id: -1
+            }).toArray((err1, customerInfo) => {
+              res.render('orders.ejs', {
+                orders: rows,
+                customerInfo,
+                sub_orders: rows1,
+                selected_item: "None",
+                month_name: 'Phone',
+                year: phone
+              });
             });
+
           } else {
             res.render('orders.ejs', {
               orders: rows,
@@ -870,22 +1014,28 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
   var filter_type = req.body['exampleRadios1'];
 
   if (filter_type === 'brand') {
-    stockCollection.aggregate([{
-      $group: {
-        _id: '$Brand',
-        Count: {
-          $sum: 1
-        },
-        Amount: {
-          $sum: '$Amount'
+    stockCollection.aggregate([
+      {
+        $addFields: {
+          total: { $multiply: ["$Amount", "$Size"] }
+          // Calculate amount * size and store in a new field called "total"
         }
-      }
-    }, {
+      },
+      {
+        $group: {
+          _id: "$Brand", // Group by brand
+          Amount: { $sum: "$total" },
+          Brand: { $first:'$Brand'}, // Sum the calculated values and store in a field called "totalAmount"
+          Count: {
+            $sum: '$Size'
+          },
+        }
+      },{
       $project: {
         _id: 0,
-        Brand: '$_id',
+        Brand: 1,
         Count: 1,
-        Amount: 1
+          Amount: 1
       }
     }
     ]).toArray((err, rows) => {
@@ -908,20 +1058,29 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
   }
 
   if (filter_type === 'category') {
-    stockCollection.aggregate([{
+    stockCollection.aggregate([
+      {
+        $addFields: {
+          total: { $multiply: ["$Amount", "$Size"] }
+          // Calculate amount * size and store in a new field called "total"
+        }
+      }, {
       $group: {
         _id: '$Category',
         Count: {
-          $sum: 1
-        },
+          $sum: '$Size'
+          },
+          Category: {
+            $first: '$Category'
+          },
         Amount: {
-          $sum: '$Amount'
+          $sum: '$total'
         }
       }
     }, {
       $project: {
         _id: 0,
-        Category: '$_id',
+        Category: 1,
         Count: 1,
         Amount: 1
       }
@@ -974,6 +1133,8 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
         Count: {
           $sum: 1
         },
+        Brand: { $first: '$Brand' },
+        Category: { $first: '$Category' },
         Amount: {
           $sum: '$Amount'
         }
@@ -1003,7 +1164,6 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
 
         ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
           if (!err1) {
-            const total_amount = rows1[0];
             res.render('sales_filter.ejs', {
               is_paramater_set: true,
               time_type: 'month',
@@ -1011,7 +1171,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
               display_content: rows,
               month_name: month_name,
               year: year,
-              total_amount: total_amount
+              total_amount: rows1
             });
           } else {
             console.log(err1);
@@ -1069,7 +1229,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
 
         ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
           if (!err1) {
-            const total_amount = rows1[0];
+            const total_amount = rows1;
             res.render('sales_filter.ejs', {
               is_paramater_set: true,
               time_type: 'year',
@@ -1282,8 +1442,12 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   const PhoneNumber = req.body.PhoneNumber;
   const CustomerName = req.body.CustomerName;
   const Email = req.body.Email;
+  const CGST = req.body.CGST;
+  const Pincode = req.body.Pincode;
   const Address = req.body.Address;
   const TodayDate = req.body.todayDate;
+  const onlinePayment = req.body.onlinePayment == 'yes' ? true:false;
+  
   // Find documents from the stock collection based on ItemID
 
   const filter = { PhoneNumber: PhoneNumber };
@@ -1293,7 +1457,9 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
       'PhoneNumber': PhoneNumber,
       'CustomerName': CustomerName,
       'Email': Email,
-      'Address': Address
+      'Address': Address,
+      'CGST': CGST, 
+      'Pincode':Pincode,
     }
   };
   // Define the options for the update operation
@@ -1310,6 +1476,7 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
   request1.forEach((ddd) => {
     billAdd.push({
       ItemID: ddd.id,
+      OnlinePayment: onlinePayment,
       Category: ddd.category,
       Brand: ddd.brand,
       ItemName: ddd.product,
@@ -1552,6 +1719,24 @@ app.post('/deletesize', checkAuthenticated, (req, res) => {
     res.redirect('/sizes');
   });
 
+})
+
+app.post('/barcodegen', checkAuthenticated, (req, res) => { 
+  res.render('barcodegen.ejs', { products: JSON.parse(req.body.allStocks) });
+  // const db = getDatabase(dbName);
+
+  // const stockCollection = db.collection('stocks');
+
+  // stockCollection.find({
+  //   Brand: req.body.brand,
+  //   Category: req.body.category
+  // }).toArray((err, allStocks) => {
+  //   if (err) {
+  //     console.error('Error stockCollection generate barcde page:', err2);
+  //     return;
+  //   }
+    
+  // });
 })
 
 app.post('/deletestock', checkAuthenticated, (req, res) => {

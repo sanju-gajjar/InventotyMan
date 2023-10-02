@@ -10,13 +10,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/barcodes/JsBarcode.code39.min.js"></script>
 
-    <title>Sizes</title>
+    <title>View Stocks</title>
+    <style>
+      .grid-container {
+        display: grid;
+        grid-template-columns: auto auto auto auto auto auto;
+        gap: 5px;
+        /* background-color: #2196F3; */
+        padding: 5px;
+      }
+    
+      .grid-container>div {
+        /* background-color: rgba(255, 255, 255, 0.8); */
+        text-align: center;
+        padding: 5px 0;
+        font-size: 15px;
+      }
+    </style>
   </head>
   <body>
-    <!--Vertical Navbar-->
-    <%- include('header') %>
-  <!-- <div class="vertical-nav bg-white" id="sidebar">
+     <!--Vertical Navbar-->
+  <%- include('header') %>
+     <!-- <div class="vertical-nav bg-white" id="sidebar">
     <div class="py-4 px-3 mb-4" style="background: linear-gradient(to top, #0066eb 0%, #ff8ab3 68%);">
       <div class="media d-flex align-items-center"><img src="admin.svg" alt="..." width="65" class="mr-3 rounded-circle img-thumbnail shadow-sm">
         &emsp;<div class="media-body">
@@ -37,7 +54,7 @@
         <a href="/" class="nav-link text-dark font-italic">
                   <i class="home icon"></i>
                   Dashboard
-                </a>
+              </a>
       </li>
       <li class="nav-item">
         <a href="/billing" class="nav-link text-dark font-italic">
@@ -46,16 +63,16 @@
               </a>
       </li>
       <li class="nav-item">
-     <a href="/orders" class="nav-link text-dark font-italic">
-       <i class="eye icon"></i>
+        <a href="/orders" class="nav-link text-dark font-italic">
+          <i class="eye icon"></i>
                   View Orders
-      
               </a>
       </li>
       <li class="nav-item">
-        <a href="/viewstocks" class="nav-link text-dark font-italic">
-          <i class="tags icon"></i>
+        <a href="/viewstocks" class="nav-link text-dark font-italic" style="background: linear-gradient(to right, #0066eb 0%, #ff8ab3 68%);">
+          <p class="text-white"><i class="tags icon"></i>
                   View Stocks
+                  </p>
               </a>
       </li>
       <li class="nav-item">
@@ -84,10 +101,9 @@
               </a>
       </li>
       <li class="nav-item">
-        <a href="/sizes" class="nav-link text-dark font-italic" style="background: linear-gradient(to right, #0066eb 0%, #ff8ab3 68%);">
-          <p class="text-white"><i class="check square icon"></i>
+        <a href="/sizes" class="nav-link text-dark font-italic">
+          <i class="check square icon"></i>
                   Size
-            </p>
               </a>
       </li>
     </ul>
@@ -119,69 +135,57 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="/">Home</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Size</li>
+          <li class="breadcrumb-item active" aria-current="page">View Stock</li>
         </ol>
       </nav>
     <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
   
     <!-- Page content -->
-    
-    <h1>Manage Sizes</h1>
-    <center><img class="ui large rounded image" src="size.svg"></center>
+    <h1>Stocks Summary</h1>
     <br>
-    <center>
-         <!-- Button trigger modal -->
-<button type="button" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-    Add New Size <i class="plus circle icon"></i></span>
-  </button>
-    <!-- Modal -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Add New Size</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <div class="mb-3">
-                <label for="formGroupExampleInput" class="form-label">Enter New Size</label>
-                <form action="/addsize" method="POST">
-                <input type="text" class="form-control" id="formGroupExampleInput" name="new" style="color:white;background: linear-gradient(to right, #0066eb 0%, #ff8ab3 68%);">
-              </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary" value="Hello" >Submit</button>
-        </form>
-        </div>
+    <center><img class="ui medium rounded image headersvg" src="stock.svg"></center>
+    <br>
+    <button onclick="printBarcode()">Print</button>
+  <div class="grid-container" id="barcode-data">
+    <% products.forEach(product=> { %>
+  
+      <% for(i=0;i< product.Size;i++){%>
+      <div class="product" >
+        <p>
+          <%= product.ItemName %>
+        </p>
+        <svg id="barcode-<%= product._id %>"></svg>
+        <p>Price: <%= product.Amount %>
+        </p>
+        
       </div>
-    </div>
-  </div>
-        <div class="ui card">
-    <table class="ui inverted violet table table-bordered" >
-        <thead>
-        <tr>
-            <th><center><h1>Sizes</h1></center></th>
-        </tr>
-    </thead>
-    <tbody>
-        <% size.forEach(function(order){ %>
-            <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
-                <td><center><h2><%= order.Size %></h2> &emsp;<form action="/deletesize" method="POST"><input type="hidden" name="deleteid" value="<%= order.Size %>"><button type="submit" class="btn btn-danger btn-sm">Delete</button></form></center></td> 
-            </tr>
-        <% }); %>
-    </tbody>
-    </table>
-</center>
-    </div>
-</div>
-    
+      <script>
+        JsBarcode("#barcode-<%= product._id %>", "<%= product.ItemID %>", {
+          format: "CODE39"
+        });
 
+        function printBarcode() {
+          var printWindow = window.open('', '', 'width=100%,height=100%');
+          printWindow.document.open();
+          printWindow.document.write('<html><head><title>Barcode</title><style>.grid-container{display:grid;grid-template-columns:auto auto auto auto auto auto;gap:5px;padding:5px;}.grid-container>div{text-align:center;padding:5px 0;font-size:15px;}</style></head><body> <div class="grid-container">');
+          printWindow.document.write(document.getElementById('barcode-data').outerHTML);
+          printWindow.document.write('</div></body></html>');
+          printWindow.document.close();
+          printWindow.print();
+        }
+      </script>
+     <% } %>
+
+   
+      <% }); %>
+      </div>
+    </div> 
     <!-- Option 1: Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
     <!-- Semnatic-UI Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+
     <script>
       $(function() {
     // Sidebar toggle behavior
@@ -192,6 +196,5 @@
   
     </script>
 
-    
   </body>
 </html>
