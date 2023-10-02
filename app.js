@@ -1,7 +1,7 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
-const JsBarcode = require('jsbarcode');
+
 
 const {
   connect
@@ -375,6 +375,8 @@ app.get('/orders', checkAuthenticated, (req, res) => {
 
 })
 app.get('/viewbarcodepage', checkAuthenticated, (req, res) => {
+try {
+  
 
   const db = getDatabase(dbName);
     const brandsCollection = db.collection('brands');
@@ -404,7 +406,9 @@ app.get('/viewbarcodepage', checkAuthenticated, (req, res) => {
 
       });
     });
-
+} catch (error) {
+  console.log(error);
+}
 })
 
 app.get('/viewstocks', checkAuthenticated, (req, res) => {
