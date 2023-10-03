@@ -28,7 +28,6 @@ const {
     getOrderPage,
     getBarcodePage
 } = require('./dbOps');
-const RequestClient = require('twilio/lib/base/RequestClient');
 const secretKey = process.env.SESSION_SECRET;
 let db;
 function getUserRole(req) {

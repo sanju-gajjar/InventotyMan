@@ -4,34 +4,26 @@
   "description": "",
   "main": "server2.js",
   "scripts": {
+     "build": "mkdir -p dist/views && cp -R views dist/ && mkdir -p dist/public && cp -R public dist/",
     "start": "node server2.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
-    "chart.js": "^3.0.1",
     "cookie-parser": "^1.4.6",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
     "express-flash": "^0.0.2",
     "express-session": "^1.17.1",
     "fs": "^0.0.1-security",
-    "html2pdf.js": "^0.10.1",
     "jsbarcode": "^3.11.5",
     "jsonwebtoken": "^9.0.2",
     "method-override": "^3.0.0",
     "mongodb": "^3.7.4",
-    "mysql": "^2.18.1",
-    "natives": "^1.1.6",
     "nodemailer": "^6.9.4",
-    "passport": "^0.4.1",
-    "passport-local": "^1.0.0",
-    "pdfkit": "^0.11.0",
-    "serve-favicon": "^2.5.0",
-    "twilio": "^4.18.0"
+    "serve-favicon": "^2.5.0"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
