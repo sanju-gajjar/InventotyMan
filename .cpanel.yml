@@ -1,9 +1,5 @@
 ---
-deploy:
+deployment:
   tasks:
-    - export DEPLOYPATH=/home/plpavsfd/Inventoryman
-    - /bin/cp -R * $DEPLOYPATH
-    - /bin/cp .htaccess $DEPLOYPATH
-    - cd $DEPLOYPATH
-    - /bin/npm install
-    - /bin/npm prune --production
+    - export DEPLOYPATH=/home/plpavsfd/public_html/
+    - /bin/cp -R Inventoryman $DEPLOYPATH
