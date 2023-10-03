@@ -21,6 +21,7 @@
     "fs": "^0.0.1-security",
     "html2pdf.js": "^0.10.1",
     "jsbarcode": "^3.11.5",
+    "jsonwebtoken": "^9.0.2",
     "method-override": "^3.0.0",
     "mongodb": "^3.7.4",
     "mysql": "^2.18.1",
