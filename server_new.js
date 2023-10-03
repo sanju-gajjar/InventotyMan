@@ -3,7 +3,9 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
-const { MongoClient } = require('mongodb');
+const {
+    MongoClient
+} = require('mongodb');
 var favicon = require('serve-favicon');
 const checkAuthenticated = require('./middleware/authenticateJWT');
 const app = express();
@@ -22,20 +24,31 @@ app.use(cookieParser());
 
 const uri = process.env.mongo_host;
 const dbName = 'inventoryman';
-
+const {
+    getHomePage,
+    getOrderPage,
+    getBarcodePage
+} = require('./dbOps');
+const RequestClient = require('twilio/lib/base/RequestClient');
 // JWT secret key
 const secretKey = process.env.SESSION_SECRET;
 
 // Connect to MongoDB
 let db;
-function getUserRole(req) { 
+
+function getUserRole(req) {
     const user = req.cookies.user;
     const role = req.cookies.role;
-    return { user, role };
+    return {
+        user,
+        role
+    };
 }
 async function connectToMongo() {
     // Create a Mongo client
-    const client = new MongoClient(uri, { useUnifiedTopology: true });
+    const client = new MongoClient(uri, {
+        useUnifiedTopology: true
+    });
     await client.connect();
     db = client.db(dbName);
     console.log('Connected to MongoDB');
@@ -44,21 +57,37 @@ async function connectToMongo() {
 connectToMongo();
 
 app.get('/login', (req, res) => {
-    res.render('login.ejs', { messages: { error: null } })
+    res.render('login.ejs', {
+        messages: {
+            error: null
+        }
+    })
 })
 app.get('/register', (req, res) => {
-    res.render('register.ejs', { messages: { error: null } })
+    res.render('register.ejs', {
+        messages: {
+            error: null
+        }
+    })
 })
 // Register a new user
 app.post('/register', async (req, res) => {
-    const { email, password, role } = req.body;
+    const {
+        email,
+        password,
+        role
+    } = req.body;
 
     try {
         // Check if the username is already taken
-        const existingUser = await db.collection('users').findOne({ username: email });
+        const existingUser = await db.collection('users').findOne({
+            username: email
+        });
 
         if (existingUser) {
-            return res.status(400).json({ error: 'Username already exists' });
+            return res.status(400).json({
+                error: 'Username already exists'
+            });
         }
 
         // Generate a salt and hash the password
@@ -73,25 +102,44 @@ app.post('/register', async (req, res) => {
                 }
 
                 // Create a new user document and insert it into the 'users' collection
-                await db.collection('users').insertOne({ username: email, password: hashedPassword, role });
-                res.render('login.ejs', { messages: { error: "User registered successfully, Login to continue" } });
+                await db.collection('users').insertOne({
+                    username: email,
+                    password: hashedPassword,
+                    role
+                });
+                res.render('login.ejs', {
+                    messages: {
+                        error: "User registered successfully, Login to continue"
+                    }
+                });
             });
         });
     } catch (error) {
         console.error('Error during registration:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
     }
 });
 // User login
 app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const {
+        email,
+        password
+    } = req.body;
 
     try {
         // Find the user by username
-        const user = await db.collection('users').findOne({ username: email });
+        const user = await db.collection('users').findOne({
+            username: email
+        });
 
         if (!user) {
-            res.render('login.ejs', { messages: { error: "Invalid credentials" } })
+            res.render('login.ejs', {
+                messages: {
+                    error: "Invalid credentials"
+                }
+            })
             // return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -99,12 +147,19 @@ app.post('/login', async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
-            res.render('login.ejs', { messages: { error: "Invalid credentials" } })
+            res.render('login.ejs', {
+                messages: {
+                    error: "Invalid credentials"
+                }
+            })
             // return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         // Create and send a JWT token
-        const token = jwt.sign({ username: user.username, sub: user.role }, secretKey, {
+        const token = jwt.sign({
+            username: user.username,
+            sub: user.role
+        }, secretKey, {
             expiresIn: '1h', // Token expires in 1 hour
         });
 
@@ -122,217 +177,25 @@ app.post('/logout', (req, res) => {
     res.redirect('/login');
 })
 app.get('/', checkAuthenticated, (req, res) => {
-
-    const stockCollection = db.collection('stocks');
-
-    stockCollection.find({}).toArray((err, resultStocksCount) => {
-
-        const pipelineStock = [{
-            $group: {
-                _id: '_id',
-                TotalItemsOrdered: {
-                    $sum: '$Amount'
-                }
-            }
-        }
-        ];
-        stockCollection.aggregate(pipelineStock).toArray((err, resultStock) => {
-            if (err) {
-                console.error('Error executing aggregation:', err);
-
-                return;
-            }
-            const ordersCollection = db.collection('orders');
-
-            ordersCollection.find({}).toArray((err, resultCount) => {
-
-                const pipeline = [{
-                    $group: {
-                        _id: '_id',
-                        TotalItemsOrdered: {
-                            $sum: '$Amount'
-                        }
-                    }
-                }
-                ];
-                ordersCollection.aggregate(pipeline).toArray((err, result) => {
-                    if (err) {
-                        console.error('Error executing aggregation:', err);
-
-                        return;
-                    }
-
-                    if (resultStock.length > 0) {
-                        //
-                        res.render('index.ejs', {
-                            user: getUserRole(req),
-                            total_sales: result,
-                            ord_num: [{
-                                NumberOfProducts: (resultCount != null && resultCount != undefined) ? resultCount.length : 0
-                            }
-                            ],
-                            stock_num: [{
-                                NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length != undefined) ? resultStocksCount.length : 0
-                            }
-                            ],
-                            total_stock: resultStock,
-                        });
-                    } else {
-                        //
-                        res.render('index.ejs', {
-                            user: getUserRole(req),
-                            total_sales: [],
-                            ord_num: [],
-                            stock_num: [],
-                            total_stock: []
-                        });
-                    }
-                });
-            });
-        });
-        //
+    getHomePage(req, (err, result) => {
+        res.render('index.ejs', result);
     });
-
-    //  });
 })
 
-
-// Middleware for authenticating routes
-// function checkAuthenticated(req, res, next) {
-//     try {
-//         const token = req.cookies.token;
-
-//         if (!token) {
-//             res.render('login.ejs', { messages: { error: "Unauthorized, Please Login to continue" } })
-      
-//         }
-
-//         jwt.verify(token, secretKey, (err, user) => {
-//             if (err) {
-//                 return res.status(403).json({ error: 'Forbidden' });
-//             }
-//             const currentTimestamp = Math.floor(Date.now() / 1000);
-//             if (user.exp < currentTimestamp) {
-//                 res.render('login.ejs', { messages: { error: "Session Timeout, Please Login to continue" } })
-                
-//             }
-//             req.user = user;
-//             next();
-//         });
-//     } catch (error) {
-//         res.redirect('login');
-//     }
-// }
 app.get('/orders', checkAuthenticated, (req, res) => {
-
-    //
-    const ordersCollection = db.collection('orders');
-    const customerCollection = db.collection('customer');
-    ordersCollection.aggregate([{
-        $group: {
-            _id: '$TransactionID',
-            Amount: {
-                $sum: '$Amount'
-            },
-            TransactionDate: {
-                $first: '$TransactionDate'
-            },
-            TransactionTime: {
-                $first: '$TransactionTime'
-            },
-            CustomerPhone: {
-                $first: '$CustomerPhone'
-            }
-        }
-    }]).toArray((err, rows) => {
-        if (!err) {
-            ordersCollection.find().sort({
-                _id: -1
-            }).toArray((err1, rows1) => {
-                if (!err1) {
-
-                    let customerPhonesList = rows.map(x => x.CustomerPhone)
-                    customerCollection.find({
-                        "PhoneNumber": {
-                            $in: customerPhonesList
-                        },
-                    }).sort({
-                        _id: -1
-                    }).toArray((err1, customerInfo) => {
-                        if (customerInfo != null) {
-                            res.render('orders.ejs', {
-                                user:getUserRole(req),
-                                orders: rows,
-                                sub_orders: rows1,
-                                customerInfo: customerInfo,
-                                selected_item: 'None',
-                                month_name: 'None',
-                                year: 'None'
-                            });
-                        } else {
-                            res.render('orders.ejs', {
-                                user:getUserRole(),
-                                orders: rows,
-                                sub_orders: rows1,
-                                customerInfo: undefined,
-                                selected_item: 'None',
-                                month_name: 'None',
-                                year: 'None'
-                            });
-                        }
-                    });
-                } else {
-                    console.log(err1);
-                }
-
-            });
-        } else {
-            console.log(err);
-
-        }
+    getOrderPage(req, (err, result) => {
+        res.render('orders.ejs', result);
     });
-
 })
 app.get('/viewbarcodepage', checkAuthenticated, (req, res) => {
-    try {
-
-
-        
-        const brandsCollection = db.collection('brands');
-
-        brandsCollection.find().toArray((err1, brands) => {
-            if (err1) {
-                console.error('Error querying brand collection:', err1);
-
-                return;
-            }
-
-            const categoriesCollection = db.collection('categories');
-
-            categoriesCollection.find().toArray((err2, categories) => {
-                if (err2) {
-                    console.error('Error querying category collection:', err2);
-
-                    return;
-                }
-                res.render('barcodeFilter.ejs', {
-                    brands: brands,
-                    categories: categories,
-                    display_content: 'None',
-                    filter_type: 'None',
-                    filter_name: 'None'
-                });
-
-            });
-        });
-    } catch (error) {
-        console.log(error);
-    }
+    getBarcodePage(req, (err, result) => {
+        res.render('barcodeFilter.ejs', result);
+    });
 })
 
 app.get('/viewstocks', checkAuthenticated, (req, res) => {
 
-    
+
 
     const stockCollection = db.collection('stocks');
 
@@ -382,8 +245,6 @@ app.get('/viewstocks', checkAuthenticated, (req, res) => {
 })
 
 app.post('/stocks_query', checkAuthenticated, (req, res) => {
-
-    
 
     const stockCollection = db.collection('stocks');
 
@@ -476,7 +337,7 @@ app.post('/stocks_query', checkAuthenticated, (req, res) => {
 
 app.post('/barcode_query', checkAuthenticated, (req, res) => {
 
-    
+
     console.log(req.body);
     const {
         selected_brand,
@@ -535,7 +396,7 @@ app.post('/barcode_query', checkAuthenticated, (req, res) => {
 
 app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
 
-    
+
     const customerCollection = db.collection('customer');
     const PhoneNumber = req.body.PhoneNumber;
     // Find documents from the customer collection based on phone number
@@ -557,7 +418,7 @@ app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
 
 app.post('/fetchitem', checkAuthenticated, (req, res) => {
 
-    
+
     const stockCollection = db.collection('stocks');
 
     const item_id = req.body.itemid;
@@ -587,7 +448,7 @@ app.post('/fetchitem', checkAuthenticated, (req, res) => {
 
 app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
 
-    
+
     const stockCollection = db.collection('orders');
 
     const item_id = req.body.itemid.toString().split('\n')[0];
@@ -639,7 +500,7 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
 
 app.get('/billing', checkAuthenticated, (req, res) => {
 
-    
+
     const categoryCollection = db.collection('categories');
     const brandCollection = db.collection('brands');
     const sizeCollection = db.collection('sizes');
@@ -685,7 +546,7 @@ app.get('/billing', checkAuthenticated, (req, res) => {
 
 app.post('/addcategory', checkAuthenticated, (req, res) => {
 
-    
+
 
     const categoriesCollection = db.collection('categories');
 
@@ -708,7 +569,7 @@ app.post('/addcategory', checkAuthenticated, (req, res) => {
 
 app.post('/addbrand', checkAuthenticated, (req, res) => {
 
-    
+
 
     const brandsCollection = db.collection('brands');
 
@@ -731,7 +592,7 @@ app.post('/addbrand', checkAuthenticated, (req, res) => {
 
 app.post('/addsize', checkAuthenticated, (req, res) => {
 
-    
+
 
     const sizesCollection = db.collection('sizes');
 
@@ -757,7 +618,7 @@ app.get('/orders_query', checkAuthenticated, (req, res) => {
 });
 app.post('/orders_query', checkAuthenticated, (req, res) => {
 
-    
+
     const ordersCollection = db.collection('orders');
     const customerCollection = db.collection('customer');
 
@@ -866,7 +727,7 @@ app.get('/stock_filter', (req, res) => {
 
 app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
 
-    
+
     const stockCollection = db.collection('stocks');
 
     var filter_type = req.body['exampleRadios1'];
@@ -971,7 +832,7 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
 
 app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
 
-    
+
     const ordersCollection = db.collection('orders');
 
     const time_type = req.body['exampleRadios'];
@@ -1042,8 +903,6 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
                     } else {
                         console.log(err1);
                     }
-
-                    // Close the MongoDB connection
 
                 });
             } else {
@@ -1121,7 +980,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
 
 app.get('/categories', checkAuthenticated, (req, res) => {
 
-    
+
 
     const categoriesCollection = db.collection('categories');
 
@@ -1142,7 +1001,7 @@ app.get('/categories', checkAuthenticated, (req, res) => {
 
 app.get('/brands', checkAuthenticated, (req, res) => {
 
-    
+
 
     const brandsCollection = db.collection('brands');
 
@@ -1163,7 +1022,7 @@ app.get('/brands', checkAuthenticated, (req, res) => {
 
 app.get('/sizes', checkAuthenticated, (req, res) => {
 
-    
+
 
     const sizesCollection = db.collection('sizes');
 
@@ -1184,7 +1043,7 @@ app.get('/sizes', checkAuthenticated, (req, res) => {
 
 app.get('/stocks', checkAuthenticated, (req, res) => {
 
-    
+
 
     const categoryCollection = db.collection('categories');
     const brandCollection = db.collection('brands');
@@ -1222,36 +1081,9 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
     });
 
 })
-async function sendMail(orderDetails, to) {
-
-    var htmlOrderTable = "";
-    var invoiceNumber = orderDetails[0].TransactionID;
-    var customerName = orderDetails[0].CustomerName;
-    orderDetails.forEach((order) => {
-        htmlOrderTable = htmlOrderTable + `<tr><td style="padding: 5px 10px 5px 0"width="80%"align="left"><p>₹{order.ItemName}</p></td><td style="padding: 5px 0"width="20%"align="left"><p>₹{order.Amount}</p></td></tr>`;
-    })
-    // SMTP config
-    const transporter = nodemailer.createTransport({
-        host: "mail.thecyclehub.co.in", //
-        port: 465,
-        auth: {
-            user: "phoner@thecyclehub.co.in", // Your Ethereal Email address
-            pass: "Keyur@123", // Your Ethereal Email password
-        },
-    }); // Send the email
-    let info = await transporter.sendMail({
-        from: '"Keyur Gajjar" <phoner@thecyclehub.co.in>',
-        to: to, //'sanju.gajjar2@gmail.com', // Test email address
-        subject: `Thank for shoping at Phoner #Invoice: ${invoiceNumber}`,
-        text: `Hi, ${customerName}`,
-        html: `<!DOCTYPE html PUBLIC'-//W3C//DTD XHTML 1.0 Transitional//EN''http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'><html xmlns='http://www.w3.org/1999/xhtml'xmlns:o='urn:schemas-microsoft-com:office:office'><head><meta charset='UTF-8'><meta content='width=device-width, initial-scale=1'name='viewport'><meta name='x-apple-disable-message-reformatting'><meta http-equiv='X-UA-Compatible'content='IE=edge'><meta content='telephone=no'name='format-detection'><title></title><!--[if(mso 16)]><style type='text/css'>a{text-decoration:none;}</style><![endif]--><!--[if gte mso 9]><style>sup{font-size:100%!important;}</style><![endif]--><!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG></o:AllowPNG><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]--></head><body><div class='es-wrapper-color'><!--[if gte mso 9]><v:background xmlns:v='urn:schemas-microsoft-com:vml'fill='t'><v:fill type='tile'color='#eeeeee'></v:fill></v:background><![endif]--><table class='es-wrapper'width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-email-paddings'valign='top'><table cellpadding='0'cellspacing='0'class='es-content esd-header-popover'align='center'><tbody><tr><td class='esd-stripe'esd-custom-block-id='7954'align='center'><table class='es-content-body'style='background-color: transparent;'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p15t es-p15b es-p10r es-p10l'align='left'><!--[if mso]><table width='580'cellpadding='0'cellspacing='0'><tr><td width='282'valign='top'><![endif]--><table class='es-left'cellspacing='0'cellpadding='0'align='left'><tbody><tr><td class='esd-container-frame'width='282'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='es-infoblock esd-block-text es-m-txt-c'align='left'><p style='font-family: arial, helvetica\ neue, helvetica, sans-serif;'>Put your preheader text here<br></p></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td><td width='20'></td><td width='278'valign='top'><![endif]--><table class='es-right'cellspacing='0'cellpadding='0'align='right'><tbody><tr><td class='esd-container-frame'width='278'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td align='right'class='es-infoblock esd-block-text es-m-txt-c'><p><a href='https://viewstripo.email'class='view'target='_blank'style='font-family: 'arial', 'helvetica neue', 'helvetica', 'sans-serif';'>View in browser</a></p></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr></tr><tr><td class='esd-stripe'esd-custom-block-id='7681'align='center'><table class='es-header-body'style='background-color: #044767;'width='600'cellspacing='0'cellpadding='0'bgcolor='#044767'align='center'><tbody><tr><td class='esd-structure es-p35t es-p35b es-p35r es-p35l'align='left'><!--[if mso]><table width='530'cellpadding='0'cellspacing='0'><tr><td width='340'valign='top'><![endif]--><table class='es-left'cellspacing='0'cellpadding='0'align='left'><tbody><tr><td class='es-m-p0r es-m-p20b esd-container-frame'width='340'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-m-txt-c'align='left'><h1 style='color: #ffffff; line-height: 100%;'>Phoner</h1></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td><td width='20'></td><td width='170'valign='top'><![endif]--><table cellspacing='0'cellpadding='0'align='right'><tbody><tr class='es-hidden'><td class='es-m-p20b esd-container-frame'esd-custom-block-id='7704'width='170'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-spacer es-p5b'align='center'style='font-size:0'><table width='100%'height='100%'cellspacing='0'cellpadding='0'border='0'><tbody><tr><td style='border-bottom: 1px solid #044767; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; height: 1px; width: 100%; margin: 0px;'></td></tr></tbody></table></td></tr><tr><td><table cellspacing='0'cellpadding='0'align='right'><tbody><tr><td align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text'align='right'><p>The Cycle Hub</p></td></tr></tbody></table></td><td class='esd-block-image es-p10l'valign='top'align='left'style='font-size:0'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'width='600'cellspacing='0'cellpadding='0'bgcolor='#ffffff'align='center'><tbody><tr><td class='esd-structure es-p40t es-p35b es-p35r es-p35l'esd-custom-block-id='7685'style='background-color: #f7f7f7;'bgcolor='#f7f7f7'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-image es-p20t es-p25b es-p35r es-p35l'align='center'style='font-size:0'></td></tr><tr><td class='esd-block-text es-p15b'align='center'><h2 style='color: #333333; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif;'>Thanks for your purchase</h2></td></tr><tr><td class='esd-block-text es-m-txt-l es-p20t'align='left'><h3 style='font-size: 18px;'>Hello NAME,</h3></td></tr><tr><td class='esd-block-text es-p15t es-p10b'align='left'><p style='font-size: 16px; color: #777777;'>Please find the invoice below for your purchase</p></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p40t es-p40b es-p35r es-p35l'esd-custom-block-id='7685'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p20t'align='center'><h3 style='color: #333333;'>INVOICE</h3></td></tr><tr><td class='esd-block-text es-p15t es-p10b'align='center'><p style='font-size: 16px; color: #777777;'>INVOICE NUMBER: ${invoiceNumber}</p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table cellpadding='0'cellspacing='0'class='es-content'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'width='600'cellspacing='0'cellpadding='0'bgcolor='#ffffff'align='center'><tbody><tr><td class='esd-structure es-p20t es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p10t es-p10b es-p10r es-p10l'bgcolor='#eeeeee'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody><tr><td width='80%'><h4>Order Confirmation#</h4></td><td width='20%'><h4>${invoiceNumber}</h4></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p10t es-p10b es-p10r es-p10l'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody>${htmlOrderTable}</tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p10t es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table style='border-top: 3px solid #eeeeee; border-bottom: 3px solid #eeeeee;'width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p15t es-p15b es-p10r es-p10l'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody><tr><td width='80%'><h4>TOTAL</h4></td><td width='20%'><h4>$115.00</h4></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr></tr><tr><td class='esd-stripe'esd-custom-block-id='7797'align='center'><table class='es-content-body'style='background-color: #1b9ba3;'width='600'cellspacing='0'cellpadding='0'bgcolor='#1b9ba3'align='center'><tbody><tr><td class='esd-structure es-p35t es-p35b es-p35r es-p35l'align='left'><table cellpadding='0'cellspacing='0'width='100%'><tbody><tr><td width='530'align='left'class='esd-container-frame'><table cellpadding='0'cellspacing='0'width='100%'><tbody><tr><td align='center'class='esd-empty-container'style='display: none;'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='es-footer'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'esd-custom-block-id='7684'align='center'><table class='es-footer-body'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p35t es-p40b es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p35b'align='center'><p><b>Keyur Gajjar</b></p></td></tr><tr><td esdev-links-color='#777777'align='left'class='esd-block-text es-m-txt-c es-p5b'><p style='color: #777777;'>Thanks your shooping and waiting for your next visit.</p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='esd-footer-popover es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'style='background-color: transparent;'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p30t es-p30b es-p20r es-p20l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='560'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td align='center'class='esd-empty-container'style='display: none;'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></div></body></html>`,
-    });
-    console.log("Message sent: %s", info); // Output message ID
-    console.log("View email: %s", nodemailer.getTestMessageUrl(info)); // URL to preview email
-}
 app.post('/submitbill', checkAuthenticated, (req, res) => {
 
-    
+
     const ordersCollection = db.collection('orders');
     const stockCollection = db.collection('stocks');
     const customerCollection = db.collection('customer');
@@ -1411,7 +1243,7 @@ app.post('/submitbill', checkAuthenticated, (req, res) => {
 
 app.post('/submitstock', checkAuthenticated, (req, res) => {
 
-    
+
     const stockCollection = db.collection('stocks');
 
     const request1 = req.body;
@@ -1490,7 +1322,7 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
 
 app.post('/deleteitem', checkAuthenticated, (req, res) => {
 
-    
+
     const ordersCollection = db.collection('orders');
 
     const deleteid = req.body.deleteid;
@@ -1515,8 +1347,6 @@ app.post('/deleteitem', checkAuthenticated, (req, res) => {
 
 app.post('/deletecategory', checkAuthenticated, (req, res) => {
 
-    
-
     const categoriesCollection = db.collection('categories');
 
     const deleteCategory = req.body.deleteid;
@@ -1537,8 +1367,6 @@ app.post('/deletecategory', checkAuthenticated, (req, res) => {
 })
 
 app.post('/deletebrand', checkAuthenticated, (req, res) => {
-
-    
 
     const brandsCollection = db.collection('brands');
 
@@ -1562,8 +1390,6 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
 })
 
 app.post('/deletesize', checkAuthenticated, (req, res) => {
-
-    
 
     const sizesCollection = db.collection('sizes');
 
@@ -1591,7 +1417,7 @@ app.post('/barcodegen', checkAuthenticated, (req, res) => {
 
 app.post('/deletestock', checkAuthenticated, (req, res) => {
 
-    
+
     const stockCollection = db.collection('stocks');
 
     const deleteid = req.body.deleteid;

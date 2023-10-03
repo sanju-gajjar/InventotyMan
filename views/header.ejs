@@ -47,7 +47,7 @@
                 View Stocks
             </a>
         </li>
-        <% if (user.role==='admin' ) { %>
+      
         <li class="nav-item">
             <a href="/orders" class="nav-link text-dark font-italic">
                 <i class="eye icon"></i>
@@ -60,13 +60,13 @@
                 Add Stock
             </a>
         </li>
-    <% } %>
+
     </ul>
 
     <h5 class="ui horizontal divider header text-primary">
         CUSTOMIZE
     </h5>
-<% if (user.role==='admin' ) { %>
+
     <ul class="nav flex-column bg-white mb-0">
         <li class="nav-item">
             <a href="/brands" class="nav-link text-dark font-italic">
@@ -87,8 +87,7 @@
             </a>
         </li>
     </ul>
-<% } %>
-<% if (user.role === 'admin') { %>
+
     <h5 class="ui horizontal divider header text-primary">
         FILTERS
     </h5>
@@ -107,6 +106,6 @@
             </a>
         </li>
     </ul>
-    <% } %>
+
 </div>
 </header>
