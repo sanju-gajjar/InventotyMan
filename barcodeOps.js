@@ -1,4 +1,3 @@
-const dbName = 'inventoryman';
 const {
     connectToMongo
 } = require('./db/db');
@@ -8,59 +7,57 @@ function getUserRole(req) {
     const role = req.cookies.role;
     return { user, role };
 }
-exports.getBarcodeQuery = function (req, callback) { 
-    const {
-        selected_brand,
-        selected_category
-    } = req.body;
-    if (selected_brand == null || selected_category == null) {
-        res.render('barcpdegen.ejs', {
-            products: []
-        });
-    }
-    const stockCollection = db.collection('stocks');
-
-    stockCollection.find({
-        "Category": selected_category,
-        "Brand": selected_brand,
-    }).sort({
-        TYear: -1,
-        Tmonth: -1,
-        TDay: -1,
-        StockTime: -1
-    }).toArray((err, allStocks) => {
-        if (err) {
-            console.error('Error querying stock collection:', err);
-            return;
-        }
-        const brandsCollection = db.collection('brands');
-
-        brandsCollection.find().toArray((err1, brands) => {
-            if (err1) {
-                console.error('Error querying brand collection:', err1);
-
-                return;
-            }
-
-            const categoriesCollection = db.collection('categories');
-
-            categoriesCollection.find().toArray((err2, categories) => {
-                if (err2) {
-                    console.error('Error querying category collection:', err2);
-
-                    return;
-                }
-                let result= {
-                    all_stocks: allStocks,
-                    brands: brands,
-                    categories: categories,
-                    // display_content: filteredStocks,
+exports.getBarcodeQuery = function (req, callback) {
+    const { selected_brand, selected_category } = req.body;
+    async function fetchData() {
+        try {
+            if (selected_brand == null || selected_category == null) {
+                return {
+                    user: getUserRole(),
+                    all_stocks: [],
+                    brands: [],
+                    categories: [],
                     filter_type: 'Filter',
-                    filter_name: selected_brand + " " + selected_category
+                    filter_name: '',
                 };
-                callback(err2, result);
-            });
+            }
+            const stockCollection = db.collection('stocks');
+            const allStocks = await stockCollection
+                .find({
+                    "Category": selected_category,
+                    "Brand": selected_brand,
+                })
+                .sort({
+                    TYear: -1,
+                    Tmonth: -1,
+                    TDay: -1,
+                    StockTime: -1
+                })
+                .toArray();
+
+            const [brands, categories] = await Promise.all([
+                db.collection('brands').find().toArray(),
+                db.collection('categories').find().toArray()
+            ]);
+
+            return {
+                user: getUserRole(),
+                all_stocks: allStocks,
+                brands: brands,
+                categories: categories,
+                filter_type: 'Filter',
+                filter_name: `${selected_brand} ${selected_category}`
+            };
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            throw err;
+        }
+    }
+    fetchData()
+        .then(result => {
+            callback(null, result);
+        })
+        .catch(error => {
+            callback(error, null);
         });
-    });
-   
 }

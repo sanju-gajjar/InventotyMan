@@ -39,11 +39,15 @@ const {
     getViewStocks,
 } = require('./dbOps');
 const {
-    getStockQuery
+    getStockQuery, deleteStock, fetStockItem
 } = require('./stockOps');
 const {
      getBarcodeQuery
 } = require('./barcodeOps');
+const {
+    getCustomer
+} = require('./customerOps.js');
+const { getBillPage, submitBill, fetchOrderItem } = require('./orderOps.js');
 const secretKey = process.env.SESSION_SECRET;
 let db;
 function getUserRole(req) {
@@ -197,6 +201,41 @@ app.post('/stocks_query', checkAuthenticated, (req, res) => {
 app.post('/barcode_query', checkAuthenticated, (req, res) => {
     getBarcodeQuery(req, (err, result) => {
         res.render('barcodeFilter.ejs', result);
+    });
+});
+app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
+    getCustomer(req, (err, result) => {
+        res.json(result);
+    });
+});
+app.post('/barcodegen', checkAuthenticated, (req, res) => {
+    res.render('barcodegen.ejs', {
+        products: JSON.parse(req.body.allStocks)
+    });
+});
+app.post('/deletestock', checkAuthenticated, (req, res) => {
+    deleteStock(req, (err, result) => {
+        res.redirect('/viewstocks');
+    });
+})
+app.post('/fetchitem', checkAuthenticated, (req, res) => {
+    fetStockItem(req, (err, result) => {
+        res.json(result);
+    });
+})
+app.get('/billing', checkAuthenticated, async (req, res) => {
+    getBillPage(req, (err, result) => {
+        res.render('bill.ejs', result)
+    });
+});
+app.post('/submitbill', checkAuthenticated, (req, res) => {
+    submitBill(req, (err, result) => {
+        res.redirect('/orders');
+    });
+})
+app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
+    fetchOrderItem(req, (err, result) => {
+        res.json(result);
     });
 })
 app.listen(port, () => {

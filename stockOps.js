@@ -97,3 +97,44 @@ exports.getStockQuery = function (req, callback) {
         });
     });
 }
+exports.deleteStock = function (req, callback) { 
+    const stockCollection = db.collection('stocks');
+
+    const deleteid = req.body.deleteid;
+
+    stockCollection.deleteMany({
+        ItemID: deleteid
+    }, (err, result) => {
+        if (err) {
+            callback(err, null);
+        }
+        callback(null, null);
+        
+
+    });
+}
+
+exports.fetStockItem = function (req, callback) { 
+    const db = getDatabase(dbName);
+    const stockCollection = db.collection('stocks');
+
+    const item_id = req.body.itemid;
+    stockCollection.find({
+        ItemID: item_id,
+        Status: {
+            $ne: "sold"
+        }
+    }).toArray((err, rows) => {
+        if (!err) {
+           let result={
+                success: "Updated Successfully",
+                status: 200,
+                rows: rows
+            };
+            callback(err, result);
+        } else {
+            callback(err, null);
+        }
+    });
+
+}

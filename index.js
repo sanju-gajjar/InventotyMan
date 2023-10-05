@@ -429,153 +429,44 @@ app.post('/barcode_query', checkAuthenticated, (req, res) => {
 
 app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
     const customerCollection = db.collection('customer');
     const PhoneNumber = req.body.PhoneNumber;
-    // Find documents from the customer collection based on phone number
-    customerCollection.find({
-        PhoneNumber: PhoneNumber
-    }).toArray((err, rows) => {
-        if (!err) {
-            res.json({
-                success: "Get Successfully",
-                status: 200,
-                rows: rows
-            });
-        } else {
-            console.log(err);
-        }
-    });
 
-})
-
-app.post('/fetchitem', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-    const stockCollection = db.collection('stocks');
-
-    const item_id = req.body.itemid;
-
-    // Find documents from the stock collection based on ItemID
-    stockCollection.find({
-        ItemID: item_id,
-        Status: {
-            $ne: "sold"
-        }
-    }).toArray((err, rows) => {
-        if (!err) {
-            res.json({
-                success: "Updated Successfully",
-                status: 200,
-                rows: rows
-            });
-        } else {
-            console.log(err);
-        }
-
-        // Close the MongoDB connection
-
-    });
-
-})
-
-app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-    const stockCollection = db.collection('orders');
-
-    const item_id = req.body.itemid.toString().split('\n')[0];
-
-    // Find documents from the stock collection based on ItemID
-    stockCollection.find({
-        TransactionID: item_id
-    }).toArray((err, rows) => {
-        if (!err) {
-
-            if (rows.length > 0) {
-                let CustomerPhone = rows[0].CustomerPhone;
-                let customDetails = {};
-                const customerCollection = db.collection('customer');
-                const PhoneNumber = CustomerPhone;
-                // Find documents from the customer collection based on phone number
-                customerCollection.find({
-                    PhoneNumber: PhoneNumber
-                }).toArray((err, customerRows) => {
-                    if (!err) {
-                        customDetails = customerRows[0];
-
-                        rows.forEach(x => {
-                            x.CustomerName = customDetails.CustomerName
-                            x.CustomerAddress = customDetails.Address
-                            x.CustomerPhone = customDetails.PhoneNumber
-                            x.CustomerEmail = customDetails.Email
-                        })
-                        res.json({
-                            success: "Get Successfully version 1.0.0",
-                            status: 200,
-                            rows: rows
-                        });
-                    } else {
-                        console.log(err);
-                    }
-                });
-            }
-
-        } else {
-            console.log(err);
-        }
-
-        // Close the MongoDB connection
-
-    });
-
-})
-
-app.get('/billing', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-    const categoryCollection = db.collection('categories');
-    const brandCollection = db.collection('brands');
-    const sizeCollection = db.collection('sizes');
-
-    // Find documents in the category collection
-    categoryCollection.find().toArray((err1, category) => {
-        if (err1) {
-            console.error('Error querying category collection:', err1);
-
-            return;
-        }
-
-        // Find documents in the brand collection
-        brandCollection.find().toArray((err2, brand) => {
-            if (err2) {
-                console.error('Error querying brand collection:', err2);
-
-                return;
-            }
-
-            // Find documents in the size collection
-            sizeCollection.find().toArray((err3, size) => {
-                if (err3) {
-                    console.error('Error querying size collection:', err3);
-
-                    return;
-                }
-
-                // Render the bill.ejs template with the retrieved data
-                res.render('bill.ejs', {
-                    category: category,
-                    brand: brand,
-                    size: size
-                });
-
-                // Close the MongoDB connection
-
-            });
+    // Basic input validation
+    if (!PhoneNumber || !/^\d{10}$/.test(PhoneNumber)) {
+        res.status(400).json({
+            error: "Invalid PhoneNumber format"
         });
-    });
+    } else {
+        async function fetchData() {
+            try {
+                const rows = await customerCollection.find({ PhoneNumber: PhoneNumber }).toArray();
+                return rows;
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                throw err;
+            }
+        }
+
+        fetchData()
+            .then(rows => {
+                res.json({
+                    success: "Get Successfully",
+                    status: 200,
+                    rows: rows
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                res.status(500).json({
+                    error: "Internal Server Error"
+                });
+            });
+    }
 
 })
+
+
 
 app.post('/addcategory', checkAuthenticated, (req, res) => {
 
@@ -618,29 +509,6 @@ app.post('/addbrand', checkAuthenticated, (req, res) => {
         }
 
         res.redirect('/brands');
-
-    });
-
-})
-
-app.post('/addsize', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-
-    const sizesCollection = db.collection('sizes');
-
-    const newSize = {
-        Size: parseInt(req.body.new)
-    };
-
-    sizesCollection.insertOne(newSize, (err2, result) => {
-        if (err2) {
-            console.error('Error inserting new size:', err2);
-
-            return;
-        }
-
-        res.redirect('/sizes');
 
     });
 
@@ -1055,26 +923,6 @@ app.get('/brands', checkAuthenticated, (req, res) => {
 
 })
 
-app.get('/sizes', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-
-    const sizesCollection = db.collection('sizes');
-
-    sizesCollection.find().toArray((err2, size) => {
-        if (err2) {
-            console.error('Error querying collection:', err2);
-
-            return;
-        }
-
-        res.render('sizes.ejs', {
-            size
-        });
-
-    });
-
-})
 
 app.get('/stocks', checkAuthenticated, (req, res) => {
 
@@ -1423,56 +1271,6 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
         if (result.deletedCount > 0) { } else { }
 
         res.redirect('/brands');
-
-    });
-
-})
-
-app.post('/deletesize', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-
-    const sizesCollection = db.collection('sizes');
-
-    const deleteSize = req.body.deleteid;
-
-    sizesCollection.deleteOne({
-        Size: deleteSize
-    }, (err2, result) => {
-        if (err2) {
-            console.error('Error deleting size:', err2);
-
-            return;
-        }
-        res.redirect('/sizes');
-    });
-
-})
-
-app.post('/barcodegen', checkAuthenticated, (req, res) => {
-    res.render('barcodegen.ejs', {
-        products: JSON.parse(req.body.allStocks)
-    });
-
-})
-
-app.post('/deletestock', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
-    const stockCollection = db.collection('stocks');
-
-    const deleteid = req.body.deleteid;
-
-    stockCollection.deleteMany({
-        ItemID: deleteid
-    }, (err, result) => {
-        if (err) {
-            console.error('Error deleting value:', err);
-
-            return;
-        }
-
-        res.redirect('/viewstocks');
 
     });
 
