@@ -223,7 +223,7 @@ app.post('/fetchitem', checkAuthenticated, (req, res) => {
         res.json(result);
     });
 })
-app.get('/billing', checkAuthenticated, async (req, res) => {
+app.get('/billing', checkAuthenticated, (req, res) => {
     getBillPage(req, (err, result) => {
         res.render('bill.ejs', result)
     });
