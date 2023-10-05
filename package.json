@@ -4,16 +4,18 @@
   "description": "",
   "main": "server2.js",
   "scripts": {
-     "build": "mkdir -p dist/views && cp -R views dist/ && mkdir -p dist/public && cp -R public dist/",
+    "build": "mkdir -p dist/views && cp -R views dist/ && mkdir -p dist/public && cp -R public dist/",
     "start": "node server2.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "babel-loader": "^9.1.3",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
-    "ejs": "^3.1.6",
+    "ejs": "^3.1.9",
     "express": "^4.17.1",
     "express-flash": "^0.0.2",
     "express-session": "^1.17.1",
@@ -23,9 +25,14 @@
     "method-override": "^3.0.0",
     "mongodb": "^3.7.4",
     "nodemailer": "^6.9.4",
-    "serve-favicon": "^2.5.0"
+    "serve-favicon": "^2.5.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-middleware": "^6.1.1",
+    "webpack-hot-middleware": "^2.25.4"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.22.20",
     "dotenv": "^8.2.0",
     "nodemon": "^2.0.7"
   }

@@ -1,4 +1,3 @@
-const dbName = 'inventoryman';
 const {
     connectToMongo
 } = require('./db/db');
@@ -181,7 +180,8 @@ exports.getBarcodePage = function (req, callback) {
 
                     callback(err2, null);
                 }
-               let result= {
+                let result = {
+                    user: getUserRole(req),
                     brands: brands,
                     categories: categories,
                     display_content: 'None',
@@ -195,4 +195,50 @@ exports.getBarcodePage = function (req, callback) {
     } catch (error) {
         console.log(error);
     }
+}
+exports.getViewStocks = function (req, callback) { 
+    const stockCollection = db.collection('stocks');
+
+    stockCollection.find().sort({
+        TYear: -1,
+        Tmonth: -1,
+        TDay: -1,
+        StockTime: -1
+    }).toArray((err, allStocks) => {
+        if (err) {
+            console.error('Error querying stock collection:', err);
+
+            return;
+        }
+
+        const brandsCollection = db.collection('brands');
+
+        brandsCollection.find().toArray((err1, brands) => {
+            if (err1) {
+                console.error('Error querying brand collection:', err1);
+
+                return;
+            }
+
+            const categoriesCollection = db.collection('categories');
+
+            categoriesCollection.find().toArray((err2, categories) => {
+                if (err2) {
+                    console.error('Error querying category collection:', err2);
+
+                    return;
+                }
+                let result={
+                    user: getUserRole(req),
+                    all_stocks: allStocks,
+                    brands: brands,
+                    categories: categories,
+                    display_content: 'None',
+                    filter_type: 'None',
+                    filter_name: 'None'
+               };
+                callback(err2, result);
+            });
+        });
+    });
 }

@@ -1,33 +1,49 @@
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
 const express = require('express');
+const webpack = require('webpack');
+const webpackConfig = require('./webpack.config.js');
+const { MongoClient } = require('mongodb');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
-const {
-    MongoClient
-} = require('mongodb');
 let favicon = require('serve-favicon');
+const compression = require('compression');
+const ejs = require('ejs');
+const fs = require('fs');
 const checkAuthenticated = require('./middleware/authenticateJWT');
 const app = express();
+const compiler = webpack(webpackConfig);
+app.use(require('webpack-dev-middleware')(compiler, {
+    publicPath: webpackConfig.output.publicPath
+}));
 const port = process.env.PORT || 3000;
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config()
-}
+
 app.use(bodyParser.json());
 app.use(express.static("public"));
+app.set('views', './views');
 app.set('view-engine', 'ejs');
+app.use(compression());
 app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(express.urlencoded({
     extended: false
 }));
 app.use(cookieParser());
-const uri = process.env.mongo_host;
-const dbName = 'inventoryman';
+
 const {
     getHomePage,
     getOrderPage,
-    getBarcodePage
+    getBarcodePage,
+    getViewStocks,
 } = require('./dbOps');
+const {
+    getStockQuery
+} = require('./stockOps');
+const {
+     getBarcodeQuery
+} = require('./barcodeOps');
 const secretKey = process.env.SESSION_SECRET;
 let db;
 function getUserRole(req) {
@@ -38,6 +54,13 @@ function getUserRole(req) {
         role
     };
 }
+function renderTml(filename,tmlData) { 
+    const template = fs.readFileSync(filename, 'utf-8');
+    const compiledTemplate = ejs.compile(template);
+    return compiledTemplate(tmlData);
+}
+const uri = process.env.mongo_host;
+const dbName = 'inventoryman';
 async function connectToMongo() {
     const client = new MongoClient(uri, {
         useUnifiedTopology: true
@@ -48,11 +71,12 @@ async function connectToMongo() {
 }
 connectToMongo();
 app.get('/login', (req, res) => {
-    res.render('login.ejs', {
+    let data = {
         messages: {
             error: null
         }
-    })
+    };
+    res.send(renderTml('views/login.ejs', data))
 });
 app.get('/register', (req, res) => {
     res.render('register.ejs', {
@@ -160,6 +184,21 @@ app.get('/viewbarcodepage', checkAuthenticated, (req, res) => {
         res.render('barcodeFilter.ejs', result);
     });
 });
+app.get('/viewstocks', checkAuthenticated, (req, res) => {
+    getViewStocks(req, (err, result) => {
+        res.render('viewstocks.ejs', result);
+    });
+});
+app.post('/stocks_query', checkAuthenticated, (req, res) => {
+    getStockQuery(req, (err, result) => {
+        res.render('viewstocks.ejs', result);
+    });
+});
+app.post('/barcode_query', checkAuthenticated, (req, res) => {
+    getBarcodeQuery(req, (err, result) => {
+        res.render('barcodeFilter.ejs', result);
+    });
+})
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
