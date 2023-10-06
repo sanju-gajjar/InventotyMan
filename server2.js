@@ -796,6 +796,7 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
     var stockAdd = [];
     data.forEach(datas => {
         stockAdd.push({
+            UserBy: getUserRole(req),
             ItemID: datas[0],
             ItemName: datas[1],
             Category: datas[2],

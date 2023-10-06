@@ -146,6 +146,7 @@ exports.submitBill = function (req, callback) {
     var billAdd = [];
     request1.forEach((ddd) => {
         billAdd.push({
+            UserBy: getUserRole(req),
             ItemID: ddd.id,
             OnlinePayment: onlinePayment,
             Category: ddd.category,
