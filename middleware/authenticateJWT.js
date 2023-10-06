@@ -25,7 +25,7 @@ const checkAuthenticated = (req, res, next) => {
             next();
         });
     } catch (error) {
-        res.redirect('login');
+        console.log("Error Authentication");
     }
 };
 

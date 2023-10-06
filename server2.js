@@ -4,7 +4,9 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const webpack = require('webpack');
 const webpackConfig = require('./webpack.config.js');
-const { MongoClient } = require('mongodb');
+const {
+    MongoClient
+} = require('mongodb');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -39,15 +41,21 @@ const {
     getViewStocks,
 } = require('./dbOps');
 const {
-    getStockQuery, deleteStock, fetStockItem
+    getStockQuery,
+    deleteStock,
+    fetStockItem
 } = require('./stockOps');
 const {
-     getBarcodeQuery
+    getBarcodeQuery
 } = require('./barcodeOps');
 const {
     getCustomer
 } = require('./customerOps.js');
-const { getBillPage, submitBill, fetchOrderItem } = require('./orderOps.js');
+const {
+    getBillPage,
+    submitBill,
+    fetchOrderItem
+} = require('./orderOps.js');
 const secretKey = process.env.SESSION_SECRET;
 let db;
 function getUserRole(req) {
@@ -58,7 +66,7 @@ function getUserRole(req) {
         role
     };
 }
-function renderTml(filename,tmlData) { 
+function renderTml(filename, tmlData) {
     const template = fs.readFileSync(filename, 'utf-8');
     const compiledTemplate = ejs.compile(template);
     return compiledTemplate(tmlData);
@@ -241,8 +249,6 @@ app.post('/fetchorderitem', checkAuthenticated, (req, res) => {
 
 app.post('/addcategory', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
-
     const categoriesCollection = db.collection('categories');
 
     const newCategory = {
@@ -263,8 +269,6 @@ app.post('/addcategory', checkAuthenticated, (req, res) => {
 })
 
 app.post('/addbrand', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
 
     const brandsCollection = db.collection('brands');
 
@@ -290,7 +294,6 @@ app.get('/orders_query', checkAuthenticated, (req, res) => {
 });
 app.post('/orders_query', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
     const ordersCollection = db.collection('orders');
     const customerCollection = db.collection('customer');
 
@@ -299,7 +302,6 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
     // const month = req.body['month'];
     // const year = req.body['year'];
     console.log(phone);
-
 
     let aggregationPipeline = [];
     let month_name = "";
@@ -343,6 +345,7 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
                             _id: -1
                         }).toArray((err1, customerInfo) => {
                             res.render('orders.ejs', {
+                                user: getUserRole(req),
                                 orders: rows,
                                 customerInfo,
                                 sub_orders: rows1,
@@ -354,6 +357,7 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
 
                     } else {
                         res.render('orders.ejs', {
+                            user: getUserRole(req),
                             orders: rows,
                             sub_orders: rows1,
                             selected_item: "time_type",
@@ -379,6 +383,7 @@ app.post('/orders_query', checkAuthenticated, (req, res) => {
 app.get('/sales_filter', checkAuthenticated, (req, res) => {
     rows = {}
     res.render('sales_filter.ejs', {
+        user: getUserRole(req),
         is_paramater_set: false,
         time_type: 'none',
         filter_type: 'none',
@@ -391,6 +396,7 @@ app.get('/sales_filter', checkAuthenticated, (req, res) => {
 
 app.get('/stock_filter', (req, res) => {
     res.render('stock_filter.ejs', {
+        user: getUserRole(req),
         filter_type: 'None',
         display_content: {},
         total_items: {}
@@ -399,7 +405,6 @@ app.get('/stock_filter', (req, res) => {
 
 app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
     const stockCollection = db.collection('stocks');
 
     var filter_type = req.body['exampleRadios1'];
@@ -412,8 +417,7 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 }
                 // Calculate amount * size and store in a new field called "total"
             }
-        },
-        {
+        }, {
             $group: {
                 _id: "$Brand", // Group by brand
                 Amount: {
@@ -439,6 +443,7 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 stockCollection.countDocuments({}, (err1, count) => {
                     if (!err1) {
                         res.render('stock_filter.ejs', {
+                            user: getUserRole(req),
                             filter_type: filter_type,
                             display_content: rows,
                             total_items: count
@@ -481,11 +486,13 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 Count: 1,
                 Amount: 1
             }
-        }]).toArray((err, rows) => {
+        }
+        ]).toArray((err, rows) => {
             if (!err) {
                 stockCollection.countDocuments({}, (err1, count) => {
                     if (!err1) {
                         res.render('stock_filter.ejs', {
+                            user: getUserRole(req),
                             filter_type: filter_type,
                             display_content: rows,
                             total_items: count
@@ -504,7 +511,6 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
 
 app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
     const ordersCollection = db.collection('orders');
 
     const time_type = req.body['exampleRadios'];
@@ -540,7 +546,8 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
                     $sum: '$Amount'
                 }
             }
-        }];
+        }
+        ];
 
         ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
             if (!err) {
@@ -559,11 +566,13 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
                             $sum: 1
                         }
                     }
-                }];
+                }
+                ];
 
                 ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
                     if (!err1) {
                         res.render('sales_filter.ejs', {
+                            user: getUserRole(req),
                             is_paramater_set: true,
                             time_type: 'month',
                             filter_type: filter_type,
@@ -604,7 +613,8 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
                     $sum: '$Amount'
                 }
             }
-        }];
+        }
+        ];
 
         ordersCollection.aggregate(aggregationPipeline).toArray((err, rows) => {
             if (!err) {
@@ -622,12 +632,14 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
                             $sum: 1
                         }
                     }
-                }];
+                }
+                ];
 
                 ordersCollection.aggregate(totalAggregationPipeline).toArray((err1, rows1) => {
                     if (!err1) {
                         const total_amount = rows1;
                         res.render('sales_filter.ejs', {
+                            user: getUserRole(req),
                             is_paramater_set: true,
                             time_type: 'year',
                             filter_type: filter_type,
@@ -654,8 +666,6 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
 
 app.get('/categories', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
-
     const categoriesCollection = db.collection('categories');
 
     categoriesCollection.find().toArray((err1, category) => {
@@ -675,8 +685,6 @@ app.get('/categories', checkAuthenticated, (req, res) => {
 
 app.get('/brands', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
-
     const brandsCollection = db.collection('brands');
 
     brandsCollection.find().toArray((err2, brand) => {
@@ -695,8 +703,6 @@ app.get('/brands', checkAuthenticated, (req, res) => {
 })
 
 app.get('/stocks', checkAuthenticated, (req, res) => {
-
-    const db = getDatabase(dbName);
 
     const categoryCollection = db.collection('categories');
     const brandCollection = db.collection('brands');
@@ -724,6 +730,7 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
                 }
 
                 res.render('stocks.ejs', {
+                    user: getUserRole(req),
                     category: category,
                     brand: brand,
                     size: size
@@ -737,7 +744,6 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
 
 app.post('/submitstock', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
     const stockCollection = db.collection('stocks');
 
     const request1 = req.body;
@@ -816,7 +822,6 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
 
 app.post('/deleteitem', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
     const ordersCollection = db.collection('orders');
 
     const deleteid = req.body.deleteid;
@@ -841,8 +846,6 @@ app.post('/deleteitem', checkAuthenticated, (req, res) => {
 
 app.post('/deletecategory', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
-
     const categoriesCollection = db.collection('categories');
 
     const deleteCategory = req.body.deleteid;
@@ -864,8 +867,6 @@ app.post('/deletecategory', checkAuthenticated, (req, res) => {
 
 app.post('/deletebrand', checkAuthenticated, (req, res) => {
 
-    const db = getDatabase(dbName);
-
     const brandsCollection = db.collection('brands');
 
     const deleteBrand = req.body.deleteid;
@@ -879,7 +880,8 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
             return;
         }
 
-        if (result.deletedCount > 0) { } else { }
+        if (result.deletedCount > 0) { }
+        else { }
 
         res.redirect('/brands');
 
