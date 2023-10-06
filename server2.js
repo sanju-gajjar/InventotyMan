@@ -274,7 +274,7 @@ app.post('/addbrand', checkAuthenticated, (req, res) => {
     const brandsCollection = db.collection('brands');
 
     const newBrand = {
-        Brand: req.body.new
+        Brand: req.body.new.toUpperCase()
     };
 
     brandsCollection.insertOne(newBrand, (err2, result) => {
@@ -800,7 +800,7 @@ app.post('/submitstock', checkAuthenticated, (req, res) => {
             ItemID: datas[0],
             ItemName: datas[1],
             Category: datas[2],
-            Brand: datas[3],
+            Brand: datas[3].toUpperCase(),
             Size: parseInt(datas[4]),
             Amount: parseFloat(datas[5]),
             StockDate: datas[6],

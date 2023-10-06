@@ -47,7 +47,7 @@ exports.getStockQuery = function (req, callback) {
                     let brand_name = req.body['selected_brand'];
 
                     stockCollection.find({
-                        Brand: brand_name
+                        Brand: brand_name.toUpperCase()
                     }).toArray((err3, filteredStocks) => {
                         if (!err3) {
                             let result={
@@ -115,15 +115,11 @@ exports.deleteStock = function (req, callback) {
 }
 
 exports.fetStockItem = function (req, callback) { 
-    const db = getDatabase(dbName);
     const stockCollection = db.collection('stocks');
 
     const item_id = req.body.itemid;
     stockCollection.find({
         ItemID: item_id,
-        Status: {
-            $ne: "sold"
-        }
     }).toArray((err, rows) => {
         if (!err) {
            let result={

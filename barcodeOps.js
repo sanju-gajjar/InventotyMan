@@ -25,7 +25,7 @@ exports.getBarcodeQuery = function (req, callback) {
             const allStocks = await stockCollection
                 .find({
                     "Category": selected_category,
-                    "Brand": selected_brand,
+                    "Brand": selected_brand.toUpperCase(),
                 })
                 .sort({
                     TYear: -1,

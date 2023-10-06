@@ -110,6 +110,10 @@
     .space {
       width: 50%;
     }
+    td.narrow {
+  width: 10% !important;
+  max-width: 10% !important;
+}
 
     table {
       table-layout: auto;
@@ -154,11 +158,10 @@
     input[type=number] {
       text-align: center;
       border-radius: 5px;
-      max-width: 50px;
       font-size: 10px;
       padding: 5px;
       outline: none;
-      border-radius: 20%;
+      border-radius: 5px;
       border: none;
       box-shadow: cadetblue 1px 1px 1px 1px;
 
@@ -168,7 +171,7 @@
       border-radius: 5px;
       box-shadow: cadetblue 1px 1px 1px 1px;
       border: none;
-      max-width: 100px;
+      max-width: 90%;
       text-align: left;
       font-size: 12px;
       padding: 5px;
@@ -293,8 +296,8 @@
         }
 
         td {
-          display: inline-block;
-          width: 33.33%;
+          
+         
           /* each cell will fill 1/3rd of the container width */
         }
       }
@@ -363,38 +366,40 @@
           <div class="invoice-body">
             <table>
               <thead>
-                <th style="padding-left:5px;">ID</th>
-                <th style="padding-left:5px;">PRODUCT</th>
-                <th style="padding-left:5px;">BRAND</th>
-                <th style="padding-left:5px;">CATEGORY</th>
-                <th style="padding-left:5px;">HSN/HSB</th>
-                <th style="padding-left:5px;">UNIT</th>
-                <th style="padding-left:5px;">PRICE</th>
-                <th style="padding-left:5px;">DISCOUNT</th>
-                <th style="padding-left:5px;">GST%</th>
-                <th style="padding-left:5px;">AMOUNT</th>
-                <th style="text-align: right;">ACTION</th>
+                <th style="padding-left:5px; text-align: center;">ID</th>
+                <th style="padding-left:5px;text-align: center;">PRODUCT</th>
+                <th style="padding-left:5px;text-align: center;">BRAND</th>
+                <th style="padding-left:5px;text-align: center;">CATEGORY</th>
+                <th style="padding-left:5px;text-align: center;">HSN/HSB</th>
+                <th style="padding-left:5px;text-align: center;">PRICE</th>
+                <th style="padding-left:5px;text-align: center;">UNIT</th>
+                <th style="padding-left:5px;text-align: center;">DIS</th>
+                <th style="padding-left:5px;text-align: center;">GST%</th>
+                <th style="padding-left:5px;text-align: center;">AMOUNT</th>
+                <th style="text-align: right; text-align: center;">ACTION</th>
               </thead>
 
               <tbody id="table-body">
                 <tr class="single-row">
-                  <td><input type="text" placeholder="Product Id" required name="id1" class="id1" id="id1"
-                      class="product id" oninput="getInput(this.id)"></td>
-                  <td><input type="text" placeholder="Product name" name="product1" class="product1" id="product1"
-                      class="product left"></td>
+                  <td><input type="text" placeholder="Product Id" required name="id1" class="id1" id="id1" class="product id"
+                      oninput="getInput(this.id)"></td>
+                  <td><input type="text" placeholder="Product name" name="product1" class="product1" id="product1" class="product left">
+                  </td>
                   <td><input type="text" placeholder="Brand" name="brand1" class="brand1" id="brand1"></td>
                   <td><input type="text" placeholder="Category" name="category1" class="category1" id="category1"></td>
                   <td><input type="text" placeholder="HSN/HSB" name="hsb1" class="hsb1" id="hsb1"></td>
-                  <td><input type="number" placeholder="0" name="unit1" class="unit1" id="unit1"
-                      onkeyup="getUnitInput(this.id)"></td>
-                  <td><input type="text" inputmode="decimal" placeholder="0" name="price1" class="price1" id="price1"
-                      onkeyup="getUnitInput(this.id)" pattern="[0-9]*[.,]?[0-9]*"></td>
-                  <td><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0"
-                      name="discount1" class="discount1" id="discount1" onkeyup="getUnitInput(this.id)"></td>
-                  <td><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0%" name="gst1"
-                      class="gst1" id="gst1" onkeyup="getUnitInput(this.id)"></td>
-                  <td><input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px"
-                      placeholder="0" name="amount1" class="amount1" id="amount1"></td>
+                  <td style="width: 30%;">
+                    <input type="number" inputmode="decimal" style="width: 100%;" placeholder="0" name="price1"
+                      class="price1" id="price1" onkeyup="getUnitInput(this.id)" pattern="[0-9]*[.,]?[0-9]*">
+                    </td>
+                  <td style="width: 20%;"><input type="number" placeholder="0" name="unit1" style="width: 100%;" class="unit1" id="unit1" onkeyup="getUnitInput(this.id)"></td>
+                  <td style="width: 10%;"><input type="number" inputmode="decimal" style="width: 100%;" pattern="[0-9]*[.,]?[0-9]*" placeholder="0" name="discount1"
+                      class="discount1" id="discount1" onkeyup="getUnitInput(this.id)"></td>
+                  <td style="width: 10%;"><input type="number" style="width: 100%;" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0%" name="gst1" class="gst1"
+                      id="gst1" onkeyup="getUnitInput(this.id)"></td>
+                  <td style="width: 70%;"><input type="number" style="width: 100%;" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0"
+                      name="amount1" class="amount1" id="amount1"></td>
+                  
                   <td style="text-align: right;"><span class="material-icons">delete_outline</span></td>
                 </tr>
                 <tr style="padding-left: 20px">
@@ -463,13 +468,14 @@
         <td><input type="text" placeholder="Category" class="category${currenRowLngth}" id="category${currenRowLngth}" name="category${currenRowLngth}"></td>
         
         <td><input type="text" placeholder="HSB" class="hsb${currenRowLngth}" id="hsb${currenRowLngth}" name="hsb${currenRowLngth}"></td>
-      <td><input type="number" placeholder="0" name="unit${currenRowLngth}" class="unit${currenRowLngth}" id="unit${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
-      <td>
-      <input placeholder="0" name="price${currenRowLngth}" class="price" id="price${currenRowLngth}" onkeyup="getUnitInput(this.id)" type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*">
+       <td style="width: 30%">
+      <input placeholder="0" name="price${currenRowLngth}" class="price" id="price${currenRowLngth}" style="width:100%" onkeyup="getUnitInput(this.id)" type="number" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*">
       </td>
-           <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" placeholder="0" name="discount${currenRowLngth}" class="discount" id="discount${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
-           <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*"  placeholder="0%" name="gst${currenRowLngth}" class="gst" id="gst${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
-       <td><input type="text" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="max-width:180px" placeholder="0" name="amount${currenRowLngth}" class="amount" id="amount${currenRowLngth}"></td>
+        <td style="width: 20%;"><input type="number" placeholder="0" name="unit${currenRowLngth}" style="width:100%" class="unit${currenRowLngth}" id="unit${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
+     
+           <td style="width: 10%;"><input type="number" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="width:100%" placeholder="0" name="discount${currenRowLngth}" class="discount" id="discount${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
+           <td style="width: 10%;"><input type="number" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*"  style="width:100%" placeholder="0%" name="gst${currenRowLngth}" class="gst" id="gst${currenRowLngth}" onkeyup="getUnitInput(this.id)"></td>
+       <td style="width: 70%;"><input type="number" inputmode="decimal"pattern="[0-9]*[.,]?[0-9]*" style="width:100%" placeholder="0" name="amount${currenRowLngth}" class="amount" id="amount${currenRowLngth}"></td>
        <td style="text-align: right;"><span class="material-icons" action="delete">delete_outline</span></td>`
 
           tBody.insertBefore(row, tBody.lastElementChild.previousSibling);
