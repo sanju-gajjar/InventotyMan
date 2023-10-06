@@ -677,6 +677,7 @@ app.get('/categories', checkAuthenticated, (req, res) => {
         }
 
         res.render('categories.ejs', {
+            user: getUserRole(req),
             category
         });
 
@@ -696,6 +697,7 @@ app.get('/brands', checkAuthenticated, (req, res) => {
         }
 
         res.render('brands.ejs', {
+            user: getUserRole(req),
             brand
         });
 
