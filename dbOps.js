@@ -138,7 +138,7 @@ exports.getOrderPage = function (req, callback) {
                             callback(err, result);
                         } else {
                             let result = { 
-                                user: getUserRole(),
+                                user: getUserRole(req),
                                 orders: rows,
                                 sub_orders: rows1,
                                 customerInfo: undefined,

@@ -13,7 +13,7 @@ exports.getBarcodeQuery = function (req, callback) {
         try {
             if (selected_brand == null || selected_category == null) {
                 return {
-                    user: getUserRole(),
+                    user: getUserRole(req),
                     all_stocks: [],
                     brands: [],
                     categories: [],
@@ -41,7 +41,7 @@ exports.getBarcodeQuery = function (req, callback) {
             ]);
 
             return {
-                user: getUserRole(),
+                user: getUserRole(req),
                 all_stocks: allStocks,
                 brands: brands,
                 categories: categories,
