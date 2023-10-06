@@ -218,6 +218,7 @@ app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
 });
 app.post('/barcodegen', checkAuthenticated, (req, res) => {
     res.render('barcodegen.ejs', {
+        user: getUserRole(req),
         products: JSON.parse(req.body.allStocks)
     });
 });
