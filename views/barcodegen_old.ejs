@@ -12,33 +12,18 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/barcodes/JsBarcode.code39.min.js"></script>
 
   <title>View Stocks</title>
-    <style>
-      .page {
-        width: 21cm;
-        height: 29.7cm;
-        margin: 0 auto;
-        display: block;
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
-    
-      .cell {
-        width: 5.25cm;
-        height: 2.475cm;
-        border: 1px solid black;
-        text-align: center;
-        margin: 2px;
-        overflow: hidden;
-      }
-    
-      .cell img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-    </style>
+  <style>
+        .barcode-sticker {
+            width: <%= stickerWidth %>cm;
+            height: <%= stickerHeight %>cm;
+            border: 1px solid black;
+            text-align: center;
+            margin: 5px;
+        }
+  </style>
 </head>
 
 <body>
@@ -59,19 +44,48 @@
           class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
 
       <!-- Page content -->
-      <h1>Barcode Gen</h1>
+      <h1>Stocks Summary</h1>
       <br>
       <center><img class="ui medium rounded image headersvg" src="stock.svg"></center>
       <br>
-        <div class="page">
-          <% barcodeStickers.forEach((sticker, index)=> { %>
-           
-              <div class="cell">
-                <img class="barcode-image" src="<%= sticker %>" alt="Barcode">
+      <div class="container">
+        <% for (let row=0; row < stickerHeight; row++) { %>
+          <div class="row">
+            <% for (let col=0; col < stickerWidth; col++) { %>
+              <div class="barcode-sticker">
+                <div>
+                  <%= headerText %> Barcode <%= row * stickerWidth + col + 1 %>
+                      <%= footerText %>
+                </div>
+                <svg class="barcode"></svg>
               </div>
-             
-                       <% }); %>
-        </div>
+              <% } %>
+          </div>
+          <% } %>
+      </div>
+      <button id="printButton">Print Stickers</button>
+      <script>
+        // Generate barcodes using JsBarcode
+        const stickers = document.querySelectorAll('.barcode-sticker');
+        const width=21.00;
+        const height = 29.7;
+        stickers.forEach((sticker) => {
+          const barcodeText = sticker.firstChild.textContent.trim();
+          const barcodeElement = sticker.querySelector('.barcode');
+          JsBarcode(barcodeElement, barcodeText, {
+            format: 'CODE128', // Barcode format
+            displayValue: false, // Whether to display the encoded text
+            width: 2, // Bar width
+            height: 60, // Bar height
+            margin: 10 // Space between barcode and surrounding elements
+          });
+        });
+        // Print button functionality
+        const printButton = document.getElementById('printButton');
+        printButton.addEventListener('click', () => {
+          window.print();
+        });
+      </script>
     </div>
     <%- include('footer') %>
 

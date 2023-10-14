@@ -3,6 +3,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const express = require('express');
 const webpack = require('webpack');
+const bwipjs = require('bwip-js');
 const webpackConfig = require('./webpack.config.js');
 const {
     MongoClient
@@ -217,12 +218,102 @@ app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
         res.json(result);
     });
 });
-app.post('/barcodegen', checkAuthenticated, (req, res) => {
-    res.render('barcodegen.ejs', {
-        user: getUserRole(req),
-        products: JSON.parse(req.body.allStocks)
+
+function generateBarcode(widthCm, heightCm, text,size) {
+    return new Promise((resolve, reject) => {
+        bwipjs.toBuffer({
+            bcid: 'code128',
+            text: text,
+            scale: 3,
+            includetext: true,
+            textxalign: 'center',
+            textfont: 'Inconsolata',
+            textsize: 12,
+            width: widthCm * 37.7952756,
+            height: heightCm * 37.7952756
+        }, (err, png) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(`data:image/png;base64,${png.toString('base64')}`);
+            }
+        });
     });
+}
+app.post('/barcodegen', checkAuthenticated, async (req, res) => {
+
+    const widthCm = 5.25;
+    const heightCm = 2.475;
+    var products = JSON.parse(req.body.allStocks);
+   
+    index = 1;
+    const generateBarcodePromises = products.map(product => {
+        const text = product.ItemID;
+        console.log('rendering ', index);
+        index = index + 1;
+        return generateBarcode(widthCm, heightCm, text, product.Size);
+    });
+    Promise.all(generateBarcodePromises)
+        .then(barcodeStickers => {
+            // Render the EJS template with barcode stickers data
+            console.log('rendering');
+            res.render('barcodegen.ejs', { user: getUserRole(req), barcodeStickers });
+        })
+        .catch(error => {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        });
+    // products.forEach(async product => {
+    //     headerText = product.ItemName;
+    //     footerText = product.Amount;
+    //     let text = product.ItemID;
+    //     const x = 0; // You can adjust the x-coordinate based on your layout
+    //     const y = 0; // You can adjust the y-coordinate based on your layout
+
+    //     // // Generate barcode using bwip-js
+    //     // bwipjs.toBuffer({
+    //     //     bcid: 'code128', // Barcode type
+    //     //     text: product.ItemID, // Text to encode in the barcode
+    //     //     scale: 3, // Scale factor for the barcode
+    //     //     includetext: true, // Include text on the barcode
+    //     //     textxalign: 'center', // Text horizontal alignment
+    //     //     textfont: 'Inconsolata', // Font for the text
+    //     //     textsize: 12, // Font size for the text
+    //     //     width: stickerWidthCm * 37.7952756, // Convert cm to points
+    //     //     height: stickerHeightCm * 37.7952756 // Convert cm to points
+    //     // }, (err, png) => {
+    //     //     if (err) {
+    //     //         console.error(err);
+    //     //     } else {
+    //     //         // Push barcode data to the array
+    //     //         barcodeStickers.push({ x, y, barcode: `data:image/png;base64,${png.toString('base64')}` });
+    //     //     }
+    //     // });
+    //     // Generate barcode using bwip-js (wrapped in a Promise)
+    //     const barcodeBuffer = await generateBarcode(text, stickerWidthCm, stickerHeightCm);
+    //     // Push barcode data to the array
+    //     barcodeStickers.push({ x, y, barcode: `data:image/png;base64,${barcodeBuffer.toString('base64')}` });
+    // });
+    // // Render the EJS template with barcode stickers data
+    // res.render('barcodegen.ejs', { user: getUserRole(req), barcodeStickers });
+    // // Render the EJS template with barcode stickers data
+    //res.render('barcodegen.ejs', { user: getUserRole(req), barcodeStickers });
+    // res.render('barcodegen.ejs', {
+    //     user: getUserRole(req),
+    //     stickerWidth,
+    //     stickerHeight,
+    //     barcodeStickers: JSON.parse({
+    //         barcodeStickers: req.body.allStocks,
+    //     })
+    // });
 });
+
+// app.post('/barcodegen', checkAuthenticated, (req, res) => {
+//     res.render('barcodegen.ejs', {
+//         user: getUserRole(req),
+//         products: JSON.parse(req.body.allStocks)
+//     });
+// });
 app.post('/deletestock', checkAuthenticated, (req, res) => {
     deleteStock(req, (err, result) => {
         res.redirect('/viewstocks');
@@ -665,6 +756,7 @@ app.post('/sales_filter_query', checkAuthenticated, (req, res) => {
     }
 
 })
+
 
 app.get('/categories', checkAuthenticated, (req, res) => {
 

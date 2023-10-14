@@ -80,6 +80,11 @@
         </tr>
     </thead>
     <tbody>
+
+    <label>Sticker Width : </label><input style="width: 50px;" value=48 type="number" placeholder="cm" id="stickerWidth"
+      name="stickerWidth">
+    <label>Sticker Height : </label><input style="width: 50px;" value=12 type="number" placeholder="cm" id="stickerHeight"
+      name="stickerHeight">
         <% all_stocks.forEach(function(order){ %>
             <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
                 <td><%= order.ItemID %></td>
