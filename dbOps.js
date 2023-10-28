@@ -182,8 +182,8 @@ exports.getBarcodePage = function (req, callback) {
                 }
                 let result = {
                     user: getUserRole(req),
-                    brands: brands,
-                    categories: categories,
+                    brands: brands.sort(),
+                    categories: categories.sort(),
                     display_content: 'None',
                     filter_type: 'None',
                     filter_name: 'None'
@@ -231,8 +231,8 @@ exports.getViewStocks = function (req, callback) {
                 let result={
                     user: getUserRole(req),
                     all_stocks: allStocks,
-                    brands: brands,
-                    categories: categories,
+                    brands: brands.sort(),
+                    categories: categories.sort(),
                     display_content: 'None',
                     filter_type: 'None',
                     filter_name: 'None'

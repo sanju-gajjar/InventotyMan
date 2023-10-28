@@ -24,7 +24,7 @@ exports.getBarcodeQuery = function (req, callback) {
             const stockCollection = db.collection('stocks');
             const allStocks = await stockCollection
                 .find({
-                    "Category": selected_category,
+                    "Category": selected_category.toUpperCase(),
                     "Brand": selected_brand.toUpperCase(),
                 })
                 .sort({
@@ -43,8 +43,8 @@ exports.getBarcodeQuery = function (req, callback) {
             return {
                 user: getUserRole(req),
                 all_stocks: allStocks,
-                brands: brands,
-                categories: categories,
+                brands: brands.sort(),
+                categories: categories.sort(),
                 filter_type: 'Filter',
                 filter_name: `${selected_brand} ${selected_category}`
             };

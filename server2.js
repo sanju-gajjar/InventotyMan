@@ -1,6 +1,11 @@
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
+const Recipient = require("mailersend").Recipient;
+const EmailParams = require("mailersend").EmailParams;
+const MailerSend = require("mailersend").MailerSend;
+const Sender = require("mailersend").Sender;
+
 const express = require('express');
 const webpack = require('webpack');
 const bwipjs = require('bwip-js');
@@ -219,13 +224,13 @@ app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
     });
 });
 
-function generateBarcode(widthCm, heightCm, text,size) {
+function generateBarcode(widthCm, heightCm, text, size, headerText, footerText) {
     return new Promise((resolve, reject) => {
         bwipjs.toBuffer({
             bcid: 'code128',
             text: text,
             scale: 3,
-            includetext: true,
+            includetext: false,
             textxalign: 'center',
             textfont: 'Inconsolata',
             textsize: 12,
@@ -235,7 +240,7 @@ function generateBarcode(widthCm, heightCm, text,size) {
             if (err) {
                 reject(err);
             } else {
-                resolve(`data:image/png;base64,${png.toString('base64')}`);
+                resolve({ sticker: `data:image/png;base64,${png.toString('base64')}`, headerText, footerText });
             }
         });
     });
@@ -243,21 +248,25 @@ function generateBarcode(widthCm, heightCm, text,size) {
 app.post('/barcodegen', checkAuthenticated, async (req, res) => {
 
     const widthCm = 5.25;
-    const heightCm = 2.475;
+    const heightCm = 2.0;
     var products = JSON.parse(req.body.allStocks);
    
     index = 1;
-    const generateBarcodePromises = products.map(product => {
+    const generateBarcodePromises = products.map((product,index) => {
         const text = product.ItemID;
+        let headerText = product.ItemName + "(" + product.Brand +")";
+        let footerText = product.Amount;
         console.log('rendering ', index);
         index = index + 1;
-        return generateBarcode(widthCm, heightCm, text, product.Size);
+        return generateBarcode(widthCm, heightCm, text, product.Size, headerText, footerText);
     });
     Promise.all(generateBarcodePromises)
         .then(barcodeStickers => {
+            const chunkedItems = chunkArray(barcodeStickers, 48);
+
             // Render the EJS template with barcode stickers data
             console.log('rendering');
-            res.render('barcodegen.ejs', { user: getUserRole(req), barcodeStickers });
+            res.render('barcodegen.ejs', { user: getUserRole(req), chunkedItems });
         })
         .catch(error => {
             console.error(error);
@@ -771,7 +780,7 @@ app.get('/categories', checkAuthenticated, (req, res) => {
 
         res.render('categories.ejs', {
             user: getUserRole(req),
-            category
+            category: category.sort()
         });
 
     });
@@ -791,7 +800,7 @@ app.get('/brands', checkAuthenticated, (req, res) => {
 
         res.render('brands.ejs', {
             user: getUserRole(req),
-            brand
+            brand:brand.sort()
         });
 
     });
@@ -827,8 +836,8 @@ app.get('/stocks', checkAuthenticated, (req, res) => {
 
                 res.render('stocks.ejs', {
                     user: getUserRole(req),
-                    category: category,
-                    brand: brand,
+                    category: category.sort(),
+                    brand: brand.sort(),
                     size: size
                 });
 
@@ -984,34 +993,51 @@ app.post('/deletebrand', checkAuthenticated, (req, res) => {
 
     });
 
-})
+});
 
-async function sendMail(orderDetails, to) {
+app.post('/sendmail', checkAuthenticated, async (req, res) => {
+    fetchOrderItem(req, async (err, result) => {
+        var orderDetails = result.rows;
+        var htmlOrderTable = "";
+        var invoiceNumber = orderDetails[0].TransactionID;
+        var customerName = orderDetails[0].CustomerName;
+        orderDetails.forEach((order) => {
+            htmlOrderTable = htmlOrderTable + `<tr><td style="padding: 5px 10px 5px 0"width="80%"align="left"><p>₹${order.ItemName}</p></td><td style="padding: 5px 0"width="20%"align="left"><p>₹${order.Amount}</p></td></tr>`;
+        })
+        const mailersend = new MailerSend({
+            api_key: "mlsn.bf184150b16271c73d239eed2fc07dc568d9fb774ee97ad148219864554a3feb",
+        });
 
-    var htmlOrderTable = "";
-    var invoiceNumber = orderDetails[0].TransactionID;
-    var customerName = orderDetails[0].CustomerName;
-    orderDetails.forEach((order) => {
-        htmlOrderTable = htmlOrderTable + `<tr><td style="padding: 5px 10px 5px 0"width="80%"align="left"><p>₹{order.ItemName}</p></td><td style="padding: 5px 0"width="20%"align="left"><p>₹{order.Amount}</p></td></tr>`;
-    })
-    // SMTP config
-    const transporter = nodemailer.createTransport({
-        host: "mail.thecyclehub.co.in", //
-        port: 465,
-        auth: {
-            user: "phoner@thecyclehub.co.in", // Your Ethereal Email address
-            pass: "Keyur@123", // Your Ethereal Email password
-        },
-    }); // Send the email
-    let info = await transporter.sendMail({
-        from: '"Keyur Gajjar" <phoner@thecyclehub.co.in>',
-        to: to, //'sanju.gajjar2@gmail.com', // Test email address
-        subject: `Thank for shoping at Phoner #Invoice: ${invoiceNumber}`,
-        text: `Hi, ${customerName}`,
-        html: `<!DOCTYPE html PUBLIC'-//W3C//DTD XHTML 1.0 Transitional//EN''http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'><html xmlns='http://www.w3.org/1999/xhtml'xmlns:o='urn:schemas-microsoft-com:office:office'><head><meta charset='UTF-8'><meta content='width=device-width, initial-scale=1'name='viewport'><meta name='x-apple-disable-message-reformatting'><meta http-equiv='X-UA-Compatible'content='IE=edge'><meta content='telephone=no'name='format-detection'><title></title><!--[if(mso 16)]><style type='text/css'>a{text-decoration:none;}</style><![endif]--><!--[if gte mso 9]><style>sup{font-size:100%!important;}</style><![endif]--><!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG></o:AllowPNG><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]--></head><body><div class='es-wrapper-color'><!--[if gte mso 9]><v:background xmlns:v='urn:schemas-microsoft-com:vml'fill='t'><v:fill type='tile'color='#eeeeee'></v:fill></v:background><![endif]--><table class='es-wrapper'width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-email-paddings'valign='top'><table cellpadding='0'cellspacing='0'class='es-content esd-header-popover'align='center'><tbody><tr><td class='esd-stripe'esd-custom-block-id='7954'align='center'><table class='es-content-body'style='background-color: transparent;'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p15t es-p15b es-p10r es-p10l'align='left'><!--[if mso]><table width='580'cellpadding='0'cellspacing='0'><tr><td width='282'valign='top'><![endif]--><table class='es-left'cellspacing='0'cellpadding='0'align='left'><tbody><tr><td class='esd-container-frame'width='282'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='es-infoblock esd-block-text es-m-txt-c'align='left'><p style='font-family: arial, helvetica\ neue, helvetica, sans-serif;'>Put your preheader text here<br></p></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td><td width='20'></td><td width='278'valign='top'><![endif]--><table class='es-right'cellspacing='0'cellpadding='0'align='right'><tbody><tr><td class='esd-container-frame'width='278'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td align='right'class='es-infoblock esd-block-text es-m-txt-c'><p><a href='https://viewstripo.email'class='view'target='_blank'style='font-family: 'arial', 'helvetica neue', 'helvetica', 'sans-serif';'>View in browser</a></p></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr></tr><tr><td class='esd-stripe'esd-custom-block-id='7681'align='center'><table class='es-header-body'style='background-color: #044767;'width='600'cellspacing='0'cellpadding='0'bgcolor='#044767'align='center'><tbody><tr><td class='esd-structure es-p35t es-p35b es-p35r es-p35l'align='left'><!--[if mso]><table width='530'cellpadding='0'cellspacing='0'><tr><td width='340'valign='top'><![endif]--><table class='es-left'cellspacing='0'cellpadding='0'align='left'><tbody><tr><td class='es-m-p0r es-m-p20b esd-container-frame'width='340'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-m-txt-c'align='left'><h1 style='color: #ffffff; line-height: 100%;'>Phoner</h1></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td><td width='20'></td><td width='170'valign='top'><![endif]--><table cellspacing='0'cellpadding='0'align='right'><tbody><tr class='es-hidden'><td class='es-m-p20b esd-container-frame'esd-custom-block-id='7704'width='170'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-spacer es-p5b'align='center'style='font-size:0'><table width='100%'height='100%'cellspacing='0'cellpadding='0'border='0'><tbody><tr><td style='border-bottom: 1px solid #044767; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; height: 1px; width: 100%; margin: 0px;'></td></tr></tbody></table></td></tr><tr><td><table cellspacing='0'cellpadding='0'align='right'><tbody><tr><td align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text'align='right'><p>The Cycle Hub</p></td></tr></tbody></table></td><td class='esd-block-image es-p10l'valign='top'align='left'style='font-size:0'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!--[if mso]></td></tr></table><![endif]--></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'width='600'cellspacing='0'cellpadding='0'bgcolor='#ffffff'align='center'><tbody><tr><td class='esd-structure es-p40t es-p35b es-p35r es-p35l'esd-custom-block-id='7685'style='background-color: #f7f7f7;'bgcolor='#f7f7f7'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-image es-p20t es-p25b es-p35r es-p35l'align='center'style='font-size:0'></td></tr><tr><td class='esd-block-text es-p15b'align='center'><h2 style='color: #333333; font-family: 'open sans', 'helvetica neue', helvetica, arial, sans-serif;'>Thanks for your purchase</h2></td></tr><tr><td class='esd-block-text es-m-txt-l es-p20t'align='left'><h3 style='font-size: 18px;'>Hello NAME,</h3></td></tr><tr><td class='esd-block-text es-p15t es-p10b'align='left'><p style='font-size: 16px; color: #777777;'>Please find the invoice below for your purchase</p></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p40t es-p40b es-p35r es-p35l'esd-custom-block-id='7685'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p20t'align='center'><h3 style='color: #333333;'>INVOICE</h3></td></tr><tr><td class='esd-block-text es-p15t es-p10b'align='center'><p style='font-size: 16px; color: #777777;'>INVOICE NUMBER: ${invoiceNumber}</p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table cellpadding='0'cellspacing='0'class='es-content'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'width='600'cellspacing='0'cellpadding='0'bgcolor='#ffffff'align='center'><tbody><tr><td class='esd-structure es-p20t es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p10t es-p10b es-p10r es-p10l'bgcolor='#eeeeee'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody><tr><td width='80%'><h4>Order Confirmation#</h4></td><td width='20%'><h4>${invoiceNumber}</h4></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p10t es-p10b es-p10r es-p10l'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody>${htmlOrderTable}</tbody></table></td></tr></tbody></table></td></tr><tr><td class='esd-structure es-p10t es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table style='border-top: 3px solid #eeeeee; border-bottom: 3px solid #eeeeee;'width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p15t es-p15b es-p10r es-p10l'align='left'><table style='width: 500px;'class='cke_show_border'cellspacing='1'cellpadding='1'border='0'align='left'><tbody><tr><td width='80%'><h4>TOTAL</h4></td><td width='20%'><h4>$115.00</h4></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr></tr><tr><td class='esd-stripe'esd-custom-block-id='7797'align='center'><table class='es-content-body'style='background-color: #1b9ba3;'width='600'cellspacing='0'cellpadding='0'bgcolor='#1b9ba3'align='center'><tbody><tr><td class='esd-structure es-p35t es-p35b es-p35r es-p35l'align='left'><table cellpadding='0'cellspacing='0'width='100%'><tbody><tr><td width='530'align='left'class='esd-container-frame'><table cellpadding='0'cellspacing='0'width='100%'><tbody><tr><td align='center'class='esd-empty-container'style='display: none;'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='es-footer'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'esd-custom-block-id='7684'align='center'><table class='es-footer-body'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p35t es-p40b es-p35r es-p35l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='530'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-block-text es-p35b'align='center'><p><b>Keyur Gajjar</b></p></td></tr><tr><td esdev-links-color='#777777'align='left'class='esd-block-text es-m-txt-c es-p5b'><p style='color: #777777;'>Thanks your shooping and waiting for your next visit.</p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class='esd-footer-popover es-content'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-stripe'align='center'><table class='es-content-body'style='background-color: transparent;'width='600'cellspacing='0'cellpadding='0'align='center'><tbody><tr><td class='esd-structure es-p30t es-p30b es-p20r es-p20l'align='left'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td class='esd-container-frame'width='560'valign='top'align='center'><table width='100%'cellspacing='0'cellpadding='0'><tbody><tr><td align='center'class='esd-empty-container'style='display: none;'></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table></div></body></html>`,
+        const recipients = [new Recipient("keyur@thecyclehub.co.in", "Sanju Gajjar")];
+        const sentFrom = new Sender("MS_TXAOnw@thecyclehub.co.in", "The Cycle Hub");
+
+        const emailParams = new EmailParams()
+            .setFrom(sentFrom)
+            .setTo(recipients)
+            .setSubject("Subject")
+           // .setHtml(htmlOrderTable)
+            .setText("Greetings from the team, you got this message through MailerSend.");
+        try {
+            
+      
+      await  mailersend.email.send(emailParams, (err) => { 
+            console.log("here i am ",err);
+      })
+        } catch (error) {
+            console.log("here i am ", error);
+        }
+        res.redirect('/orders');
     });
-    console.log("Message sent: %s", info); // Output message ID
-    console.log("View email: %s", nodemailer.getTestMessageUrl(info)); // URL to preview email
+  
+});
+// Function to split the array into chunks of given size
+function chunkArray(array, chunkSize) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+        const chunk = array.slice(i, i + chunkSize);
+        chunks.push(chunk);
+    }
+    return chunks;
 }
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

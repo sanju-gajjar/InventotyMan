@@ -23,6 +23,7 @@
     "fs": "^0.0.1-security",
     "jsbarcode": "^3.11.5",
     "jsonwebtoken": "^9.0.2",
+    "mailersend": "^2.2.0",
     "method-override": "^3.0.0",
     "mongodb": "^3.7.4",
     "nodemailer": "^6.9.4",

@@ -31,3 +31,26 @@ function initialize(passport, getUserByEmail, getUserById) {
 }
 
 module.exports = initialize
+
+
+mlsn.bf184150b16271c73d239eed2fc07dc568d9fb774ee97ad148219864554a3feb    prod token
+
+
+Enter your SMTP name
+thecyclehub
+Server
+smtp.mailersend.net
+Port
+Connection security: TLS
+587
+Username
+MS_TXAOnw @thecyclehub.co.in
+Password
+Reset credentials
+wbLLVXd9SBApqqfl
+
+
+
+
+
+

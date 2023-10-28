@@ -168,14 +168,7 @@
                     <%=order._id%>
                   </button>
                 </p>
-                <div class="form-check form-check-inline form-switch">
-                  <input class="form-check-input" type="radio" name=<%=order._id%> id=<%=order._id%>
-                    value="sendMail">
-                    <label class="form-check-label" for="sendMail">
-                      Send Mail
-                    </label>
-                </div>
-              </div>
+          
               <table class="ui inverted violet table table-bordered">
                 <thead>
                   <tr class="table-success">
@@ -189,6 +182,8 @@
                     <th>Customer Name</th>
                     <th>Customer Email</th>
                     <th>Customer Number</th>
+                    <th>Mail</th>
+                    <th>Action</th>
 
                   </tr>
                 </thead>
@@ -228,6 +223,9 @@
                           <%= sub_order.CustomerPhone %>
                         </td>
                         <td>
+                          <button class="ui green submit button" type="button" value="<%= order._id %>" onclick="sendInvoice(this.value)">
+                            Send Mail
+                          </button>
                         </td>
                         <td>
                           <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
@@ -379,6 +377,20 @@
         }
         function downloadInvoice(tID) {
           var data = getSampleData(tID.trim().split('\n')[0]);
+        }
+        function sendInvoice(tID){
+          $.ajax({
+            type: "POST",
+            url: "/sendmail",
+            data: {
+              "itemid": tID
+            },
+            success: function (data) {
+              if (data.status == 200 && data.rows.length > 0) {
+                console.log("mail sent");
+            }
+          }
+          });
         }
         function getSampleData(tID) {
           var target = document.getElementById('loader');

@@ -52,8 +52,8 @@ exports.getStockQuery = function (req, callback) {
                         if (!err3) {
                             let result={
                                 all_stocks: allStocks,
-                                brands: brands,
-                                categories: categories,
+                                brands: brands.sort(),
+                                categories: categories.sort(),
                                 display_content: filteredStocks,
                                 filter_type: 'brand',
                                 filter_name: brand_name
