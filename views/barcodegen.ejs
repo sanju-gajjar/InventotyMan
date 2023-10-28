@@ -12,23 +12,25 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/barcodes/JsBarcode.code39.min.js"></script>
 
   <title>View Stocks</title>
   <style>
-    .grid-container {
-      display: grid;
-      grid-template-columns: auto auto auto auto auto auto;
-      gap: 5px;
-      /* background-color: #2196F3; */
-      padding: 5px;
+    .page {
+      width: 21cm;
+      height: 29.7cm;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
     }
 
-    .grid-container>div {
-      /* background-color: rgba(255, 255, 255, 0.8); */
+    .cell {
+      background-color: white;
+      width: 5.25cm;
+      height: 2.475cm;
+      border: 1px solid red;
       text-align: center;
-      padding: 5px 0;
-      font-size: 15px;
+
+      overflow: auto;
     }
   </style>
 </head>
@@ -51,64 +53,122 @@
           class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
 
       <!-- Page content -->
-      <h1>Stocks Summary</h1>
+      <h1>Barcode Gen</h1>
       <br>
       <center><img class="ui medium rounded image headersvg" src="stock.svg"></center>
       <br>
-      <button onclick="printBarcode()">Print</button>
-      <div class="grid-container" id="barcode-data">
-        <% products.forEach(product=> { %>
 
-          <% for(i=0;i< product.Size;i++){%>
-            <div class="product">
-              <p>
-                <%= product.ItemName %>
-              </p>
-              <svg id="barcode-<%= product._id %>"></svg>
-              <p>Price: <%= product.Amount %>
-              </p>
+      <!-- <div name="printme" id="printme">
+        <style>
+          .page {
+            width: 21cm;
+            height: 29.7cm;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+          }
+        
+          .cell {
+            background-color: white;
+            width: 5.25cm;
+            height: 2.475cm;
+            border: 1px solid red;
+            text-align: center;
+        
+            overflow: auto;
+          }
+        
+   
+        </style>
+      
+         <div class="page" name="page" id="page">
+         
+    
+        </div> -->
 
-            </div>
-            <script>
-              JsBarcode("#barcode-<%= product._id %>", "<%= product.ItemID %>", {
-                format: "CODE39"
-              });
+      <button id="printButton">Print Stickers</button>
+      <div class="container" name="printme" id="printme">
+        <style>
+          .container {
+            width: 80vw;
+            margin: 0 auto;
+            page-break-after: always;
+          }
+         
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
 
-              function printBarcode() {
-                var printWindow = window.open('', '', 'width=100%,height=100%');
-                printWindow.document.open();
-                printWindow.document.write('<html><head><title>Barcode</title><style>.grid-container{display:grid;grid-template-columns:auto auto auto auto auto auto;gap:5px;padding:5px;}.grid-container>div{text-align:center;padding:5px 0;font-size:15px;}</style></head><body> <div class="grid-container">');
-                printWindow.document.write(document.getElementById('barcode-data').outerHTML);
-                printWindow.document.write('</div></body></html>');
-                printWindow.document.close();
-                printWindow.print();
-              }
-            </script>
+          td {
+            border: 1px solid black;
+            width: 5.25cm;
+            height: 2.475cm;
+            text-align: center;
+            vertical-align: middle;
+          }
+
+          .empty-cell {
+            visibility: hidden;
+          }
+        </style>
+          <% for (let k=0; k< chunkedItems.length;k++) {%>
+        <table id="myTable">
+          <% for (let i=0; i < 12; i++) { %>
+            <tr>
+              <% for (let j=0; j < 4; j++) { %>
+                <% const index=i * 4 + j; %>
+                  <% if (index < chunkedItems[k].length) { %>
+                    <td>
+                      <p style="font-size: 10px;margin: 0;">
+                        <%= chunkedItems[k][index].headerText %>
+                          <%=chunkedItems[k][index].footerText %>
+                      </p>
+                      <img height="80%" width="90%" class="barcode-image" src="<%= chunkedItems[k][index].sticker %>"
+                        alt="Barcode">
+                    </td>
+                    <% } else { %>
+                      <td class="empty-cell"></td>
+                      <% } %>
+                        <% } %>
+            </tr>
             <% } %>
-
-
-              <% }); %>
+        </table>
+        <% } %>
       </div>
+    </div>
     </div>
     <%- include('footer') %>
 
-    <!-- Option 1: Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
-      crossorigin="anonymous"></script>
-    <!-- Semnatic-UI Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+      <!-- Option 1: Bootstrap Bundle with Popper -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+        crossorigin="anonymous"></script>
+      <!-- Semnatic-UI Scripts -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
 
-    <script>
-      $(function () {
-        // Sidebar toggle behavior
-        $('#sidebarCollapse').on('click', function () {
-          $('#sidebar, #content').toggleClass('active');
+      <script>
+        const printButton = document.getElementById('printButton');
+        printButton.addEventListener('click', () => {
+          var printContents = document.getElementById("printme").innerHTML;
+          var originalContents = document.body.innerHTML;
+
+          document.body.innerHTML = printContents;
+
+          window.print();
+
+          document.body.innerHTML = originalContents;
+
         });
-      });
+        $(function () {
+          // Sidebar toggle behavior
+          $('#sidebarCollapse').on('click', function () {
+            $('#sidebar, #content').toggleClass('active');
+          });
+        });
 
-    </script>
+      </script>
 
 </body>
 

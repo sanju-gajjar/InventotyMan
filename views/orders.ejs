@@ -1,488 +1,530 @@
 <!doctype html>
-  <html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!--Custom CSS-->
-    <link rel="stylesheet" href="styles.css">
-    <!--Semantic-UI CSS-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-    <script src="easyInvoice.min.js"></script>
-    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
-    <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <style>
-      /* styles.css */
-      .fulldiv {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: transparent;
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--Custom CSS-->
+  <link rel="stylesheet" href="styles.css">
+  <!--Semantic-UI CSS-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+  <script src="easyInvoice.min.js"></script>
+  <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+  <script src="https://smtpjs.com/v3/smtp.js"></script>
+  <style>
+    /* styles.css */
+    .fulldiv {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+    }
+
+    .loader {
+      z-index: 1;
+      background-color: grey;
+      display: flex;
+      top: 50%;
+      right: 50%;
+      position: fixed;
+      justify-content: center;
+      border: 16 px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16 px solid blue;
+      border-right: 16 px solid green;
+      border-bottom: 16 px solid red;
+      border-left: 16 px solid pink;
+      width: 120 px;
+      height: 120 px;
+      -webkit-animation: spin 2 s linear infinite;
+      animation: spin 2 s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+      0% {
+        -webkit-transform: rotate(0 deg);
       }
 
-      .loader {
-        z-index: 1;
-        background-color: grey;
-        display: flex;
-        top: 50%;
-        right: 50%;
-        position: fixed;
-        justify-content: center;
-        border: 16 px solid #f3f3f3;
-        border-radius: 50%;
-        border-top: 16 px solid blue;
-        border-right: 16 px solid green;
-        border-bottom: 16 px solid red;
-        border-left: 16 px solid pink;
-        width: 120 px;
-        height: 120 px;
-        -webkit-animation: spin 2 s linear infinite;
-        animation: spin 2 s linear infinite;
+      100% {
+        -webkit-transform: rotate(360 deg);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0 deg);
       }
 
-      @-webkit-keyframes spin {
-        0%{
-          -webkit-transform: rotate(0 deg);
-        }
-
-        100%{
-          -webkit-transform: rotate(360 deg);
-        }
+      100% {
+        transform: rotate(360 deg);
       }
+    }
+  </style>
+  <title>Orders</title>
+</head>
 
-      @keyframes spin {
-        0%{
-          transform: rotate(0 deg);
-        }
-
-        100%{
-          transform: rotate(360 deg);
-        }
-      }
-    </style>
-    <title>Orders</title>
-    </head>
-
-    <body>
-      <!--Vertical Navbar-->
-      <%- include('header') %>
-        <!-- Page content holder -->
-        <div class="page-content p-5" id="content"
-          style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
-          <!-- Toggle button -->
-          <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item">
-                <a href="/">Home</a>
-              </li>
-              <li class="breadcrumb-item active" aria-current="page">View Order</li>
-            </ol>
-          </nav>
-          <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4">
-            <i class="align justify icon"></i>
-            <small class="text-uppercase font-weight-bold">Menu</small>
-          </button>
-          <div id="loader"></div>
-          <!-- Page content -->
-          <h1>Order Summary</h1>
-          <center>
-            <img class="ui medium rounded image headersvg" src="flower.svg">
-          </center>
-          <br>
-          <form action="orders_query" method="POST">
-            <div class="ui four column grid">
-              <div class="row">
-                <div class="column">
-                  <h3>View Orders By</h3>
-                </div>
-              </div>
+<body>
+  <!--Vertical Navbar-->
+  <%- include('header') %>
+    <!-- Page content holder -->
+    <div class="page-content p-5" id="content"
+      style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
+      <!-- Toggle button -->
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="/">Home</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">View Order</li>
+        </ol>
+      </nav>
+      <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4">
+        <i class="align justify icon"></i>
+        <small class="text-uppercase font-weight-bold">Menu</small>
+      </button>
+      <div id="loader"></div>
+      <!-- Page content -->
+      <h1>Order Summary</h1>
+      <center>
+        <img class="ui medium rounded image headersvg" src="flower.svg">
+      </center>
+      <br>
+      <form action="orders_query" method="POST">
+        <div class="ui four column grid">
+          <div class="row">
+            <div class="column">
+              <h3>View Orders By</h3>
             </div>
-            <br>
-            <center>
-              <div class="ui left corner labeled action input">
-                <div class="column">
-                  <input class="form-input" type="input" name="phone" id="phone" placeholder="Enter Phone Number">
-                </div>
-                <button class="ui teal button" type="submit">Search &emsp;</button>
-                <div class="ui corner label">
-                  <i class="search icon"></i>
-                </div>
-              </div>
-            </center>
-          </form>
-          <% if(selected_item=='None' ) { %>
-            <% orders.sort( function(a, b){return new
-              Date(b.TransactionDate.split('/')[2],b.TransactionDate.split('/')[1],b.TransactionDate.split('/')[0]) -
-              new Date(a.TransactionDate.split('/')[2],a.TransactionDate.split('/')[1],a.TransactionDate.split('/')[0])}
-              ).forEach(function(order){ %>
-              <br>
-              <div class="ui styled fluid accordion">
-                <div class="title text-primary">
+          </div>
+        </div>
+        <br>
+        <center>
+          <div class="ui left corner labeled action input">
+            <div class="column">
+              <input class="form-input" type="input" name="phone" id="phone" placeholder="Enter Phone Number">
+            </div>
+            <button class="ui teal button" type="submit">Search &emsp;</button>
+            <div class="ui corner label">
+              <i class="search icon"></i>
+            </div>
+          </div>
+        </center>
+      </form>
+      <% if(selected_item=='None' ) { %>
+        <% orders.sort( function(a, b){return new
+          Date(b.TransactionDate.split('/')[2],b.TransactionDate.split('/')[1],b.TransactionDate.split('/')[0]) - new
+          Date(a.TransactionDate.split('/')[2],a.TransactionDate.split('/')[1],a.TransactionDate.split('/')[0])}
+          ).forEach(function(order){ %>
+          <br>
+          <div class="ui styled fluid accordion">
+            <div class="title text-primary">
 
-                  <table>
+              <table>
 
-                    <tr class="text-primary">
-                      <td><i class="dropdown icon">
-                        </i></td>
-                      <td>Date:<i>
-                          <%= order.TransactionDate %>
-                        </i> | </td>
-                      <td>Time:<i>
-                          <%= order.TransactionTime %>
-                        </i> | </td>
-                      <td>Order ID:<i>
-                          <%= order._id %>
-                        </i> | </td>
-                      <td>Phone:<i>
-                      <td>
-                        <%= order.CustomerPhone %>
-                          |
-                      </td>
-                      <td style="right: 0;">Total Amount:<i>
-                          <%= order.Amount %>
-                        </i> </td>
-
-                      </i>
-
-                      </td>
-                    </tr>
-
-                  </table>
-
-
-                </div>
-                <div class="content">
-                  <div class="col-lg">
-
-                    <p>Download <button class="ui green submit button" type="button"
-                        onclick="downloadInvoice(this.innerHTML)">
-                        <%=order._id%>
-                    </p>
+                <tr class="text-primary">
+                  <td><i class="dropdown icon">
+                    </i></td>
+                  <td>Date:<i>
+                      <%= order.TransactionDate %>
+                    </i> | </td>
+                  <td>Time:<i>
+                      <%= order.TransactionTime %>
+                    </i> | </td>
+                  <td>Order ID:<i>
+                      <%= order._id %>
+                    </i> | </td>
+                  <td>Phone:<i>
+                  <td>
+                    <%= order.CustomerPhone %>
+                      |
+                  </td>
+                  <td style="right: 0;">Total Amount:<i>
+                      <%= order.Amount %>
+                    </i> </td>
+                  </i>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="content">
+              <div class="col-lg">
+                <p>
+                  <%- include('orderModel') %>
+                    <button data-id=<%=order._id %> class="ui green submit button" type="button" data-bs-toggle="modal"
+                      id="btnExampleModal" data-bs-target="#exampleModal">
+                      Update Order
                     </button>
-                    <div class="form-check form-check-inline form-switch">
-                      <input class="form-check-input" type="radio" name=<%=order._id%> id=<%=order._id%>
-                        value="sendMail">
-                        <label class="form-check-label" for="sendMail">
-                          Send Mail
-                        </label>
+                </p>
+                <p><button class="ui green submit button" type="button" onclick="downloadInvoice(this.innerHTML)">
+                    <%=order._id%>
+                  </button>
+                </p>
+          
+              <table class="ui inverted violet table table-bordered">
+                <thead>
+                  <tr class="table-success">
 
-                    </div>
-                  </div>
-                  <table class="ui inverted violet table table-bordered">
-                    <thead>
-                      <tr class="table-success">
+                    <th>Item ID</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Brand Name</th>
+                    <th>Size</th>
+                    <th>Amount</th>
+                    <th>Customer Name</th>
+                    <th>Customer Email</th>
+                    <th>Customer Number</th>
+                    <th>Mail</th>
+                    <th>Action</th>
 
-                        <th>Item ID</th>
-                        <th>Item Name</th>
-                        <th>Category</th>
-                        <th>Brand Name</th>
-                        <th>Size</th>
-                        <th>Amount</th>
-                        <th>Customer Name</th>
-                        <th>Customer Email</th>
-                        <th>Customer Number</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% sub_orders.forEach(function(sub_order){ %>
+
+                    <% if(sub_order.TransactionID==order._id) { %>
+
+                      <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
+                        <td>
+                          <%= sub_order.ItemID %>
+                        </td>
+                        <td>
+                          <%= sub_order.ItemName %>
+                        </td>
+                        <td>
+                          <%= sub_order.Category %>
+                        </td>
+                        <td>
+                          <%= sub_order.Brand %>
+                        </td>
+                        <td>
+                          <%= sub_order.Size %>
+                        </td>
+                        <td><i class="rupee sign icon"></i>
+                          <%= sub_order.Amount %>
+                        </td>
+                        <td>
+                          <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone) != undefined ?
+                            customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone).CustomerName :"" %>
+                        </td>
+                        <td>
+                          <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone) !=undefined ?
+                            customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone).Email : "" %>
+                        </td>
+                        <td>
+                          <%= sub_order.CustomerPhone %>
+                        </td>
+                        <td>
+                          <button class="ui green submit button" type="button" value="<%= order._id %>" onclick="sendInvoice(this.value)">
+                            Send Mail
+                          </button>
+                        </td>
+                        <td>
+                          <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
+                              value="<%= sub_order._id %>"><button type="submit"
+                              class="btn btn-danger btn-sm">Delete</button>
+                          </form>
+                        </td>
 
                       </tr>
-                    </thead>
-                    <tbody>
-                      <% sub_orders.forEach(function(sub_order){ %>
+                      <% } %>
+                        <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <% }) %>
 
-                        <% if(sub_order.TransactionID==order._id) { %>
+            <% } %>
 
-                          <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
-                            <td>
-                              <%= sub_order.ItemID %>
-                            </td>
-                            <td>
-                              <%= sub_order.ItemName %>
-                            </td>
-                            <td>
-                              <%= sub_order.Category %>
-                            </td>
-                            <td>
-                              <%= sub_order.Brand %>
-                            </td>
-                            <td>
-                              <%= sub_order.Size %>
-                            </td>
-                            <td><i class="rupee sign icon"></i>
-                              <%= sub_order.Amount %>
-                            </td>
-                            <td>
-                              <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone) != undefined ? customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone).CustomerName :"" %>
-                            </td>
-                            <td>
-                              <%= customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone) !=undefined ? customerInfo.find(x=>x.PhoneNumber== order.CustomerPhone).Email : ""  %>
-                            </td>
-                            <td>
-                              <%= sub_order.CustomerPhone %>
-                            </td>
-                            <td>
-                            </td>
-                            <td>
-                              <form action="/deleteitem" method="POST"><input type="hidden" name="deleteid"
-                                  value="<%= sub_order._id %>"><button type="submit"
-                                  class="btn btn-danger btn-sm">Delete</button>
-                              </form>
-                            </td>
+    </div>
 
-                          </tr>
-                          <% } %>
-                            <% }) %>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <% }) %>
+    <!-- Modal -->
 
-                <% } %>
-        </div>
-        <%- include('footer') %>
-                  <!-- Option 1: Bootstrap Bundle with Popper -->
-                  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
-                    integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
-                    crossorigin="anonymous"></script>
-                  <!-- Semnatic-UI Scripts -->
-                  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-                  <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
-                  <script>
-                    $(function () { // Sidebar toggle behavior
-                      $('#sidebarCollapse').on('click', function () {
-                        $('#sidebar, #content').toggleClass('active');
-                      });
-                    });
-                  </script>
-                  <script language='javascript'>
-                    $(document).ready(function () {
-                      $('.ui.accordion').accordion();
-                    });
-                  </script>
-                  <script>
-                    function convertNumberToWords(amount) {
-                      var words = new Array();
-                      words[0] = '';
-                      words[1] = 'One';
-                      words[2] = 'Two';
-                      words[3] = 'Three';
-                      words[4] = 'Four';
-                      words[5] = 'Five';
-                      words[6] = 'Six';
-                      words[7] = 'Seven';
-                      words[8] = 'Eight';
-                      words[9] = 'Nine';
-                      words[10] = 'Ten';
-                      words[11] = 'Eleven';
-                      words[12] = 'Twelve';
-                      words[13] = 'Thirteen';
-                      words[14] = 'Fourteen';
-                      words[15] = 'Fifteen';
-                      words[16] = 'Sixteen';
-                      words[17] = 'Seventeen';
-                      words[18] = 'Eighteen';
-                      words[19] = 'Nineteen';
-                      words[20] = 'Twenty';
-                      words[30] = 'Thirty';
-                      words[40] = 'Forty';
-                      words[50] = 'Fifty';
-                      words[60] = 'Sixty';
-                      words[70] = 'Seventy';
-                      words[80] = 'Eighty';
-                      words[90] = 'Ninety';
-                      amount = amount.toString();
-                      var atemp = amount.split(".");
-                      var number = atemp[0].split(",").join("");
-                      var n_length = number.length;
-                      var words_string = "";
-                      if (n_length <= 9) {
-                        var n_array = new Array(0, 0, 0, 0, 0, 0, 0, 0, 0);
-                        var received_n_array = new Array();
-                        for (var i = 0; i < n_length; i++) {
-                          received_n_array[i] = number.substr(i, 1);
-                        }
-                        for (var i = 9-n_length, j = 0; i < 9; i++, j++) {
-                          n_array[i] = received_n_array[j];
-                        }
-                        for (var i = 0, j = 1; i < 9; i++, j++) {
-                          if (i == 0 || i == 2 || i == 4 || i == 7) {
-                            if (n_array[i] == 1) {
-                              n_array[j] = 10 + parseInt(n_array[j]);
-                              n_array[i] = 0;
-                            }
-                          }
-                        }
-                        value = "";
-                        for (var i = 0; i < 9; i++) {
-                          if (i == 0 || i == 2 || i == 4 || i == 7) {
-                            value = n_array[i] * 10;
-                          } else {
-                            value = n_array[i];
-                          }
-                          if (value != 0) {
-                            words_string += words[value] + " ";
-                          }
-                          if ((i == 1 && value != 0) || (i == 0 && value != 0 && n_array[i + 1] == 0)) {
-                            words_string += "Crores ";
-                          }
-                          if ((i == 3 && value != 0) || (i == 2 && value != 0 && n_array[i + 1] == 0)) {
-                            words_string += "Lakhs ";
-                          }
-                          if ((i == 5 && value != 0) || (i == 4 && value != 0 && n_array[i + 1] == 0)) {
-                            words_string += "Thousand ";
-                          }
-                          if (i == 6 && value != 0 && (n_array[i + 1] != 0 && n_array[i + 2] != 0)) {
-                            words_string += "Hundred ";
-                          } else if (i == 6 && value != 0) {
-                            words_string += "Hundred ";
-                          }
-                        }
-                        words_string = words_string.split("  ").join(" ");
-                      }
-                      return words_string;
-                    }
-                    function downloadInvoice(tID) {
-                      var data = getSampleData(tID.trim().split('\n')[0]);
-                    }
-                    function getSampleData(tID) {
-                      var target = document.getElementById('loader');
-                      target.classList.add('loader');
-                     // target.classList.add('fulldiv');
-                      var totalAmount = 0.0;
-                      var wordsMatter = 0.0;
-                      var email = "";
-                      $.ajax({
-                        type: "POST",
-                        url: "/fetchorderitem",
-                        data: {
-                          "itemid": tID
-                        },
-                        success: function (data) { //
-                          if (data.status == 200 && data.rows.length > 0) {
-                            var date_format = new Date();
-                            var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
-                            var transaction_date = date_format.getDate() + '/' + (
-                              parseInt(date_format.getMonth() + 1)
-                            ).toString() + '/' + date_format.getFullYear();
-                            const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
-                            var items_arr = []
-                            for (var i = 0; i < data.rows.length; i++) {
-                              var disc = data.rows[i].Discount == null
-                                ? 0.0
-                                : data.rows[i].Discount;
-                              if (isNaN(disc)) {
-                                disc = 0.0;
-                              }
-                              let item_obj = {
-                                "noitem": (i + 1),
-                                "quantity": data.rows[i].Size,
-                                "description": data.rows[i].ItemName + '(' + data.rows[i].Category + ')' + '-' + data.rows[i].Brand,
-                                "tax-rate": 0,
-                                "price": parseFloat(data.rows[i].Amount).toFixed(2),
-                                "distotal": parseFloat(disc).toFixed(2),
-                                "GST": data.rows[i].GST,
-                                "price": parseFloat(data.rows[i].Price).toFixed(2),
-                                "email": data.rows[i].CustomerEmail
-                              }
-                              email = data.rows[0].CustomerEmail;
-                              totalAmount = parseFloat(parseFloat(totalAmount) + data.rows[i].Amount).toFixed(2);
-                              console.log("inWordsTotalAmount 1", wordsMatter);
-                              wordsMatter = convertNumberToWords(totalAmount.toString().split('.')[0]);
-                              wordsMatter = wordsMatter + "And ";
-                              wordsMatter = wordsMatter + (
-                                totalAmount.toString().split('.')[1] > 0
-                                  ? convertNumberToWords(totalAmount.toString().split('.')[1])
-                                  : "Zero"
-                              );
-                              console.log("inWordsTotalAmount 2", wordsMatter);
-                              items_arr.push(item_obj)
-                            }
-                            var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-details th{text-align:left;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-101,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9714621020</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>24</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th>Email</th><td>{{email}}</td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN/HSB</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{price}}</td></tr>{{/each}}</tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td></td><td></td><td></td><td>{{totalAmount}}</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount:</td><td>0.00</td></tr><tr><td>GST:</td><td>%</td></tr><tr><td>Final Amount:</td><td>{{totalAmount}}</td></tr></table></div><div class="footer"><p>In Words: <span>{{wordsMatter}} Paisa Only</span></p><p>Payment Mode:<strong>Cash</strong>/<strong>Online</strong>:{{totalAmount}}</p><p>Bill By:Keyur Gajjar</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
-                            var htmlpayload = {
-                              products: items_arr,
-                              totalAmount,
-                              email,
-                              wordsMatter
-                            };
-                            var template = Handlebars.compile(html);
-                            parsedHtml = template(htmlpayload);
-                            if (document.getElementById(tID).checked == true) {
-                              console.log(parsedHtml);
-                            }
-                            const invoiceDataNew = {
-                              customize: { // btoa === base64 encode
-                                template: btoa(parsedHtml) // Your template must be base64 encoded
-                              },
-                              "images": { // The logo on top of your invoice
-                                "logo": "https://i.imgur.com/b1IoAnu.png",
-                                // The invoice background
-                                "background": "https://i.imgur.com/zjTdQjv.png"
-                              },
-                              // Your own data
-                              "sender": {
-                                "company": "RETAIL INVOICE",
-                                "address": "THE MOBILE ACCESSORIES HUB",
-                                "zip": "Shope No. G-96, B.T MALL, NAVJIVAN MILL COMPOUND",
-                                "city": "KALOL 382721",
-                                "country": "Gandhinagar,9574867001",
-                                "custom1": "GST #: 24AIGPG8025R1ZW",
-                                // "custom2": "custom value 2",
-                                // "custom3": "custom value 3"
-                              },
-                              // Your recipient
-                              "client": {
-                                "company": data.rows[0].CustomerName,
-                                "address": data.rows[0].CustomerAddress,
-                                "zip": data.rows[0].CustomerPhone,
-                                "city": "",
-                                "country": ""
-                                // "custom1": "custom value 1",
-                                // "custom2": "custom value 2",
-                                // "custom3": "custom value 3"
-                              },
-                              "information": {
-                                "number": transaction_id,
-                                "date": data.rows[0].BillDate,
-                                "due-date": data.rows[0].BillDate
-                              },
-                              // "products": items_arr,
-                              "settings": {
-                                "margin-top": 5,
-                                "margin-right": 5,
-                                "margin-left": 5,
-                                "margin-bottom": 5,
-                                "locale": "en-IN",
-                                "currency": "INR",
-                                "height": "1000px",
-                                "width": "1000px",
-                                "orientation": "landscape"
-                              }
-                            };
-                            easyinvoice.createInvoice(invoiceDataNew, function (result) {
-                              var date_format = new Date();
-                              easyinvoice.download(`${transaction_id}.pdf`, result.pdf);
-                              // you can download like this as well:
-                              // easyinvoice.download();
-                              // easyinvoice.download('myInvoice.pdf');
-                              if (target.classList.contains('loader')) {
-                                target.classList.remove('loader');
-                                target.classList.remove('fulldiv');
-                              }
-                            });
-                            // ///////////////////
-                          } else if (data.status == "failed") {
-                            alert("Item not found")
-                          }
-                        }
-                      });
-                    }
-                  </script>
-    </body>
+    <%- include('footer') %>
+      <!-- Option 1: Bootstrap Bundle with Popper -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+        crossorigin="anonymous"></script>
+      <!-- Semnatic-UI Scripts -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+      <script>
+        $(function () { // Sidebar toggle behavior
+          $('#sidebarCollapse').on('click', function () {
+            $('#sidebar, #content').toggleClass('active');
+          });
+        });
+      </script>
+      <script type="text/javascript">
 
-  </html>
+        $(document).on("click", "#btnExampleModal", function () {
+          var myBookId = $(this).data('id');
+          alert(myBookId)
+
+          // $(".modal-body #itemid1").val($(this).data('id'));
+          var row = $("#myOrderUpdateTable tr").last().clone();
+          var oldId = Number(row.attr('id').slice(-1));
+           $("#itemid").attr('value', myBookId);
+          debugger
+          var id = 1 + oldId;
+          
+          row.find('#number' + oldId).attr('id', 'number' + id);
+          row.find('#itemid' + oldId).attr('id', 'itemid' + id);
+          row.find('#itemname' + oldId).attr('id', 'itemname' + id);
+          row.find('#Category' + oldId).attr('id', 'Category' + id);
+          row.find('#Brand' + oldId).attr('id', 'Brand' + id);
+          row.find('#size' + oldId).attr('id', 'size' + id);
+          row.find('#amount' + oldId).attr('id', 'amount' + id);
+          $('#myOrderUpdateTable').append(row);
+         
+        });
+      </script>
+      <script language='javascript'>
+        $(document).ready(function () {
+          $('.ui.accordion').accordion();
+        });
+      </script>
+      <script>
+        function convertNumberToWords(amount) {
+          var words = new Array();
+          words[0] = '';
+          words[1] = 'One';
+          words[2] = 'Two';
+          words[3] = 'Three';
+          words[4] = 'Four';
+          words[5] = 'Five';
+          words[6] = 'Six';
+          words[7] = 'Seven';
+          words[8] = 'Eight';
+          words[9] = 'Nine';
+          words[10] = 'Ten';
+          words[11] = 'Eleven';
+          words[12] = 'Twelve';
+          words[13] = 'Thirteen';
+          words[14] = 'Fourteen';
+          words[15] = 'Fifteen';
+          words[16] = 'Sixteen';
+          words[17] = 'Seventeen';
+          words[18] = 'Eighteen';
+          words[19] = 'Nineteen';
+          words[20] = 'Twenty';
+          words[30] = 'Thirty';
+          words[40] = 'Forty';
+          words[50] = 'Fifty';
+          words[60] = 'Sixty';
+          words[70] = 'Seventy';
+          words[80] = 'Eighty';
+          words[90] = 'Ninety';
+          amount = amount.toString();
+          var atemp = amount.split(".");
+          var number = atemp[0].split(",").join("");
+          var n_length = number.length;
+          var words_string = "";
+          if (n_length <= 9) {
+            var n_array = new Array(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var received_n_array = new Array();
+            for (var i = 0; i < n_length; i++) {
+              received_n_array[i] = number.substr(i, 1);
+            }
+            for (var i = 9 - n_length, j = 0; i < 9; i++, j++) {
+              n_array[i] = received_n_array[j];
+            }
+            for (var i = 0, j = 1; i < 9; i++, j++) {
+              if (i == 0 || i == 2 || i == 4 || i == 7) {
+                if (n_array[i] == 1) {
+                  n_array[j] = 10 + parseInt(n_array[j]);
+                  n_array[i] = 0;
+                }
+              }
+            }
+            value = "";
+            for (var i = 0; i < 9; i++) {
+              if (i == 0 || i == 2 || i == 4 || i == 7) {
+                value = n_array[i] * 10;
+              } else {
+                value = n_array[i];
+              }
+              if (value != 0) {
+                words_string += words[value] + " ";
+              }
+              if ((i == 1 && value != 0) || (i == 0 && value != 0 && n_array[i + 1] == 0)) {
+                words_string += "Crores ";
+              }
+              if ((i == 3 && value != 0) || (i == 2 && value != 0 && n_array[i + 1] == 0)) {
+                words_string += "Lakhs ";
+              }
+              if ((i == 5 && value != 0) || (i == 4 && value != 0 && n_array[i + 1] == 0)) {
+                words_string += "Thousand ";
+              }
+              if (i == 6 && value != 0 && (n_array[i + 1] != 0 && n_array[i + 2] != 0)) {
+                words_string += "Hundred ";
+              } else if (i == 6 && value != 0) {
+                words_string += "Hundred ";
+              }
+            }
+            words_string = words_string.split("  ").join(" ");
+          }
+          return words_string;
+        }
+        function downloadInvoice(tID) {
+          var data = getSampleData(tID.trim().split('\n')[0]);
+        }
+        function sendInvoice(tID){
+          $.ajax({
+            type: "POST",
+            url: "/sendmail",
+            data: {
+              "itemid": tID
+            },
+            success: function (data) {
+              if (data.status == 200 && data.rows.length > 0) {
+                console.log("mail sent");
+            }
+          }
+          });
+        }
+        function getSampleData(tID) {
+          var target = document.getElementById('loader');
+          target.classList.add('loader');
+          // target.classList.add('fulldiv');
+          var totalAmount = 0.0;
+          var wordsMatter = 0.0;
+          var email = "";
+          $.ajax({
+            type: "POST",
+            url: "/fetchorderitem",
+            data: {
+              "itemid": tID
+            },
+            success: function (data) { //
+              if (data.status == 200 && data.rows.length > 0) {
+                var date_format = new Date();
+                var transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
+                var transaction_date = date_format.getDate() + '/' + (
+                  parseInt(date_format.getMonth() + 1)
+                ).toString() + '/' + date_format.getFullYear();
+                const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
+                var items_arr = []
+                for (var i = 0; i < data.rows.length; i++) {
+                  var disc = data.rows[i].Discount == null
+                    ? 0.0
+                    : data.rows[i].Discount;
+                  if (isNaN(disc)) {
+                    disc = 0.0;
+                  }
+                  let item_obj = {
+                    "noitem": (i + 1),
+                    "quantity": data.rows[i].Size,
+                    "description": data.rows[i].ItemName + '(' + data.rows[i].Category + ')' + '-' + data.rows[i].Brand,
+                    "tax-rate": 0,
+                    "price": parseFloat(data.rows[i].Amount).toFixed(2),
+                    "distotal": parseFloat(disc).toFixed(2),
+                    "GST": data.rows[i].GST,
+                    "price": parseFloat(data.rows[i].Price).toFixed(2),
+                    "email": data.rows[i].CustomerEmail
+                  }
+                  email = data.rows[0].CustomerEmail;
+                  totalAmount = parseFloat(parseFloat(totalAmount) + data.rows[i].Amount).toFixed(2);
+                  console.log("inWordsTotalAmount 1", wordsMatter);
+                  wordsMatter = convertNumberToWords(totalAmount.toString().split('.')[0]);
+                  wordsMatter = wordsMatter + "And ";
+                  wordsMatter = wordsMatter + (
+                    totalAmount.toString().split('.')[1] > 0
+                      ? convertNumberToWords(totalAmount.toString().split('.')[1])
+                      : "Zero"
+                  );
+                  console.log("inWordsTotalAmount 2", wordsMatter);
+                  items_arr.push(item_obj)
+                }
+                var html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"content="width=device-width, initial-scale=1.0"><title>RETAIL INVOICE</title><style>body{font-family:Arial,sans-serif;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid#000;padding:8px;}th{text-align:center;background-color:#e7e7e7;}h1{margin:0;padding:0;}.header h1{text-decoration:underline;}.header{float:left;}.logo{width:100px;}.address{font-size:14px;margin-top:4px;}.invoice-details{text-align:right;}.invoice-details table{border:none;}h2{text-align:center;}.invoice-details{float:right;text-align:right;margin-right:0px;margin-bottom:5px;}.invoice-details table{border:none;}.invoice-summary-footer{display:inline-block;width:100%;}.invoice-details th{text-align:left;}.invoice-summary{float:right;text-align:right;}.invoice-summary table td{border:none;text-align:right;}.footer{float:left;text-align:left;}.payment-details{margin-left:20px;}.main_wrapper{width:900px;margin:0px auto;}tfoot tr td:first-child{background-color:#fff}tfoot tr td{background-color:#e7e7e7;}.info-table{width:100%;margin-bottom:5px;}.info-table th{text-align:left;background-color:transparent;font-weight:normal;}.info-table td{padding:4px 8px;}.customer-info{width:100%;margin-bottom:5px;border:1px solid;}.customer-info th,.customer-info td{padding:4px;}.customer-info th{text-align:left;width:25%;background-color:transparent;border:none;font-weight:normal;}.customer-info td{width:25%;border:none;}</style></head><body><div class="main_wrapper"><div class="header"><!--<img src="%logo%"alt="Vishwesh Logo"class="logo"><br>--><h1><strong>THE CYCLE HUB</strong></h1><span><strong>THE PHONER MOBILE ACCESSORIES HUB</strong></span><br><div class="address"><strong>Address:</strong>Shop No:G-101,B.T.Mall,Navjivan Mall Compound,Kalol-382721<br>DIST-GANDHINAGAR,<strong>Contact No:</strong>9714621020</div></div><div class="invoice-details"><table><tr><th>Invoice No:</th><td>%number%</td></tr><tr><th><strong>Invoice Date:</strong></th><td>%date%</td></tr><tr><th><strong>State code:</strong></th><td>24</td></tr><tr><th><strong>GSTN No:</strong></th><td>24AIGPG8025R1ZW</td></tr></table></div><h3>RETAIL INVOICE</h3><table class="customer-info"><tr><th>Name:</th><td>%company-to%</td><th>Mobile No:</th><td>%zip-to%</td></tr><tr><th>Address:</th><td>%address-to%,%city-to%</td><th>GSTN:</th><td></td></tr><tr><th>Email</th><td>{{email}}</td><td>ID Proof:</td><td>ID Proof No:</td><td></td></tr></table><table id="products-table"><thead><tr><th>No.</th><th style="width:50%">Particular</th><th>HSN/HSB</th><th>Qty</th><th>Sale Rate</th><th>Disc</th><th>Amount</th></tr></thead><tbody>{{#each products}}<tr><td>{{noitem}}</td><td>{{description}}</td><td>{{hsn}}</td><td align="center">{{quantity}}</td><td>{{price}}</td><td>{{distotal}}</td><td>{{price}}</td></tr>{{/each}}</tbody><tfoot><tr><td colspan="2"class="total"></td><td></td><td></td><td></td><td></td><td>{{totalAmount}}</td></tr></tfoot></table><div class="invoice-summary-footer"><div class="invoice-summary"><table><tr><td>Discount:</td><td>0.00</td></tr><tr><td>GST:</td><td>%</td></tr><tr><td>Final Amount:</td><td>{{totalAmount}}</td></tr></table></div><div class="footer"><p>In Words: <span>{{wordsMatter}} Paisa Only</span></p><p>Payment Mode:<strong>Cash</strong>/<strong>Online</strong>:{{totalAmount}}</p><p>Bill By:Keyur Gajjar</p><p>Goods once sold will not be taken back.Warranty will be converted</p></div></div></div></body></html>`;
+                var htmlpayload = {
+                  products: items_arr,
+                  totalAmount,
+                  email,
+                  wordsMatter
+                };
+                var template = Handlebars.compile(html);
+                parsedHtml = template(htmlpayload);
+                if (document.getElementById(tID).checked == true) {
+                  console.log(parsedHtml);
+                }
+                const invoiceDataNew = {
+                  customize: { // btoa === base64 encode
+                    template: btoa(parsedHtml) // Your template must be base64 encoded
+                  },
+                  "images": { // The logo on top of your invoice
+                    "logo": "https://i.imgur.com/b1IoAnu.png",
+                    // The invoice background
+                    "background": "https://i.imgur.com/zjTdQjv.png"
+                  },
+                  // Your own data
+                  "sender": {
+                    "company": "RETAIL INVOICE",
+                    "address": "THE MOBILE ACCESSORIES HUB",
+                    "zip": "Shope No. G-96, B.T MALL, NAVJIVAN MILL COMPOUND",
+                    "city": "KALOL 382721",
+                    "country": "Gandhinagar,9574867001",
+                    "custom1": "GST #: 24AIGPG8025R1ZW",
+                    // "custom2": "custom value 2",
+                    // "custom3": "custom value 3"
+                  },
+                  // Your recipient
+                  "client": {
+                    "company": data.rows[0].CustomerName,
+                    "address": data.rows[0].CustomerAddress,
+                    "zip": data.rows[0].CustomerPhone,
+                    "city": "",
+                    "country": ""
+                    // "custom1": "custom value 1",
+                    // "custom2": "custom value 2",
+                    // "custom3": "custom value 3"
+                  },
+                  "information": {
+                    "number": transaction_id,
+                    "date": data.rows[0].BillDate,
+                    "due-date": data.rows[0].BillDate
+                  },
+                  // "products": items_arr,
+                  "settings": {
+                    "margin-top": 5,
+                    "margin-right": 5,
+                    "margin-left": 5,
+                    "margin-bottom": 5,
+                    "locale": "en-IN",
+                    "currency": "INR",
+                    "height": "1000px",
+                    "width": "1000px",
+                    "orientation": "landscape"
+                  }
+                };
+                easyinvoice.createInvoice(invoiceDataNew, function (result) {
+                  var date_format = new Date();
+                  easyinvoice.download(`${transaction_id}.pdf`, result.pdf);
+                  // you can download like this as well:
+                  // easyinvoice.download();
+                  // easyinvoice.download('myInvoice.pdf');
+                  if (target.classList.contains('loader')) {
+                    target.classList.remove('loader');
+                    target.classList.remove('fulldiv');
+                  }
+                });
+                // ///////////////////
+              } else if (data.status == "failed") {
+                alert("Item not found")
+              }
+            }
+          });
+        }
+      </script>
+</body>
+
+</html>

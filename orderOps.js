@@ -30,7 +30,7 @@ exports.getBillPage = function (req, callback) {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(brand);
+                    resolve(brand.sort());
                 }
             });
         });
@@ -193,9 +193,9 @@ exports.submitBill = function (req, callback) {
                 );
 
             });
-            if (req.body.sendMail == "on") {
-                sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
-            }
+            // if (req.body.sendMail == "on") {
+            //     sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
+            // }
             callback(null, null);
           
         } else {
