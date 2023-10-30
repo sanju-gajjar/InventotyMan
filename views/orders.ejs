@@ -389,12 +389,16 @@
                     "itemid": tID
                   },
                   success: function (data) {
-                    if (data.status == 200 && data.rows.length > 0) {
-                      console.log("mail sent");
-                    }
-                  }
+                    
+                      alert(`mail sent: ${data.message} - ${data.error}`);
+                    
+                  },
+                  error: function (data) {
+     alert('error; ' + eval(data.responseText));
+}
                 });
               }
+              
               function getSampleData(tID) {
                 var target = document.getElementById('loader');
                 target.classList.add('loader');
