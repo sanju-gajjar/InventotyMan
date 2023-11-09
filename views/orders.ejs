@@ -461,9 +461,7 @@
                       };
                       var template = Handlebars.compile(html);
                       parsedHtml = template(htmlpayload);
-                      if (document.getElementById(tID).checked == true) {
-                        console.log(parsedHtml);
-                      }
+                    
                       const invoiceDataNew = {
                         customize: { // btoa === base64 encode
                           template: btoa(parsedHtml) // Your template must be base64 encoded
