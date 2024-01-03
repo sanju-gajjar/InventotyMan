@@ -1,6 +1,6 @@
 {
   "name": "inventory",
-  "version": "1.0.0",
+  "version": "1.0.6.3",
   "description": "",
   "main": "server2.js",
   "scripts": {

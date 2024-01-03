@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--Custom CSS-->
+  <link rel="stylesheet" href="styles.css">
+  <!-- Semantic UI CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+  <title>Back up</title>
+</head>
+
+<body>
+  <!--Vertical Navbar-->
+  <%- include('header') %>
+   
+
+    <!-- Page content holder -->
+    <div class="page-content p-5" id="content"
+      style="background: linear-gradient(to right, #e9edf1 47%, #ff8ab3 100%);">
+      <!-- Toggle button -->
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Backup</li>
+        </ol>
+      </nav>
+      <button id="sidebarCollapse" type="button" class="btn btn-light bg-white rounded-pill shadow-sm px-4 mb-4"><i
+          class="align justify icon"></i><small class="text-uppercase font-weight-bold">Menu</small></button>
+      <h1>Back up</h1>
+      <br>
+      <center><img class="ui large rounded image" src="flower.svg"></center>
+      <br>
+      <button id="exportBtn" class="ui download button" type="submit">Export to CSV</button>  wait 1 min after click....
+
+      
+      <script>
+        document.getElementById('exportBtn').addEventListener('click', function () {
+          // Make an AJAX request to the API endpoint
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', '/export/csv', true);
+          xhr.responseType = 'blob'; // Set response type to 'blob' to handle binary data
+          xhr.onload = function () {
+            // Create a blob URL and initiate download
+            var blob = new Blob([this.response], { type: 'text/csv' });
+            var link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'backup_data_'+ new Date().toISOString()+'_.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+          xhr.send();
+        });
+      </script>
+    </div>
+    <%- include('footer') %>
+    <!-- End demo content -->
+    <br>
+    <!--Semantic UI Scripts-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+      crossorigin="anonymous"></script>
+    <script>
+      $(function () {
+        // Sidebar toggle behavior
+        $('#sidebarCollapse').on('click', function () {
+          $('#sidebar, #content').toggleClass('active');
+        });
+      });
+
+    </script>
+</body>
+
+</html>

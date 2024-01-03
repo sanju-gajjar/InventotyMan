@@ -100,7 +100,7 @@
           <table class="ui inverted violet table table-bordered">
             <thead>
               <tr class="table-success">
-                <th>Brand <i class="yelp icon"></i></th>
+                <th>Brand <i class="yelp icon"></i></th><th>Category <i class="yelp icon"></i></th>
                 <th>Stock Left<i class="cart arrow down icon"></i></th>
                 <th>Stock Value <i class="rupee sign icon"></i></th>
               </tr>
@@ -110,6 +110,9 @@
                 <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
                   <td>
                     <%= order.Brand %>
+                  </td>
+                  <td>
+                    <%= order.Category %>
                   </td>
                   <td>
                     <%= order.Count %>

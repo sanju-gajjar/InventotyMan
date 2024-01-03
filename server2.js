@@ -504,6 +504,43 @@ app.get('/stock_filter', (req, res) => {
         total_items: {}
     })
 })
+app.get('/backup', (req, res) => {
+    res.render('backup.ejs', {
+        user: getUserRole(req),
+        filter_type: 'None',
+        display_content: {},
+        total_items: {}
+    })
+})
+
+app.get('/export/csv', async (req, res) => { 
+    // Fetch all collections in the database
+    const collections = await db.listCollections().toArray();
+
+    const csvStream = fs.createWriteStream('exported_data.csv');
+
+    // Write headers to CSV
+    csvStream.write('Collection,Data\n');
+
+    for (const collection of collections) {
+        const cursor = db.collection(collection.name).find();
+
+        await cursor.forEach(doc => {
+            // Write data to CSV
+            csvStream.write(`${collection.name},"${JSON.stringify(doc)}"\n`);
+        });
+    }
+
+    csvStream.end();
+    //client.close();
+
+    // Set response headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=exported_data.csv');
+
+    // Pipe the CSV file to the response
+    fs.createReadStream('exported_data.csv').pipe(res);
+});
 
 app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
 
@@ -525,6 +562,9 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 Amount: {
                     $sum: "$total"
                 },
+                Category: {
+                    $first: '$Category'
+                }, 
                 Brand: {
                     $first: '$Brand'
                 }, // Sum the calculated values and store in a field called "totalAmount"
@@ -537,7 +577,8 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 _id: 0,
                 Brand: 1,
                 Count: 1,
-                Amount: 1
+                Amount: 1,
+                Category:1
             }
         }
         ]).toArray((err, rows) => {
