@@ -1,0 +1,61 @@
+<div class="modal fade" style="width: 1200px; font-size: 10px;" id="exampleModal" tabindex="-1"
+    aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 850px;">
+        <div class="modal-content" style="width: 850px;">
+            <div class="modal-header" style="width: 850px;">
+                <h5 class="modal-title" id="exampleModalLabel">Updating Order by <%= user.user %>
+                </h5>
+            </div>
+            <div class="modal-body" style="width: 850px;">
+                <div class="mb-3">
+                    <form action="/edititem" method="POST">
+                        <table class="ui inverted pink celled table tbl_code_with_mark" id="orderTable">
+                            <thead>
+                                <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
+                                    <th>Item ID</th>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Brand</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Customer Phone</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: linear-gradient(to left, #0066eb 0%, #ff8ab3 68%);">
+                                    <td>
+                                        <input type="text" name="itemID" id="itemID" value="<%= orderData.ItemID %>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="itemName" id="itemName"
+                                            value="<%= orderData.ItemName %>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="category" id="category"
+                                            value="<%= orderData.Category %>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="brand" id="brand" value="<%= orderData.Brand %>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="size" id="size" value="<%= orderData.Size %>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="price" id="price" value="<%= orderData.Price %>">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="customerPhone" id="customerPhone"
+                                            value="<%= orderData.CustomerPhone %>">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" value="Hello">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -223,106 +223,62 @@ app.post('/fetchcustomer', checkAuthenticated, (req, res) => {
         res.json(result);
     });
 });
+function generateBarcode(widthCm, heightCm, text, count, headerText, footerText) {
+    const generateBarcodePromises = [];
 
-function generateBarcode(widthCm, heightCm, text, size, headerText, footerText) {
-    return new Promise((resolve, reject) => {
-        bwipjs.toBuffer({
-            bcid: 'code128',
-            text: text,
-            scale: 3,
-            includetext: false,
-            textxalign: 'center',
-            textfont: 'Inconsolata',
-            textsize: 12,
-            width: widthCm * 37.7952756,
-            height: heightCm * 37.7952756
-        }, (err, png) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({ sticker: `data:image/png;base64,${png.toString('base64')}`, headerText, footerText });
-            }
-        });
-    });
+    for (let i = 0; i < count; i++) {
+        generateBarcodePromises.push(new Promise((resolve, reject) => {
+            bwipjs.toBuffer({
+                bcid: 'code128',
+                text: text,
+                scale: 3,
+                includetext: false,
+                textxalign: 'center',
+                textfont: 'Inconsolata',
+                textsize: 12,
+                width: widthCm * 37.7952756,
+                height: heightCm * 37.7952756
+            }, (err, png) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ sticker: `data:image/png;base64,${png.toString('base64')}`, headerText, footerText });
+                }
+            });
+        }));
+    }
+
+    return Promise.all(generateBarcodePromises);
 }
-app.post('/barcodegen', checkAuthenticated, async (req, res) => {
 
+app.post('/barcodegen', checkAuthenticated, async (req, res) => {
     const widthCm = 5.25;
     const heightCm = 2.0;
-    var products = JSON.parse(req.body.allStocks);
+    const products = JSON.parse(req.body.allStocks);
 
-    index = 1;
-    const generateBarcodePromises = products.map((product, index) => {
+    const generateBarcodePromises = products.map((product) => {
         const text = product.ItemID;
-        let headerText = product.ItemName + "(" + product.Brand + ")";
-        let footerText = product.Amount;
-        console.log('rendering ', index);
-        index = index + 1;
+        const headerText = product.ItemName + "(" + product.Brand + ")";
+        const footerText = product.Amount;
+
         return generateBarcode(widthCm, heightCm, text, product.Size, headerText, footerText);
     });
+
     Promise.all(generateBarcodePromises)
-        .then(barcodeStickers => {
+        .then((barcodeStickersArrays) => {
+            const barcodeStickers = barcodeStickersArrays.flat();
             const chunkedItems = chunkArray(barcodeStickers, 48);
 
             // Render the EJS template with barcode stickers data
             console.log('rendering');
             res.render('barcodegen.ejs', { user: getUserRole(req), chunkedItems });
         })
-        .catch(error => {
+        .catch((error) => {
             console.error(error);
             res.status(500).send('Internal Server Error');
         });
-    // products.forEach(async product => {
-    //     headerText = product.ItemName;
-    //     footerText = product.Amount;
-    //     let text = product.ItemID;
-    //     const x = 0; // You can adjust the x-coordinate based on your layout
-    //     const y = 0; // You can adjust the y-coordinate based on your layout
-
-    //     // // Generate barcode using bwip-js
-    //     // bwipjs.toBuffer({
-    //     //     bcid: 'code128', // Barcode type
-    //     //     text: product.ItemID, // Text to encode in the barcode
-    //     //     scale: 3, // Scale factor for the barcode
-    //     //     includetext: true, // Include text on the barcode
-    //     //     textxalign: 'center', // Text horizontal alignment
-    //     //     textfont: 'Inconsolata', // Font for the text
-    //     //     textsize: 12, // Font size for the text
-    //     //     width: stickerWidthCm * 37.7952756, // Convert cm to points
-    //     //     height: stickerHeightCm * 37.7952756 // Convert cm to points
-    //     // }, (err, png) => {
-    //     //     if (err) {
-    //     //         console.error(err);
-    //     //     } else {
-    //     //         // Push barcode data to the array
-    //     //         barcodeStickers.push({ x, y, barcode: `data:image/png;base64,${png.toString('base64')}` });
-    //     //     }
-    //     // });
-    //     // Generate barcode using bwip-js (wrapped in a Promise)
-    //     const barcodeBuffer = await generateBarcode(text, stickerWidthCm, stickerHeightCm);
-    //     // Push barcode data to the array
-    //     barcodeStickers.push({ x, y, barcode: `data:image/png;base64,${barcodeBuffer.toString('base64')}` });
-    // });
-    // // Render the EJS template with barcode stickers data
-    // res.render('barcodegen.ejs', { user: getUserRole(req), barcodeStickers });
-    // // Render the EJS template with barcode stickers data
-    //res.render('barcodegen.ejs', { user: getUserRole(req), barcodeStickers });
-    // res.render('barcodegen.ejs', {
-    //     user: getUserRole(req),
-    //     stickerWidth,
-    //     stickerHeight,
-    //     barcodeStickers: JSON.parse({
-    //         barcodeStickers: req.body.allStocks,
-    //     })
-    // });
 });
 
-// app.post('/barcodegen', checkAuthenticated, (req, res) => {
-//     res.render('barcodegen.ejs', {
-//         user: getUserRole(req),
-//         products: JSON.parse(req.body.allStocks)
-//     });
-// });
 app.post('/deletestock', checkAuthenticated, (req, res) => {
     deleteStock(req, (err, result) => {
         res.redirect('/viewstocks');
@@ -390,7 +346,70 @@ app.post('/addbrand', checkAuthenticated, (req, res) => {
     });
 
 })
+app.get('/edititem', checkAuthenticated, (req, res) => {
+    // res.render('editOrder.ejs', {
+    //     user: getUserRole(req),
+    //     orderData: getOderData(req.query.edititemid)
+    // })
+    const ordersCollection = db.collection('orders');
 
+    const edititemid = req.query.edititemid;
+
+    var objectId2 = new ObjectID(edititemid);
+    ordersCollection.find({
+        _id: objectId2
+    }).toArray((err1, rows1) => { 
+        console.log('editing order ' + edititemid);
+        if (err1) {
+            console.error('Error editing value:', err1);
+
+            return;
+        }
+
+        res.render('editOrder.ejs', {
+            user: getUserRole(req),
+            orderData: rows1[0]
+        })
+    });
+    // ordersCollection.find({
+    //     _id: objectId2
+    // }, (err, result) => {
+       
+
+    // });
+});
+app.post('/edititem', checkAuthenticated, (req, res) => {
+    const { itemID, itemName, category, brand, size, price, customerPhone } = req.body;
+
+    // Assuming 'Order' is your MongoDB model
+    const ordersCollection = db.collection('orders');
+
+    // Update the document based on the itemID
+    ordersCollection.findOneAndUpdate(
+        { ItemID: itemID },
+        {
+            $set: {
+                ItemName: itemName,
+                Category: category,
+                Brand: brand,
+                Size: size,
+                Price: price,
+                Amount: price * size,
+                CustomerPhone: customerPhone,
+            },
+        },
+        { new: true }, // Return the modified document
+        (err, updatedOrder) => {
+            if (err) {
+                console.error('Error updating order:', err);
+                return res.status(500).send('Internal Server Error');
+            }
+
+            // Handle the updated order as needed
+            res.redirect('/orders');
+        }
+    );
+});
 app.get('/orders_query', checkAuthenticated, (req, res) => {
     res.redirect('/orders');
 });
@@ -513,7 +532,7 @@ app.get('/backup', (req, res) => {
     })
 })
 
-app.get('/export/csv', async (req, res) => { 
+app.get('/export/csv', async (req, res) => {
     // Fetch all collections in the database
     const collections = await db.listCollections().toArray();
 
@@ -564,7 +583,7 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 },
                 Category: {
                     $first: '$Category'
-                }, 
+                },
                 Brand: {
                     $first: '$Brand'
                 }, // Sum the calculated values and store in a field called "totalAmount"
@@ -578,7 +597,7 @@ app.post('/stock_filter_query', checkAuthenticated, (req, res) => {
                 Brand: 1,
                 Count: 1,
                 Amount: 1,
-                Category:1
+                Category: 1
             }
         }
         ]).toArray((err, rows) => {
@@ -1122,11 +1141,11 @@ app.post('/sendmailpdf', checkAuthenticated, async (req, res) => {
         }
     });
     try {
-        const pdfAttachment = 
-             {
+        const pdfAttachment =
+        {
             filename: filename,
-                content: Buffer.from(pdf, 'base64'), // Convert Base64 string to Buffer
-                    encoding: 'base64'
+            content: Buffer.from(pdf, 'base64'), // Convert Base64 string to Buffer
+            encoding: 'base64'
         }
 
         let info = await transporter.sendMail({
@@ -1167,10 +1186,6 @@ app.post('/sendmailpdf', checkAuthenticated, async (req, res) => {
             error: 'Error Sending mail' + err.message
         });
     }
-
-
-
-    //  });
 });
 // Function to split the array into chunks of given size
 function chunkArray(array, chunkSize) {
