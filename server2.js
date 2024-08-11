@@ -63,7 +63,7 @@ const {
     submitBill,
     fetchOrderItem
 } = require('./orderOps.js');
-const secretKey = process.env.SESSION_SECRET;
+const secretKey =process.env.SESSION_SECRET;
 let db;
 function getUserRole(req) {
     const user = req.cookies.user;
@@ -78,7 +78,7 @@ function renderTml(filename, tmlData) {
     const compiledTemplate = ejs.compile(template);
     return compiledTemplate(tmlData);
 }
-const uri = process.env.mongo_host;
+const uri =process.env.mongo_host;
 const dbName = 'inventoryman';
 async function connectToMongo() {
     const client = new MongoClient(uri, {

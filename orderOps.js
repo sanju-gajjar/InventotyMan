@@ -84,7 +84,7 @@ exports.submitBill = function (req, callback) {
     }
 
     jsonArray.push(obj);
-
+    
     const jsonArrayFinal = [];
     let currentGroup = {};
     let currentGroupIndex = 0;
@@ -141,69 +141,97 @@ exports.submitBill = function (req, callback) {
     const date_format = new Date();
     const transaction_date = date_format.getDate() + '/' + (parseInt(date_format.getMonth() + 1)).toString() + '/' + date_format.getFullYear();
     const transaction_time = date_format.getHours() + ':' + date_format.getMinutes() + ':' + date_format.getSeconds();
-    const transaction_id = "TCH" + date_format.getDate() + date_format.getMonth() + date_format.getFullYear() + date_format.getHours() + date_format.getMinutes() + date_format.getSeconds();
-    // Insert data into orders collection
-    var billAdd = [];
-    request1.forEach((ddd) => {
+    generateReceiptNumber().then(transaction_id => {
+      // Insert data into orders collection
+      var billAdd = [];
+      request1.forEach(ddd => {
         billAdd.push({
-            UserBy: getUserRole(req),
-            ItemID: ddd.id,
-            OnlinePayment: onlinePayment,
-            Category: ddd.category,
-            Brand: ddd.brand,
-            ItemName: ddd.product,
-            Size: parseInt(ddd.unit),
-            GST: parseFloat(ddd.gst),
-            Discount: parseFloat(ddd.discount),
-            Amount: parseFloat(ddd.amount),
-            Price: parseFloat(ddd.price),
-            CustomerPhone: PhoneNumber,
-            BillDate: TodayDate,
-            TransactionDate: transaction_date,
-            TransactionTime: transaction_time,
-            TransactionID: transaction_id,
-            TDay: parseInt(date_format.getDate()),
-            TMonth: parseInt(date_format.getMonth() + 1),
-            TYear: parseInt(date_format.getFullYear())
+          UserBy: getUserRole(req),
+          ItemID: ddd.id,
+          OnlinePayment: onlinePayment,
+          Category: ddd.category,
+          Brand: ddd.brand,
+          ItemName: ddd.product,
+          Size: parseInt(ddd.unit),
+          GST: parseFloat(ddd.gst),
+          Discount: parseFloat(ddd.discount),
+          Amount: parseFloat(ddd.amount),
+          Price: parseFloat(ddd.price),
+          CustomerPhone: PhoneNumber,
+          BillDate: TodayDate,
+          TransactionDate: transaction_date,
+          TransactionTime: transaction_time,
+          TransactionID: transaction_id,
+          TDay: parseInt(date_format.getDate()),
+          TMonth: parseInt(date_format.getMonth() + 1),
+          TYear: parseInt(date_format.getFullYear())
         });
-    })
-    ordersCollection.insertMany(billAdd, (err, result) => {
+      });
+      ordersCollection.insertMany(billAdd, (err, result) => {
         if (!err) {
+          billAdd.forEach(item => {
+            const { ItemID, Size } = item;
 
-            billAdd.forEach((item) => {
-                const {
-                    ItemID,
-                    Size
-                } = item;
-
-                stockCollection.updateOne({
-                    ItemID
-                }, {
-                    $inc: {
-                        Size: -Size
-                    }
-                },
-                    (err, result) => {
-                        if (err) {
-                            console.log('Error updating product:', err);
-                        } else {
-                            console.log(`Product with ID ${ItemID} updated successfully`);
-                        }
-                    }
-                );
-
-            });
-            // if (req.body.sendMail == "on") {
-            //     sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
-            // }
-            callback(null, null);
-          
+            stockCollection.updateOne(
+              {
+                ItemID
+              },
+              {
+                $inc: {
+                  Size: -Size
+                }
+              },
+              (err, result) => {
+                if (err) {
+                  console.log("Error updating product:", err);
+                } else {
+                  console.log(
+                    `Product with ID ${ItemID} updated successfully`
+                  );
+                }
+              }
+            );
+          });
+          // if (req.body.sendMail == "on") {
+          //     sendMail(billAdd, billAdd[0].CustomerEmail).catch(console.error);
+          // }
+          callback(null, null);
         } else {
-            console.log(err);
-
+          console.log(err);
         }
+      });
     });
 }
+const generateReceiptNumber = () => {
+  const ReceiptCollection = db.collection("receipt");
+  const today = new Date();
+  let financialYear;
+
+  if (today.getMonth() + 1 >= 4) {
+    financialYear = `${today
+      .getFullYear()
+      .toString()
+      .slice(-2)}-${(today.getFullYear() + 1).toString().slice(-2)}`;
+  } else {
+    financialYear = `${(today.getFullYear() - 1)
+      .toString()
+      .slice(-2)}-${today.getFullYear().toString().slice(-2)}`;
+  }
+
+  const prefix = `TCH-${financialYear}/`;
+
+  return ReceiptCollection.findOneAndUpdate(
+    { prefix },
+    { $inc: { sequenceNumber: 1 } },
+    { returnDocument: "after", upsert: true }
+  ).then(result => {
+    const paddedNumber = result.value.sequenceNumber
+      .toString()
+      .padStart(5, "0");
+    return `${prefix}${paddedNumber}`;
+  });
+};
+
 exports.fetchOrderItem = function (req, callback) { 
     const stockCollection = db.collection('orders');
 
