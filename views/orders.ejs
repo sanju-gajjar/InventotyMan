@@ -120,10 +120,9 @@
         </center>
       </form>
       <% if(selected_item=='None' ) { %>
-        <% orders.sort( function(a, b){return new
-          Date(b.TransactionDate.split('/')[2],b.TransactionDate.split('/')[1],b.TransactionDate.split('/')[0]) - new
-          Date(a.TransactionDate.split('/')[2],a.TransactionDate.split('/')[1],a.TransactionDate.split('/')[0])}
-          ).forEach(function(order){ %>
+        <% orders.sort((a, b) => {
+  return a.mongoId.toString() > b.mongoId.toString() ? -1 : 1;
+}).forEach(function(order){ %>
           <br>
           <div class="ui styled fluid accordion">
             <div class="title text-primary">
@@ -133,10 +132,13 @@
                 <tr class="text-primary">
                   <td><i class="dropdown icon">
                     </i></td>
-                  <td>Date:<i>
+                    <td>Bill Date:<i>
+                      <%= order.BillDate %>
+                      </i> | </td>
+                  <td>Created Date:<i>
                       <%= order.TransactionDate %>
                     </i> | </td>
-                  <td>Time:<i>
+                  <td>Created Time:<i>
                       <%= order.TransactionTime %>
                     </i> | </td>
                   <td>Order ID:<i>
@@ -182,6 +184,7 @@
 
                     <th>Item ID</th>
                     <th>Item Name</th>
+                    <th>Bill Date</th>
                     <th>Category</th>
                     <th>Brand Name</th>
                     <th>Size</th>
@@ -207,6 +210,9 @@
                         <td>
                           <%= sub_order.ItemName %>
                         </td>
+                          <td>
+                            <%= sub_order.BillDate %>
+                          </td>
                         <td>
                           <%= sub_order.Category %>
                         </td>
@@ -486,7 +492,7 @@
                   },
                   "information": {
                     "number": transaction_id,
-                    "date": data.rows[0].TransactionDate + " " + data.rows[0].TransactionTime,
+                    "date": data.rows[0].BillDate,
                     "due-date": data.rows[0].TransactionDate
                   },
                   // "products": items_arr,

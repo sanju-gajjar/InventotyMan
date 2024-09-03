@@ -158,6 +158,7 @@ exports.submitBill = function (req, callback) {
           Amount: parseFloat(ddd.amount),
           Price: parseFloat(ddd.price),
           CustomerPhone: PhoneNumber,
+          CustomerEmail: Email,
           BillDate: TodayDate,
           TransactionDate: transaction_date,
           TransactionTime: transaction_time,

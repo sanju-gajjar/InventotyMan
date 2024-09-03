@@ -63,7 +63,7 @@ const {
     submitBill,
     fetchOrderItem
 } = require('./orderOps.js');
-const secretKey =process.env.SESSION_SECRET;
+const secretKey = process.env.SESSION_SECRET;
 let db;
 function getUserRole(req) {
     const user = req.cookies.user;
@@ -352,6 +352,7 @@ app.get('/edititem', checkAuthenticated, (req, res) => {
     //     orderData: getOderData(req.query.edititemid)
     // })
     const ordersCollection = db.collection('orders');
+    const customerCollection = db.collection("customer");
 
     const edititemid = req.query.edititemid;
 
@@ -365,11 +366,16 @@ app.get('/edititem', checkAuthenticated, (req, res) => {
 
             return;
         }
-
-        res.render('editOrder.ejs', {
-            user: getUserRole(req),
-            orderData: rows1[0]
-        })
+        customerCollection
+          .find({ PhoneNumber: rows1[0].CustomerPhone })
+          .toArray((err1, rows2) => {
+            res.render("editOrder.ejs", {
+              user: getUserRole(req),
+              orderData: rows1[0],
+              customerData: rows2[0]
+            });
+          });
+    
     });
     // ordersCollection.find({
     //     _id: objectId2
@@ -379,35 +385,54 @@ app.get('/edititem', checkAuthenticated, (req, res) => {
     // });
 });
 app.post('/edititem', checkAuthenticated, (req, res) => {
-    const { itemID, itemName, category, brand, size, price, customerPhone } = req.body;
+    const { itemID, itemName, transactionID, billDate, category, brand, size, price, id, customerPhone, customerEmail, customerName } = req.body;
 
     // Assuming 'Order' is your MongoDB model
     const ordersCollection = db.collection('orders');
+    const customerCollection = db.collection("customer");
 
     // Update the document based on the itemID
     ordersCollection.findOneAndUpdate(
-        { ItemID: itemID },
-        {
-            $set: {
-                ItemName: itemName,
-                Category: category,
-                Brand: brand,
-                Size: parseInt(size),
-                Price: parseFloat(price),
-                Amount: parseFloat(price) * parseFloat(size),
-                CustomerPhone: customerPhone,
-            },
-        },
-        { new: true }, // Return the modified document
-        (err, updatedOrder) => {
-            if (err) {
-                console.error('Error updating order:', err);
-                return res.status(500).send('Internal Server Error');
-            }
-
-            // Handle the updated order as needed
-            res.redirect('/orders');
+      { ItemID: itemID, TransactionID: transactionID },
+      {
+        $set: {
+          ItemName: itemName,
+          Category: category,
+          Brand: brand,
+          BillDate: billDate,
+          Size: parseInt(size),
+          Price: parseFloat(price),
+          Amount: parseFloat(price) * parseFloat(size),
+          CustomerPhone: customerPhone,
+          customerEmail: customerEmail
         }
+      },
+      { new: true }, // Return the modified document
+      (err, updatedOrder) => {
+        if (err) {
+          console.error("Error updating order:", err);
+          return res.status(500).send("Internal Server Error");
+        }
+        customerCollection.findOneAndUpdate(
+          { _id: new ObjectID(id) },
+          {
+            $set: {
+              PhoneNumber: customerPhone,
+              Email: customerEmail,
+              CustomerName: customerName
+            }
+          },
+          { new: true }, // Return the modified document
+          (err, updatedOrder) => {
+            if (err) {
+              console.error("Error updating customer:", err);
+              return res.status(500).send("Internal Server Error");
+            }
+          }
+        );
+        // Handle the updated order as needed
+        res.redirect("/orders");
+      }
     );
 });
 app.get('/orders_query', checkAuthenticated, (req, res) => {

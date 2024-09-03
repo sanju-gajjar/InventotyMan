@@ -9,156 +9,165 @@ function getUserRole(req) {
 }
 exports.getHomePage = function (req,callback) {
     const stockCollection = db.collection('stocks');
-    stockCollection.find({}).toArray((err, resultStocksCount) => {
-        if (err) { 
-            console.log(err);
-        }
-        const pipelineStock = [{
-            $addFields: {
-                total: {
-                    $multiply: ["$Amount", "$Size"]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: '_id',
-                TotalItemsOrdered: {
-                    $sum: '$total'
-                }
-            }
-        }
-        ];
-        stockCollection.aggregate(pipelineStock).toArray((err, resultStock) => {
+    try {
+        stockCollection.find({}).toArray((err, resultStocksCount) => {
             if (err) {
-                console.error('Error executing aggregation:', err);
-                return;
+                console.log(err);
             }
-            const ordersCollection = db.collection('orders');
-
-            ordersCollection.find({}).toArray((err, resultCount) => {
-
-                const pipeline = [{
-                    $addFields: {
-                        total: {
-                            $multiply: ["$Amount", "$Size"]
-                        }
-                        // Calculate amount * size and store in a new field called "total"
+            const pipelineStock = [{
+                $addFields: {
+                    total: {
+                        $multiply: ["$Amount", "$Size"]
                     }
-                }, {
-                    $group: {
-                        _id: '_id',
-                        TotalItemsOrdered: {
-                            $sum: '$total'
-                        }
+                }
+            },
+            {
+                $group: {
+                    _id: '_id',
+                    TotalItemsOrdered: {
+                        $sum: '$total'
                     }
-                }];
-                ordersCollection.aggregate(pipeline).toArray((err, result) => {
-                    if (err) {
-                        console.error('Error executing aggregation:', err);
+                }
+            }
+            ];
+            stockCollection.aggregate(pipelineStock).toArray((err, resultStock) => {
+                if (err) {
+                    console.error('Error executing aggregation:', err);
+                    return;
+                }
+                const ordersCollection = db.collection('orders');
 
-                        return;
-                    }
+                ordersCollection.find({}).toArray((err, resultCount) => {
 
-                    if (resultStock.length > 0) {
-                        var returnData = {
-                            user: getUserRole(req),
-                            total_sales: result,
-                            ord_num: [{
-                                NumberOfProducts: (resultCount != null && resultCount != undefined) ? resultCount.length : 0
+                    const pipeline = [{
+                        $addFields: {
+                            total: {
+                                $multiply: ["$Amount", "$Size"]
                             }
-                            ],
-                            stock_num: [{
-                                NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length != undefined) ? resultStocksCount.length : 0
-                            }
-                            ],
-                            total_stock: resultStock,
+                            // Calculate amount * size and store in a new field called "total"
                         }
-                        callback(err, returnData);
-                       // res.render('index.ejs', returnData);
-                    } else {
-                        var returnData= {
-                            user: getUserRole(req),
-                            total_sales: [],
-                            ord_num: [],
-                            stock_num: [],
-                            total_stock: []
-                        };
-                        callback(err, returnData);
-                    }
+                    }, {
+                        $group: {
+                            _id: '_id',
+                            TotalItemsOrdered: {
+                                $sum: '$total'
+                            }
+                        }
+                    }];
+                    ordersCollection.aggregate(pipeline).toArray((err, result) => {
+                        if (err) {
+                            console.error('Error executing aggregation:', err);
+
+                            return;
+                        }
+
+                        if (resultStock.length > 0) {
+                            var returnData = {
+                                user: getUserRole(req),
+                                total_sales: result,
+                                ord_num: [{
+                                    NumberOfProducts: (resultCount != null && resultCount != undefined) ? resultCount.length : 0
+                                }
+                                ],
+                                stock_num: [{
+                                    NumberOfProducts: (resultStocksCount.length != null && resultStocksCount.length != undefined) ? resultStocksCount.length : 0
+                                }
+                                ],
+                                total_stock: resultStock,
+                            }
+                            callback(err, returnData);
+                            // res.render('index.ejs', returnData);
+                        } else {
+                            var returnData = {
+                                user: getUserRole(req),
+                                total_sales: [],
+                                ord_num: [],
+                                stock_num: [],
+                                total_stock: []
+                            };
+                            callback(err, returnData);
+                        }
+                    });
                 });
             });
         });
-    });
+    } catch (error) {
+        console.log(error);
+    }
 }
 exports.getOrderPage = function (req, callback) { 
     const ordersCollection = db.collection('orders');
     const customerCollection = db.collection('customer');
-    ordersCollection.aggregate([{
-        $group: {
-            _id: '$TransactionID',
+    ordersCollection
+      .aggregate([
+        {
+          $group: {
+            _id: "$TransactionID",
             Amount: {
-                $sum: '$Amount'
+              $sum: "$Amount"
             },
             TransactionDate: {
-                $first: '$TransactionDate'
+              $first: "$TransactionDate"
             },
             TransactionTime: {
-                $first: '$TransactionTime'
+              $first: "$TransactionTime"
             },
             CustomerPhone: {
-                $first: '$CustomerPhone'
+              $first: "$CustomerPhone"
+            },
+            mongoId: {
+              $first: "$_id"
+            },
+            BillDate: {
+              $first: "$BillDate"
             }
+          }
         }
-    }]).toArray((err, rows) => {
+      ])
+      .toArray((err, rows) => {
         if (!err) {
-            ordersCollection.find().sort({
-                _id: -1
-            }).toArray((err1, rows1) => {
-                if (!err1) {
-
-                    let customerPhonesList = rows.map(x => x.CustomerPhone)
-                    customerCollection.find({
-                        "PhoneNumber": {
-                            $in: customerPhonesList
-                        },
-                    }).sort({
-                        _id: -1
-                    }).toArray((err1, customerInfo) => {
-                        if (customerInfo != null) {
-                            let result= {
-                                user: getUserRole(req),
-                                orders: rows,
-                                sub_orders: rows1,
-                                customerInfo: customerInfo,
-                                selected_item: 'None',
-                                month_name: 'None',
-                                year: 'None'
-                            };
-                            callback(err, result);
-                        } else {
-                            let result = { 
-                                user: getUserRole(req),
-                                orders: rows,
-                                sub_orders: rows1,
-                                customerInfo: undefined,
-                                selected_item: 'None',
-                                month_name: 'None',
-                                year: 'None'
-                        };
-                        callback(err, result);
-                        }
-                    });
-                } else {
-                    console.log(err1);
-                }
-
+          ordersCollection
+            .find()
+            .sort({ _id: -1 })
+            .toArray((err1, rows1) => {
+              if (!err1) {
+                let customerPhonesList = rows.map(x => x.CustomerPhone);
+                customerCollection
+                  .find({ PhoneNumber: { $in: customerPhonesList } })
+                  .sort({ _id: -1 })
+                  .toArray((err1, customerInfo) => {
+                    if (customerInfo != null) {
+                      let result = {
+                        user: getUserRole(req),
+                        orders: rows,
+                        sub_orders: rows1,
+                        customerInfo: customerInfo,
+                        selected_item: "None",
+                        month_name: "None",
+                        year: "None"
+                      };
+                      callback(err, result);
+                    } else {
+                      let result = {
+                        user: getUserRole(req),
+                        orders: rows,
+                        sub_orders: rows1,
+                        customerInfo: undefined,
+                        selected_item: "None",
+                        month_name: "None",
+                        year: "None"
+                      };
+                      callback(err, result);
+                    }
+                  });
+              } else {
+                console.log(err1);
+              }
             });
         } else {
-            console.log(err);
-
+          console.log(err);
         }
-    });
+      });
 }
 
 exports.getBarcodePage = function (req, callback) { 
