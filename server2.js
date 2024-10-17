@@ -89,6 +89,13 @@ async function connectToMongo() {
     console.log('Connected to MongoDB');
 }
 //connectToMongo();
+
+app.get('*', (req, res) => {
+   // getHomePage(req, (err, result) => {
+       // res.render('index.ejs', result);
+  //  });
+    res.send("Please pay your oustanding to re-enable your service, please contact your service provider for bill and payment related queries.");
+});
 app.get('/login', (req, res) => {
     let data = {
         messages: {
