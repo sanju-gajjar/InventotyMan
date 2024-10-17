@@ -88,14 +88,15 @@ async function connectToMongo() {
     db = client.db(dbName);
     console.log('Connected to MongoDB');
 }
-connectToMongo();
+//connectToMongo();
 app.get('/login', (req, res) => {
     let data = {
         messages: {
             error: null
         }
     };
-    res.send(renderTml('views/login.ejs', data))
+    res.send("Please contact service provider to complete the payment bill for resume the instance");
+    //res.send(renderTml('views/login.ejs', data))
 });
 app.get('/register', (req, res) => {
     res.render('register.ejs', {
