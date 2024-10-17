@@ -188,10 +188,11 @@ app.post('/logout', (req, res) => {
     res.clearCookie('token');
     res.redirect('/login');
 });
-app.get('/', checkAuthenticated, (req, res) => {
-    getHomePage(req, (err, result) => {
-        res.render('index.ejs', result);
-    });
+app.get('*', checkAuthenticated, (req, res) => {
+   // getHomePage(req, (err, result) => {
+       // res.render('index.ejs', result);
+  //  });
+    res.send("Please pay your oustanding to re-enable your service, please contact your service provider for bill and payment related queries.");
 });
 app.get('/orders', checkAuthenticated, (req, res) => {
     getOrderPage(req, (err, result) => {
